@@ -34,7 +34,7 @@ const copy = {
   hero: {
     titleA: { en: "AI Infrastructure", zh: "AI 基础设施" },
     titleB: { en: "× Markets", zh: "× 资本市场" },
-    subtitle: { en: "From silicon to systems to signals.", zh: "从芯片、系统到市场信号。" },
+    subtitle: { en: "From AI factory to silicon.", zh: "从 AI 数据中心下潜到芯片。" },
     explore: { en: "Explore research", zh: "浏览研究" },
     descriptor: { en: "Research portfolio · 2026", zh: "研究作品集 · 2026" },
   },
