@@ -306,14 +306,8 @@ export default function Home() {
     [filter],
   );
 
-  const handlePointerMove = (event: React.PointerEvent<HTMLElement>) => {
-    event.currentTarget.style.setProperty("--pointer-x", `${event.clientX}px`);
-    event.currentTarget.style.setProperty("--pointer-y", `${event.clientY}px`);
-  };
-
   return (
-    <main className="site-shell" onPointerMove={handlePointerMove}>
-      <div className="cursor-aura" aria-hidden="true" />
+    <main className="site-shell">
 
       <header className="site-header">
         <a className="wordmark" href="#top" aria-label="Eric Wang home">
@@ -355,7 +349,6 @@ export default function Home() {
       </header>
 
       <section id="top" className="hero-section">
-        <div className="hero-grid" aria-hidden="true" />
         <div className="hero-copy" data-reveal>
           <p className="eyebrow"><span>01</span>{t(copy.hero.eyebrow, language)}</p>
           <h1>
