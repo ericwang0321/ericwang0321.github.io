@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 数据层三巨头 · Mercor / Scale AI / Surge AI</title>
+<style>
+:root{
+  --blue:#4472C4; --blue-dark:#2f549c; --blue-deep:#1e3a6e;
+  --tint1:#EDF2FB; --tint2:#DCE6F7; --tint3:#C3D4F0;
+  --ink:#1c2b45; --ink2:#4a5a75; --line:#dde6f3;
+  --warn:#c0392b; --warn-bg:#fdf0ee; --good:#1e7e4d; --good-bg:#ecf7f1;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:70px}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;color:var(--ink);background:#fff;line-height:1.65;font-size:15.5px}
+.en{display:none}
+body.lang-en .zh{display:none}
+body.lang-en .en{display:revert}
+
+header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.hwrap{max-width:1080px;margin:0 auto;padding:10px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.logo{font-weight:800;color:var(--blue);font-size:16px;white-space:nowrap}
+nav{display:flex;gap:4px;flex-wrap:wrap;flex:1}
+nav a{color:var(--ink2);text-decoration:none;font-size:13px;padding:5px 10px;border-radius:20px}
+nav a:hover{background:var(--tint1);color:var(--blue)}
+#langBtn{border:1.5px solid var(--blue);background:#fff;color:var(--blue);border-radius:20px;padding:5px 16px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap}
+#langBtn:hover{background:var(--blue);color:#fff}
+
+.wrap{max-width:1080px;margin:0 auto;padding:0 20px}
+.hero{background:linear-gradient(160deg,var(--blue-deep) 0%,var(--blue) 60%,#5c8ad6 100%);color:#fff;padding:58px 0 50px;text-align:center}
+.hero h1{font-size:34px;font-weight:800;letter-spacing:.5px}
+.hero p{max-width:720px;margin:14px auto 0;color:#dbe6fa;font-size:16px}
+.hero-stats{display:flex;gap:14px;justify-content:center;margin-top:32px;flex-wrap:wrap}
+.hstat{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);border-radius:14px;padding:14px 26px;min-width:200px}
+.hstat b{display:block;font-size:26px;font-weight:800}
+.hstat span{font-size:13px;color:#cfe0fb}
+.hstat i{display:block;font-style:normal;font-size:12px;color:#a9c4ef;margin-top:2px}
+
+section{padding:52px 0 8px}
+.secnum{display:inline-flex;align-items:center;gap:10px;margin-bottom:6px}
+.secnum b{background:var(--blue);color:#fff;border-radius:8px;width:30px;height:30px;display:inline-flex;align-items:center;justify-content:center;font-size:15px}
+h2{font-size:25px;color:var(--blue-deep);margin-bottom:6px}
+.sub{color:var(--ink2);margin-bottom:26px;max-width:820px}
+h3{font-size:17px;color:var(--blue-dark);margin:26px 0 12px}
+h4{font-size:15px;color:var(--blue-dark);margin-bottom:6px}
+
+.chain{display:flex;gap:0;align-items:stretch;flex-wrap:wrap;margin:18px 0 8px}
+.chain .node{flex:1;min-width:150px;background:var(--tint1);border:1.5px solid var(--tint3);border-radius:12px;padding:14px;text-align:center;position:relative;margin-right:34px}
+.chain .node:last-child{margin-right:0}
+.chain .node:not(:last-child)::after{content:"→";position:absolute;right:-27px;top:50%;transform:translateY(-50%);color:var(--blue);font-size:20px;font-weight:800}
+.chain .node.hot{background:var(--blue);border-color:var(--blue);color:#fff;box-shadow:0 6px 18px rgba(68,114,196,.35)}
+.chain .node.hot small{color:#d7e3f8}
+.chain .node b{display:block;font-size:15px}
+.chain .node small{color:var(--ink2);font-size:12px;line-height:1.45;display:block;margin-top:4px}
+
+.timeline{border-left:3px solid var(--tint3);margin:10px 0 10px 8px;padding-left:22px}
+.tl{position:relative;padding-bottom:20px}
+.tl::before{content:"";position:absolute;left:-30px;top:5px;width:13px;height:13px;border-radius:50%;background:var(--blue);border:3px solid var(--tint1)}
+.tl b{color:var(--blue-dark)}
+.tl .yr{display:inline-block;background:var(--tint2);color:var(--blue-dark);font-size:12px;font-weight:700;border-radius:6px;padding:1px 8px;margin-right:8px}
+
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+@media(max-width:820px){.grid2,.grid3{grid-template-columns:1fr}.hero h1{font-size:26px}}
+.card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px 20px;box-shadow:0 2px 10px rgba(30,58,110,.05)}
+.card.tinted{background:var(--tint1);border-color:var(--tint3)}
+.card p,.card li{font-size:14px;color:var(--ink2)}
+.card b{color:var(--ink)}
+
+.co{border:1.5px solid var(--tint3);border-radius:18px;margin-top:20px;overflow:hidden}
+.co-head{background:linear-gradient(135deg,var(--blue-deep),var(--blue));color:#fff;padding:26px 28px}
+.co-head .tagline{color:#cfe0fb;font-size:14px;margin-top:4px}
+.co-head h2{color:#fff;margin:0;font-size:26px}
+.co-body{padding:8px 28px 28px}
+@media(max-width:820px){.co-body{padding:8px 16px 22px}}
+.snap{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.snap .s{background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.28);border-radius:10px;padding:8px 14px;font-size:12.5px}
+.snap .s b{display:block;font-size:16px;font-weight:800}
+
+.flow{counter-reset:step;margin:6px 0}
+.step{display:flex;gap:14px;padding:13px 0;border-bottom:1px dashed var(--line)}
+.step:last-child{border-bottom:none}
+.step::before{counter-increment:step;content:counter(step);flex:0 0 30px;height:30px;background:var(--tint2);color:var(--blue-dark);font-weight:800;border-radius:50%;display:flex;align-items:center;justify-content:center;margin-top:2px}
+.step div{flex:1}
+.step p{color:var(--ink2);font-size:14px;margin-top:2px}
+.step b.t{color:var(--blue-dark);font-size:15px}
+
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+.chip{background:var(--tint1);border:1px solid var(--tint3);color:var(--blue-dark);border-radius:20px;padding:4px 13px;font-size:12.5px;font-weight:600}
+.chip.r{background:var(--warn-bg);border-color:#f0cdc7;color:var(--warn)}
+.chip.g{background:var(--good-bg);border-color:#c6e6d4;color:var(--good)}
+
+.callout{border-left:4px solid var(--blue);background:var(--tint1);border-radius:0 12px 12px 0;padding:14px 18px;margin:16px 0;font-size:14.5px}
+.callout.warn{border-color:var(--warn);background:var(--warn-bg)}
+.callout b{color:var(--blue-deep)}
+.callout.warn b{color:var(--warn)}
+
+details{border:1px solid var(--line);border-radius:12px;margin:10px 0;background:#fbfcfe}
+details summary{cursor:pointer;padding:12px 16px;font-weight:700;color:var(--blue-dark);font-size:14.5px;list-style:none;display:flex;align-items:center;gap:8px}
+details summary::before{content:"+";display:inline-flex;width:20px;height:20px;border-radius:6px;background:var(--tint2);color:var(--blue-dark);align-items:center;justify-content:center;font-weight:800;flex:0 0 20px}
+details[open] summary::before{content:"−"}
+details .dbody{padding:2px 18px 16px;font-size:14px;color:var(--ink2)}
+details .dbody p{margin-bottom:8px}
+
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13.5px}
+th{background:var(--blue);color:#fff;padding:10px 12px;text-align:left;font-size:13px}
+td{padding:10px 12px;border-bottom:1px solid var(--line);color:var(--ink2);vertical-align:top}
+tr:nth-child(even) td{background:var(--tint1)}
+td b{color:var(--ink)}
+th:first-child{border-radius:10px 0 0 0}th:last-child{border-radius:0 10px 0 0}
+
+.moat{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:10px 0}
+@media(max-width:820px){.moat{grid-template-columns:1fr}}
+.moat .m{border-radius:12px;padding:14px 16px;font-size:14px}
+.moat .yes{background:var(--good-bg);border:1px solid #c6e6d4}
+.moat .no{background:var(--warn-bg);border:1px solid #f0cdc7}
+.moat .m h4{margin-bottom:8px}
+.moat .yes h4{color:var(--good)}
+.moat .no h4{color:var(--warn)}
+.moat li{margin:6px 0 6px 18px;color:var(--ink2)}
+
+.vsline{display:flex;align-items:flex-start;gap:10px;margin:10px 0;font-size:14px}
+.vsline .who{flex:0 0 118px;background:var(--tint2);color:var(--blue-deep);font-weight:700;border-radius:8px;padding:6px 10px;text-align:center;font-size:12.5px}
+.vsline p{color:var(--ink2);margin-top:4px}
+
+footer{margin-top:60px;background:var(--tint1);border-top:1px solid var(--line);padding:28px 0 36px;font-size:12.5px;color:var(--ink2)}
+footer a{color:var(--blue)}
+.small{font-size:12.5px;color:var(--ink2)}
+
+/* Section 7 (Data Ops) spacing */
+#dataops h3{margin-top:38px}
+#dataops h4{margin:28px 0 12px}
+#dataops .grid2,#dataops .grid3{margin:16px 0 8px}
+#dataops table{margin:16px 0 10px}
+#dataops .vsline{margin:14px 0}
+#dataops .moat{margin:16px 0 8px}
+#dataops .callout{margin:22px 0 10px}
+#dataops p.small{margin-bottom:14px}
+.code{background:#16233c;color:#d5e2f7;border-radius:10px;padding:11px 14px;font-size:11.5px;line-height:1.6;overflow-x:auto;margin-top:9px;font-family:"SF Mono",Menlo,Consolas,monospace;white-space:pre}
+.mercor-pricing-table th:first-child,.mercor-pricing-table td:first-child{width:160px;min-width:160px;white-space:nowrap}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hwrap">
+    <div class="logo"><span class="zh">AI 数据层 · 深度拆解</span><span class="en">The AI Data Layer, Explained</span></div>
+    <nav>
+      <a href="#layer"><span class="zh">行业逻辑</span><span class="en">The Layer</span></a>
+      <a href="#scale">Scale AI</a>
+      <a href="#surge">Surge AI</a>
+      <a href="#mercor">Mercor</a>
+      <a href="#compare"><span class="zh">对比</span><span class="en">Compare</span></a>
+      <a href="#future"><span class="zh">未来</span><span class="en">Outlook</span></a>
+      <a href="#dataops"><span class="zh">数据实务</span><span class="en">Data Ops</span></a>
+    </nav>
+    <button id="langBtn" onclick="toggleLang()">English</button>
+  </div>
+</header>
+
+<div class="hero">
+  <div class="wrap">
+    <h1><span class="zh">给 AI「喂饭」的三家公司</span><span class="en">The Companies That Feed AI</span></h1>
+    <p><span class="zh">大模型的能力来自数据，而最贵的数据来自人。Scale AI、Surge AI、Mercor 用三种完全不同的方式，把「人类智慧」加工成模型能学习的养料——这一页带你看懂它们各自的原理、价值与软肋。</span><span class="en">Model capability comes from data — and the most valuable data comes from people. Scale AI, Surge AI, and Mercor each turn human intelligence into training fuel in radically different ways. This page unpacks how each one works, where the value sits, and where the cracks are.</span></p>
+    <div class="hero-stats">
+      <div class="hstat"><span>Scale AI</span><b>$29B</b><i><span class="zh">2025.6 Meta 入股时估值</span><span class="en">valuation at Meta deal, Jun 2025</span></i></div>
+      <div class="hstat"><span>Surge AI</span><b>~$30B</b><i><span class="zh">首轮融资报道估值（2025–26）</span><span class="en">reported first-round valuation, 2025–26</span></i></div>
+      <div class="hstat"><span>Mercor</span><b>$10B</b><i><span class="zh">2025.10 C 轮估值</span><span class="en">Series C valuation, Oct 2025</span></i></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ SECTION 1: THE LAYER ============ -->
+<section id="layer">
+  <div class="wrap">
+    <div class="secnum"><b>1</b><h2><span class="zh">先搞懂：什么是「数据层」，它为什么存在？</span><span class="en">First: what is the "data layer," and why does it exist?</span></h2></div>
+    <p class="sub"><span class="zh">在 AI 产业链里，这三家公司都卡在同一个位置：模型公司的上游。它们不造芯片、不训模型，只做一件事——组织人类，生产模型学不到、算不出的那部分知识。</span><span class="en">All three companies occupy the same slot in the AI value chain: directly upstream of the model labs. They don't build chips or train models. They do one thing — organize humans to produce the knowledge that models can't scrape or compute on their own.</span></p>
+
+    <div class="chain">
+      <div class="node"><b><span class="zh">算力层</span><span class="en">Compute</span></b><small>NVIDIA · <span class="zh">云厂商</span><span class="en">cloud providers</span></small></div>
+      <div class="node hot"><b><span class="zh">数据层 ★</span><span class="en">Data ★</span></b><small>Scale · Surge · Mercor</small></div>
+      <div class="node"><b><span class="zh">模型层</span><span class="en">Models</span></b><small>OpenAI · Anthropic · Google · Meta</small></div>
+      <div class="node"><b><span class="zh">应用层</span><span class="en">Applications</span></b><small>ChatGPT · Copilot · <span class="zh">各类产品</span><span class="en">and beyond</span></small></div>
+    </div>
+
+    <h3><span class="zh">模型为什么需要买「人的数据」？四个阶段，需求逐级升高</span><span class="en">Why do labs pay for human data? Four stages, each more demanding</span></h3>
+    <div class="timeline">
+      <div class="tl"><span class="yr"><span class="zh">阶段一</span><span class="en">Stage 1</span></span><b><span class="zh">预训练 = 读遍互联网</span><span class="en">Pretraining = reading the internet</span></b><br><span class="small"><span class="zh">模型先「读」海量网络文本学会语言。这些数据几乎免费——但读完只会「接话」，不会「干活」，而且互联网上的高质量文本已经快被用尽了。</span><span class="en">Models first "read" massive web text to learn language. That data is nearly free — but it only teaches the model to continue text, not to be useful. And the internet's supply of high-quality text is running out.</span></span></div>
+      <div class="tl"><span class="yr"><span class="zh">阶段二</span><span class="en">Stage 2</span></span><b><span class="zh">监督微调（SFT）= 请家教做示范</span><span class="en">Supervised fine-tuning = hiring tutors to demonstrate</span></b><br><span class="small"><span class="zh">雇人写出「理想回答」给模型模仿：问题怎么答、代码怎么写、格式怎么排。这是数据层公司的第一桶金。</span><span class="en">Humans write model answers for the AI to imitate — how to respond, how to code, how to format. This was the data layer's first big business.</span></span></div>
+      <div class="tl"><span class="yr"><span class="zh">阶段三</span><span class="en">Stage 3</span></span><b><span class="zh">人类反馈强化学习（RLHF）= 请评委打分</span><span class="en">RLHF = hiring judges to score</span></b><br><span class="small"><span class="zh">模型对同一问题生成多个回答，人类挑出更好的那个。数百万次「A 比 B 好」的选择训练出一个「奖励模型」，再用它调教主模型。ChatGPT 之所以「懂事」，靠的就是这道工序。</span><span class="en">The model generates multiple answers; humans pick the better one. Millions of "A beats B" judgments train a reward model, which then steers the main model. This step is why ChatGPT feels helpful rather than random.</span></span></div>
+      <div class="tl"><span class="yr"><span class="zh">阶段四 · 当下</span><span class="en">Stage 4 · Now</span></span><b><span class="zh">专家数据 + RL 环境 = 请教授出题、建模拟考场</span><span class="en">Expert data + RL environments = professors writing exams, and simulated worlds to practice in</span></b><br><span class="small"><span class="zh">模型已经超过普通标注员的水平，只有医生、律师、资深工程师才能「教」它、给它「判卷」。同时，训练 AI 智能体（Agent）需要仿真工作环境——模拟的浏览器、代码库、报税系统——让模型在里面反复试错。这是 2025–26 年增长最快、单价最高的需求。</span><span class="en">Models now outperform average annotators, so only doctors, lawyers, and senior engineers can still teach or grade them. Training AI agents additionally requires simulated workplaces — fake browsers, codebases, tax systems — where models practice by trial and error. This is the fastest-growing, highest-priced demand of 2025–26.</span></span></div>
+    </div>
+
+    <div class="callout"><b><span class="zh">一句话总结这门生意：</span><span class="en">The business in one sentence:</span></b> <span class="zh">三家公司本质上都是「人类智慧的供应链」——下游是出钱的 AI 实验室，上游是供智慧的人，中间靠招募、质检、工具化把「人的判断」变成标准化商品。区别只在于：组织什么样的人、用什么方式组织。</span><span class="en">All three run a supply chain for human intelligence — AI labs pay on one end, people supply judgment on the other, and the company in the middle recruits, quality-controls, and packages that judgment into a standardized product. The only real difference: which humans they organize, and how.</span></div>
+  </div>
+</section>
+
+<!-- ============ SECTION 2: SCALE AI ============ -->
+<section id="scale">
+  <div class="wrap">
+    <div class="secnum"><b>2</b><h2>Scale AI</h2></div>
+    <div class="co">
+      <div class="co-head">
+        <h2><span class="zh">数据工厂：用流程和工具把「标注」做成工业品</span><span class="en">The Data Factory: industrializing annotation with process and tooling</span></h2>
+        <div class="tagline"><span class="zh">2016 年创立 · 创始人 Alexandr Wang（19 岁从 MIT 辍学）· 行业开创者</span><span class="en">Founded 2016 by Alexandr Wang (MIT dropout at 19) · the category creator</span></div>
+        <div class="snap">
+          <div class="s"><span class="zh">估值</span><span class="en">Valuation</span><b>$29B</b><span class="zh">2025.6 Meta 交易</span><span class="en">Meta deal, Jun 2025</span></div>
+          <div class="s"><span class="zh">收入</span><span class="en">Revenue</span><b>~$1B</b><span class="zh">2025 年（2024 约 $870M）</span><span class="en">2025 (~$870M in 2024)</span></div>
+          <div class="s"><span class="zh">关键事件</span><span class="en">Key event</span><b>Meta 49%</b><span class="zh">$14.3B 买入无投票权股份</span><span class="en">$14.3B for non-voting stake</span></div>
+          <div class="s"><span class="zh">新支柱</span><span class="en">New pillar</span><b>$500M</b><span class="zh">2026.5 五角大楼合同</span><span class="en">Pentagon contract, May 2026</span></div>
+        </div>
+      </div>
+      <div class="co-body">
+
+        <h3><span class="zh">它到底在做什么：把一堆生数据变成模型的教材</span><span class="en">What it actually does: turning raw data into teaching material</span></h3>
+        <p class="small"><span class="zh">客户（车厂、AI 实验室、政府）把原始数据和需求交给 Scale，Scale 负责整个加工过程。它的核心能力不是「有很多人」，而是把标注拆成流水线的这套系统：</span><span class="en">Clients — carmakers, AI labs, governments — hand Scale raw data and requirements; Scale runs the entire refinement process. Its core asset isn't "lots of workers" — it's the assembly-line system itself:</span></p>
+        <div class="flow">
+          <div class="step"><div><b class="t"><span class="zh">接单：客户给原始数据</span><span class="en">Intake: client delivers raw data</span></b><p><span class="zh">例如自动驾驶公司的百万帧激光雷达点云，或 AI 实验室的十万条对话记录。</span><span class="en">Say, a million LiDAR frames from a self-driving fleet, or 100k conversation logs from an AI lab.</span></p></div></div>
+          <div class="step"><div><b class="t"><span class="zh">拆解：平台把大任务切成微任务</span><span class="en">Decompose: the platform slices work into micro-tasks</span></b><p><span class="zh">「标出这张图里所有行人」「判断这两个回答哪个更好」——每个任务几分钟能完成，可以分发给全球任何一个标注员。</span><span class="en">"Box every pedestrian in this frame," "pick the better of these two answers" — each takes minutes and can be routed to any worker worldwide.</span></p></div></div>
+          <div class="step"><div><b class="t"><span class="zh">人机协同：机器先标，人只改错 ← 成本的关键杠杆</span><span class="en">Human-in-the-loop: machines pre-label, humans only fix errors ← the key cost lever</span></b><p><span class="zh">Scale 用自己的模型先自动预标注，人类只负责检查和修正。机器做 80% 的粗活，人做 20% 的判断——这让 Scale 能比纯人力便宜得多，也是它和普通外包公司的本质区别。</span><span class="en">Scale's own models pre-label everything automatically; humans just review and correct. Machines do 80% of the grunt work, people supply the 20% of judgment — which is why Scale undercuts pure-labor outsourcers, and what separates it from a BPO shop.</span></p></div></div>
+          <div class="step"><div><b class="t"><span class="zh">质检：用统计学防止「人不靠谱」</span><span class="en">QA: statistics against human unreliability</span></b><p><span class="zh">同一任务发给多人投票取共识；题目里混入已知答案的「金标准题」暗中考核每个人；每个标注员有实时准确率评分，掉分就被移出任务池。</span><span class="en">The same task goes to multiple workers for consensus voting; "gold questions" with known answers are secretly mixed in to test everyone; each worker carries a live accuracy score and gets pulled from the pool if it drops.</span></p></div></div>
+          <div class="step"><div><b class="t"><span class="zh">交付：像调用云服务一样调用「人力」</span><span class="en">Deliver: labeled data via API, like a cloud service</span></b><p><span class="zh">客户通过 API 提交数据、收回标好的结果——把「组织几万人干活」封装成了一个接口。这就是它自称「数据引擎」的含义。</span><span class="en">Clients submit data and receive labels through an API — tens of thousands of workers wrapped behind a single interface. That's what "Data Engine" means.</span></p></div></div>
+        </div>
+
+        <details><summary><span class="zh">深入一层：两支工人队伍 + 三条收入线</span><span class="en">Going deeper: two workforces, three revenue lines</span></summary>
+          <div class="dbody">
+            <p><b><span class="zh">工人从哪来？</span><span class="en">Where do the workers come from?</span></b> <span class="zh">早期靠 Remotasks 平台在肯尼亚、菲律宾、委内瑞拉等地招募低成本众包工人，适合画框、描点这类通用任务。大模型时代又推出 Outlier 平台，按小时高薪招募程序员、写作者等高技能兼职，服务 RLHF 和专家数据需求。工人都是合同工，按件/按时计酬。</span><span class="en">Early on, the Remotasks platform recruited low-cost crowd workers in Kenya, the Philippines, and Venezuela for generalist tasks like drawing bounding boxes. For the LLM era, Scale launched Outlier — hourly, well-paid gigs for programmers and writers serving RLHF and expert-data demand. All are contractors paid per task or per hour.</span></p>
+            <p><b><span class="zh">钱从哪来？</span><span class="en">Where does the money come from?</span></b> <span class="zh">① 数据业务：按标注量/项目收费，毛利 = 客户付费 − 工人工资 − 质检成本，靠预标注工具把毛利做厚；② 政府业务：Donovan 平台为美军做情报分析 AI，2026 年拿下约 $500M 五角大楼合同——需要安全资质，竞争者极少；③ 企业业务：帮 EY、思科等传统企业搭建内部 AI 应用（新 CEO 的转型重点）。</span><span class="en">① Data: fees per label or per project; gross margin = client fees minus worker pay minus QA cost, fattened by pre-labeling tools. ② Government: the Donovan platform builds intelligence-analysis AI for the US military — a ~$500M Pentagon contract in 2026, in a market where security clearances keep rivals out. ③ Enterprise: building internal AI applications for companies like EY and Cisco — the new CEO's strategic focus.</span></p>
+          </div>
+        </details>
+
+        <h3><span class="zh">怎么收费：对客户有三类收费模式</span><span class="en">How it charges: three customer pricing models</span></h3>
+        <p class="small"><span class="zh">Scale 不是只有一种统一报价。客户规模、是否需要 Scale 提供工人，以及项目属于商业数据服务还是政府/大型企业合同，决定了采用哪一种收费模式。</span><span class="en">Scale does not use one universal price. The model depends on customer size, whether Scale supplies the workforce, and whether the engagement is a commercial data service or a government / large-enterprise contract.</span></p>
+        <div class="flow">
+          <div class="step"><div><b class="t"><span class="zh">第一类：自助平台——按使用量付费</span><span class="en">Model 1: self-serve platform — usage-based pricing</span></b><p><span class="zh">适合小型客户、研究团队或试验性需求。客户自行上传数据、配置工作流并使用平台工具，按照实际消耗的标注单位或平台用量付费。它更接近云服务的 pay-as-you-go，而不是签一个完整的人工标注外包项目。</span><span class="en">Designed for smaller customers, research teams, or experimental workloads. Customers upload data, configure workflows, and use the platform tools, paying for labeling units or platform usage consumed. It resembles cloud pay-as-you-go rather than a fully managed labor engagement.</span></p></div></div>
+          <div class="step"><div><b class="t"><span class="zh">第二类：Scale 提供工人的全托管标注项目</span><span class="en">Model 2: fully managed annotation with Scale-provided workers</span></b><p><span class="zh">Scale 不只提供软件，还负责招募和调度标注员、质检以及最终交付。项目可以按图片、视频分钟、对话、偏好比较、专家回答、annotation task 或整批数据集计价；通常先做 pilot，再通过 MSA、SOW 或 Order Form 约定数量、单价、质量门槛和交付时间。<b>Annotation task</b> 就是一个标注员完成的最小工作单元，例如框出一张图里的行人，或比较两个模型回答并解释哪个更好。</span><span class="en">Scale supplies not only the software but also worker recruitment and routing, QA, and final delivery. Projects may be measured by image, video minute, conversation, preference comparison, expert answer, annotation task, or full dataset; a pilot is often followed by an MSA, SOW, or order form defining volume, price, quality thresholds, and delivery dates. An <b>annotation task</b> is the smallest unit completed by one annotator—for example, boxing pedestrians in one image or comparing two model answers and explaining which is better.</span></p>
+            <details>
+              <summary><span class="zh">Pilot、MSA、SOW、Order Form 分别是什么意思？</span><span class="en">What do Pilot, MSA, SOW, and Order Form mean?</span></summary>
+              <div class="dbody">
+                <p><b>Pilot：</b> <span class="zh">先用一小批任务测试 Scale 的质量、耗时和成本，再决定是否正式放量。</span><span class="en">A small trial batch used to test Scale's quality, turnaround time, and cost before scaling up.</span></p>
+                <p><b>MSA（Master Services Agreement）：</b> <span class="zh">长期合作的总框架，主要规定保密、数据安全、知识产权、付款和违约责任。</span><span class="en">The master framework for the relationship, covering confidentiality, data security, IP, payment, and liability.</span></p>
+                <p><b>SOW（Statement of Work）：</b> <span class="zh">某个具体项目要做什么、怎么做，以及需要达到什么质量标准。</span><span class="en">Defines what a specific project will do, how it will be performed, and the required quality standards.</span></p>
+                <p><b>Order Form：</b> <span class="zh">具体采购多少、单价和总价是多少，以及开始时间、交付时间和付款安排。</span><span class="en">Records the purchased volume, unit and total price, start and delivery dates, and payment schedule.</span></p>
+                <p><b><span class="zh">整句话的意思：</span><span class="en">In plain language:</span></b> <span class="zh">客户先用少量任务测试质量；测试通过后，双方签长期合作框架，并针对正式项目约定数量、价格、质量要求和交付期限。</span><span class="en">The client first tests quality with a small batch; if it passes, the parties sign a long-term framework and define the volume, price, quality requirements, and deadline for the full project.</span></p>
+              </div>
+            </details>
+          </div></div>
+          <div class="step"><div><b class="t"><span class="zh">第三类：政府和大型企业合同</span><span class="en">Model 3: government and large-enterprise contracts</span></b><p><span class="zh">这类业务通常不是简单的单条标注计费，而是多年期合同、固定项目总额、最低采购承诺或合同上限。报价还会覆盖安全资质、专属部署、数据隔离、项目管理以及持续交付等要求。</span><span class="en">These engagements are usually not billed as simple per-label transactions. They may use multi-year contracts, fixed project values, minimum purchase commitments, or contract ceilings, with pricing also covering security clearances, dedicated deployment, data isolation, program management, and ongoing delivery.</span></p></div></div>
+        </div>
+        <h4><span class="zh">它的赚钱逻辑</span><span class="en">How the economics work</span></h4>
+        <div class="callout"><b><span class="zh">客户买的是「合格的数据或项目交付」，而不是单纯购买工时。</span><span class="en">The customer buys an accepted data or project deliverable—not labor hours alone.</span></b> <span class="zh">Scale 的毛利 = 客户支付的项目费或平台收入 − 标注员报酬 − 质检和项目运营成本。机器预标注越多、人工只需修正越少，单位交付成本就越低；政府和大型企业合同则还可能依靠长期承诺提高收入可见性。</span><span class="en">Scale's gross margin equals project or platform revenue minus worker pay, QA, and program operating costs. The more work machines pre-label and humans merely correct, the lower the unit delivery cost; government and large-enterprise contracts can also improve revenue visibility through long-term commitments.</span></div>
+
+        <h3><span class="zh">2025 年的剧变：Meta 的 143 亿美元「半收购」</span><span class="en">The 2025 earthquake: Meta's $14.3B semi-acquisition</span></h3>
+        <p class="small"><span class="zh">2025 年 6 月，Meta 以 $14.3B 买下 Scale 49% 的无投票权股份（估值 $29B），创始人 Wang 带队加入 Meta 领导「超级智能实验室」。这笔交易的本质：Meta 买的不是公司，是人和数据管道。但代价立刻显现——</span><span class="en">In June 2025, Meta paid $14.3B for a 49% non-voting stake (a $29B valuation), and founder Wang left to lead Meta's Superintelligence Lab. Meta wasn't really buying the company — it was buying the man and the data pipeline. The cost showed up immediately:</span></p>
+        <div class="callout warn"><b><span class="zh">中立性破产：</span><span class="en">Neutrality, broken:</span></b> <span class="zh">数据公司能看到客户的训练数据——那是 AI 实验室最核心的机密。Meta 入股后，OpenAI、Google 等大客户迅速削减订单：没人愿意让竞争对手的「关联公司」看自己的底牌。这一课定义了整个行业：<b>数据层公司的第一资产是中立</b>。（最大受益者是 Surge 和 Mercor。）</span><span class="en">A data vendor sees its clients' training data — the most sensitive secret an AI lab has. After Meta's investment, OpenAI, Google and others slashed their orders: nobody shows their cards to a competitor's affiliate. That episode defined the industry's first law: <b>a data-layer company's most valuable asset is neutrality</b>. (The biggest beneficiaries: Surge and Mercor.)</span></div>
+        <p class="small"><span class="zh">新 CEO Jason Droege（前 Uber 高管）的应对：收缩标注主业，转向两个不怕「中立性」问题的市场——政府（五角大楼合同翻了 5 倍）和企业应用。同时 Meta 承诺 5 年内每年至少采购 $450M 服务，给了收入一个保底。</span><span class="en">New CEO Jason Droege (ex-Uber) responded by de-emphasizing labeling and doubling down on two markets immune to the neutrality problem — government (the Pentagon contract grew 5x) and enterprise applications. Meta also committed to at least $450M/year of purchases for five years, putting a floor under revenue.</span></p>
+
+        <h3><span class="zh">业务价值与竞争壁垒：分维度拆解</span><span class="en">Value and moats, dimension by dimension</span></h3>
+        <div class="moat">
+          <div class="m yes"><h4><span class="zh">✓ 真实的壁垒</span><span class="en">✓ Real moats</span></h4>
+            <li><span class="zh"><b>运营系统</b>：管理几十万分布式工人的调度、质检、反作弊系统，是八年踩坑积累的，新玩家难以速成。</span><span class="en"><b>The operating system:</b> scheduling, QA, and anti-fraud infrastructure for hundreds of thousands of distributed workers — eight years of scar tissue a newcomer can't shortcut.</span></li>
+            <li><span class="zh"><b>政府准入</b>：安全资质 + 多年军方关系，是行政审批级别的护城河，Surge/Mercor 短期进不来。</span><span class="en"><b>Government access:</b> security clearances plus years of defense relationships — a regulatory-grade moat Surge and Mercor can't quickly cross.</span></li>
+            <li><span class="zh"><b>Meta 保底合同</b>：$450M/年 × 5 年，相当于半个收入基本盘。</span><span class="en"><b>The Meta floor:</b> $450M/year for five years — roughly half a revenue base, guaranteed.</span></li>
+          </div>
+          <div class="m no"><h4><span class="zh">✗ 靠不住的部分</span><span class="en">✗ What doesn't hold</span></h4>
+            <li><span class="zh"><b>标注本身无锁定</b>：工人是合同工，客户按项目付费，随时可换供应商——Surge 抢走高端单就是证明。</span><span class="en"><b>Labeling has no lock-in:</b> workers are contractors, clients pay per project and can switch anytime — Surge poaching the premium tier proved it.</span></li>
+            <li><span class="zh"><b>中立性已失</b>：前沿实验室这个最优质客群基本回不来了。</span><span class="en"><b>Neutrality is gone:</b> the frontier labs — the best customer segment — are likely not coming back.</span></li>
+            <li><span class="zh"><b>低端被机器蚕食</b>：预标注技术越强，纯标注的价值越低——Scale 的工具在削自己的主业。</span><span class="en"><b>The low end is being automated away:</b> the better pre-labeling gets, the less pure annotation is worth — Scale's own tools are eroding its original business.</span></li>
+          </div>
+        </div>
+
+        <h4><span class="zh">如果上下游来抢生意？</span><span class="en">What if upstream or downstream players invade?</span></h4>
+        <div class="vsline"><div class="who"><span class="zh">模型实验室自建</span><span class="en">Labs going in-house</span></div><div><p><span class="zh">已经发生了——Meta 的入股本质上就是一次「下游吞并上游」。其他实验室也在自建数据团队，但通用标注量大、管理重，多数实验室宁愿外包；真正会被拿回去的是最核心的对齐数据。</span><span class="en">Already happened — Meta's stake was literally a downstream player swallowing its supplier. Other labs are building internal data teams too, but bulk annotation is heavy to manage, so most still outsource; what labs do pull in-house is the most sensitive alignment data.</span></p></div></div>
+        <div class="vsline"><div class="who"><span class="zh">云厂商下场</span><span class="en">Cloud providers</span></div><div><p><span class="zh">AWS/Google 都有标注服务（如 SageMaker Ground Truth），但只提供工具不管人力质量，多年来一直没打赢全托管模式——说明这行的壁垒在运营而非软件。</span><span class="en">AWS and Google both offer labeling tools (e.g., SageMaker Ground Truth), but tools-without-managed-labor has lost to the full-service model for years — evidence the moat is operational, not software.</span></p></div></div>
+
+        <h3><span class="zh">未来推演</span><span class="en">Where it goes from here</span></h3>
+        <div class="grid3">
+          <div class="card tinted"><h4><span class="zh">基本盘剧本</span><span class="en">Base case</span></h4><p><span class="zh">变成「Meta 的数据部门 + 国防 AI 承包商 + 企业 AI 咨询」三合一。增长放缓但现金流稳，估值逻辑从「AI 明星」切换为「政府承包商」。</span><span class="en">Becomes a hybrid: Meta's data arm + defense AI contractor + enterprise AI consultancy. Slower growth, steadier cash — valued like a contractor, not an AI darling.</span></p></div>
+          <div class="card tinted"><h4><span class="zh">乐观剧本</span><span class="en">Bull case</span></h4><p><span class="zh">国防 AI 预算爆发（合同已一年翻 5 倍），Donovan 成为军方标配；企业应用业务吃到「AI 落地」大潮。</span><span class="en">Defense AI budgets explode (the contract already grew 5x in a year) and Donovan becomes standard military kit; the enterprise arm rides the AI-deployment wave.</span></p></div>
+          <div class="card tinted"><h4><span class="zh">悲观剧本</span><span class="en">Bear case</span></h4><p><span class="zh">标注业务被 Surge（高端）和合成数据（低端）两头挤压，企业转型撞上埃森哲等咨询巨头，公司沦为 Meta 的附庸。</span><span class="en">Labeling gets squeezed from both ends — Surge above, synthetic data below — the enterprise pivot collides with Accenture-class incumbents, and Scale fades into a Meta appendage.</span></p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SECTION 3: SURGE AI ============ -->
+<section id="surge">
+  <div class="wrap">
+    <div class="secnum"><b>3</b><h2>Surge AI</h2></div>
+    <div class="co">
+      <div class="co-head">
+        <h2><span class="zh">精品作坊：不比谁人多，只比谁的判断更准</span><span class="en">The Boutique: not more people — better judgment</span></h2>
+        <div class="tagline"><span class="zh">2020 年创立 · 创始人 Edwin Chen（前 Google/Facebook/Twitter 机器学习工程师）· 零融资做到收入超过 Scale</span><span class="en">Founded 2020 by Edwin Chen (ex-Google/Facebook/Twitter ML engineer) · outgrew Scale's revenue with zero VC money</span></div>
+        <div class="snap">
+          <div class="s"><span class="zh">估值</span><span class="en">Valuation</span><b>~$30B</b><span class="zh">首次外部融资（约 $1B，2025–26 报道）</span><span class="en">first outside round (~$1B, reported 2025–26)</span></div>
+          <div class="s"><span class="zh">收入</span><span class="en">Revenue</span><b>$1.2B</b><span class="zh">2024 年，已超 Scale</span><span class="en">2024 — more than Scale</span></div>
+          <div class="s"><span class="zh">正式员工</span><span class="en">Employees</span><b>~110</b><span class="zh">人均创收 ≈ $1000 万</span><span class="en">≈ $10M revenue per head</span></div>
+          <div class="s"><span class="zh">客户</span><span class="en">Clients</span><b><span class="zh">全部头部实验室</span><span class="en">Every top lab</span></b>OpenAI · Anthropic · Google · Meta</div>
+        </div>
+      </div>
+      <div class="co-body">
+
+        <h3><span class="zh">它做什么：给最前沿的模型当「品味教练」</span><span class="en">What it does: taste coaching for frontier models</span></h3>
+        <p class="small"><span class="zh">Surge 和 Scale 卖的名义上是同一种东西（人类反馈数据），但定位完全相反。要理解 Surge 的原理，得先理解 RLHF 里「质量」为什么值钱：</span><span class="en">Surge nominally sells the same thing as Scale — human feedback — but from the opposite end of the market. To see why, you need to understand why quality is worth so much in RLHF:</span></p>
+        <div class="flow">
+          <div class="step"><div><b class="t"><span class="zh">模型生成多个候选回答</span><span class="en">The model generates several candidate answers</span></b><p><span class="zh">同一个问题，模型写出 A、B 两版（或更多）。</span><span class="en">For one prompt, the model writes versions A and B (or more).</span></p></div></div>
+          <div class="step"><div><b class="t"><span class="zh">人类评委选出更好的，并说明理由</span><span class="en">A human judge picks the better one — with reasons</span></b><p><span class="zh">哪个更准确？更安全？推理有没有偷懒？这一步的难度取决于问题的难度：判断两首打油诗容易，判断两段肿瘤治疗建议就需要医生。</span><span class="en">Which is more accurate? Safer? Did the reasoning cut corners? The difficulty scales with the question: ranking limericks is easy; ranking oncology advice takes a doctor.</span></p></div></div>
+          <div class="step"><div><b class="t"><span class="zh">数百万次选择训练出「奖励模型」</span><span class="en">Millions of judgments train a reward model</span></b><p><span class="zh">奖励模型 = 人类品味的数字化替身，之后由它 7×24 小时给主模型「判卷」，把人的偏好放大成机器规模。</span><span class="en">The reward model is a digital stand-in for human taste — it then grades the main model around the clock, amplifying human preference to machine scale.</span></p></div></div>
+          <div class="step"><div><b class="t"><span class="zh">关键在于：垃圾进，垃圾出——而且是指数级放大</span><span class="en">The catch: garbage in, garbage out — exponentially amplified</span></b><p><span class="zh">奖励模型会把标注里的每一个错误偏好放大百万倍。一批便宜但马虎的标注，可能让整个训练白费。<b>这就是 Surge 存在的原理：在这道工序上，1 个顶尖评委 &gt; 100 个平庸评委。</b></span><span class="en">The reward model magnifies every bad judgment a million-fold. One batch of cheap, sloppy labels can poison an entire training run. <b>This is Surge's reason to exist: at this step, one excellent judge beats a hundred mediocre ones.</b></span></p></div></div>
+        </div>
+
+        <details><summary><span class="zh">深入一层：Surge 怎么保证「人是对的」？以及它反常识的经营方式</span><span class="en">Going deeper: how Surge guarantees its humans are right — and its contrarian playbook</span></summary>
+          <div class="dbody">
+            <p><b><span class="zh">供给侧：</span><span class="en">Supply side:</span></b> <span class="zh">不去劳务市场招人，而是像名校招生一样筛选——严格测试、低录取率、显著高于行业的报酬，吸引名校生、专业作家、领域专家。每个标注员在平台上持续被暗中考核（校准题、与专家答案的一致率、历史准确度），数据不达标就出局。它卖的不是工时，是「经过验证的判断力」。</span><span class="en">Instead of recruiting from labor markets, Surge screens like a selective university — rigorous testing, low acceptance rates, pay well above market — attracting top graduates, professional writers, and domain experts. Every annotator is continuously and invisibly scored (calibration questions, agreement with expert keys, accuracy history); miss the bar, and you're out. The product isn't labor-hours — it's verified judgment.</span></p>
+            <p><b><span class="zh">经营侧：</span><span class="en">Operating side:</span></b> <span class="zh">2025 年之前零融资、无销售团队，全靠口碑——因为客户（研究员）能直接在训练指标里看到数据质量的差异。高定价 → 高毛利 → 出得起顶级报酬 → 吸引更好的人 → 质量更高 → 更能撑住高定价。这个正循环是烧钱换规模的对手很难复制的。约 110 名正式员工做出 $1.2B 收入（标注员是合同工，不计入员工数）。</span><span class="en">Zero funding and no sales team before 2025 — growth came from word of mouth, because customers (researchers) can see data quality directly in their training metrics. Premium pricing → fat margins → top-of-market pay → better people → higher quality → pricing power sustained. That flywheel is hard to copy for rivals burning cash for volume. Roughly 110 employees generate $1.2B (annotators are contractors, not headcount).</span></p>
+            <p><b><span class="zh">业务重心：</span><span class="en">Focus:</span></b> <span class="zh">RLHF 偏好数据、模型评估（红队攻击、能力测评）、RL 环境。全是「模型越强、要求越高」的高端环节，几乎不碰画框描点的低端标注。</span><span class="en">RLHF preference data, model evaluation (red-teaming, capability testing), and RL environments — all segments where stronger models raise the bar. It barely touches low-end bounding-box work.</span></p>
+          </div>
+        </details>
+
+        <h3><span class="zh">怎么收费：企业合同议价 + 质量溢价</span><span class="en">How it charges: negotiated enterprise contracts plus a quality premium</span></h3>
+        <p class="small"><span class="zh">Surge 的核心服务基本都需要企业客户沟通需求、完成试点并签合同。它没有公开统一的「每个 task 多少钱」价目表；合同可以按 task、数据包或项目规模计量，但具体价格需要逐个项目协商。</span><span class="en">Surge's core services are generally sold through enterprise scoping, pilots, and negotiated contracts. It does not publish a universal “price per task” menu; contracts may be measured by task, dataset, or project volume, but pricing is negotiated for each engagement.</span></p>
+        <div class="flow">
+          <div class="step"><div><b class="t"><span class="zh">第一步：合同通常怎么签</span><span class="en">Step 1: how the contract is structured</span></b><p><span class="zh">企业通常先签保密协议和主服务协议（MSA），再通过 SOW 或 Order Form 约定本次项目：任务类型、数量、标注员资历、复核轮次、验收标准、数据安全和交付日期。正式放量前，也可能先做一个小规模 pilot，验证这批数据能否真正改善模型指标。</span><span class="en">Enterprises typically begin with confidentiality terms and an MSA, then use an SOW or order form to define task type, volume, annotator qualifications, review layers, acceptance standards, data security, and delivery dates. Before scaling, a small pilot may test whether the data materially improves model metrics.</span></p></div></div>
+          <div class="step"><div><b class="t"><span class="zh">第二步：什么决定价格</span><span class="en">Step 2: what determines the quote</span></b><p><span class="zh">核心变量包括领域难度、专家资历、单个任务耗时、是否要求写理由、多人重复标注、资深专家复核、安全隔离以及是否加急。普通语言偏好判断和需要执业医生参与的肿瘤诊疗评估，不可能采用同一个单价。</span><span class="en">Key variables include domain difficulty, expert credentials, time per task, written rationales, redundant labeling, senior review, secure isolation, and rush delivery. General-language preference ranking and oncology evaluation by licensed physicians cannot carry the same unit price.</span></p></div></div>
+        </div>
+        <h4><span class="zh">它的赚钱逻辑</span><span class="en">How the economics work</span></h4>
+        <div class="callout"><b><span class="zh">客户购买的是更可靠的高端数据结果，因此 Surge 可以收取质量溢价。</span><span class="en">Customers pay for more reliable premium data outcomes, allowing Surge to charge a quality premium.</span></b> <span class="zh">Surge 的毛利 = 客户支付的高端数据项目费 − 高水平标注员或专家报酬 − 筛选、质检和项目运营成本。它再用更高报酬吸引更好的人，形成「高价格 → 高报酬 → 高质量 → 更强定价权」的循环。</span><span class="en">Surge's gross margin equals premium project revenue minus high-skill annotator or expert pay, screening, QA, and operating costs. It then uses higher pay to attract better people, creating a flywheel of premium price, premium pay, higher quality, and stronger pricing power.</span></div>
+        <div class="callout"><b><span class="zh">关键区别：</span><span class="en">Key distinction:</span></b> <span class="zh"><b>按 task 计价</b>只是合同里的计量方式，<b>不等于公开标准价</b>。同样是 10 万个 preference tasks，任务难度和参与者资历不同，最终单价可能相差很大。</span><span class="en"><b>Per-task pricing</b> is only a contractual measurement method, <b>not a public list price</b>. The same 100,000 preference tasks can have very different unit prices depending on task difficulty and the qualifications of the people involved.</span></div>
+
+        <h3><span class="zh">业务价值与竞争壁垒</span><span class="en">Value and moats</span></h3>
+        <div class="moat">
+          <div class="m yes"><h4><span class="zh">✓ 真实的壁垒</span><span class="en">✓ Real moats</span></h4>
+            <li><span class="zh"><b>质量声誉</b>：前沿实验室的训练一次值几千万美元，没人敢为省标注费冒险。「用 Surge 不会错」本身就是定价权。</span><span class="en"><b>Quality reputation:</b> a frontier training run costs tens of millions — nobody risks it to save on labels. "Nobody gets fired for buying Surge" is pricing power.</span></li>
+            <li><span class="zh"><b>筛出来的网络</b>：多年积累的「谁在什么任务上判断准」的数据 + 一支经过实战验证的评委队伍，挖走个人容易，复制整个筛选体系难。</span><span class="en"><b>The curated network:</b> years of data on who judges what well, plus a battle-tested judge corps. Poaching individuals is easy; replicating the vetting system isn't.</span></li>
+            <li><span class="zh"><b>中立 + 无股东压力</b>：不站队任何实验室（Scale 的前车之鉴），自我造血也意味着不会被资本逼着降价换规模。</span><span class="en"><b>Neutral and beholden to no one:</b> aligned with no lab (Scale's cautionary tale), and self-funded — no investor pressure to chase volume with discounts.</span></li>
+          </div>
+          <div class="m no"><h4><span class="zh">✗ 风险敞口</span><span class="en">✗ Exposure</span></h4>
+            <li><span class="zh"><b>客户极度集中</b>：全球出得起高价的前沿实验室只有个位数，任何一家自建或流失都伤筋动骨。</span><span class="en"><b>Extreme customer concentration:</b> only a handful of labs worldwide can pay these prices; losing any one hurts badly.</span></li>
+            <li><span class="zh"><b>AI 反馈替代人类反馈</b>：RLAIF（用 AI 当评委，如 Anthropic 的 Constitutional AI）已经在替代大量常规偏好标注。人类只剩「最难判的题」。</span><span class="en"><b>AI feedback replacing human feedback:</b> RLAIF — using AI as the judge, pioneered in Anthropic's Constitutional AI — already replaces much routine preference work. Humans keep only the hardest calls.</span></li>
+            <li><span class="zh"><b>天花板悖论</b>：模型越强，够格给它「判卷」的人越少。Surge 的市场在变小的同时变贵——量减价升的赛跑。</span><span class="en"><b>The ceiling paradox:</b> the stronger the model, the fewer humans are qualified to grade it. Surge's market gets richer and smaller at once — a race between price and volume.</span></li>
+          </div>
+        </div>
+
+        <h4><span class="zh">如果上下游来抢生意？</span><span class="en">What if upstream or downstream players invade?</span></h4>
+        <div class="vsline"><div class="who"><span class="zh">实验室自建精英标注队</span><span class="en">Labs building elite teams</span></div><div><p><span class="zh">对 Surge 是最直接的威胁——精品模式恰恰是规模最小、最容易内化的。但实验室需求波动大（训练周期性），养一支常备精英队伍很贵；而且第三方评估天然需要独立性（自己给自己判卷没有公信力）。</span><span class="en">The most direct threat — the boutique model is exactly the piece small enough to internalize. But lab demand is spiky (training is cyclical), keeping an elite bench idle is expensive, and evaluation inherently needs independence — you can't credibly grade your own homework.</span></p></div></div>
+        <div class="vsline"><div class="who"><span class="zh">Scale/Mercor 上攻</span><span class="en">Scale/Mercor moving in</span></div><div><p><span class="zh">Scale 的 Outlier 和 Mercor 的专家网络都在做类似的高端反馈。Surge 的防线是质量口碑的时间壁垒——口碑要靠一次次训练结果积累，砸钱买不来。</span><span class="en">Scale's Outlier and Mercor's expert network both chase the same premium feedback work. Surge's defense is time: quality reputation compounds one training run at a time, and money can't buy it retroactively.</span></p></div></div>
+
+        <h3><span class="zh">未来推演</span><span class="en">Where it goes from here</span></h3>
+        <div class="grid3">
+          <div class="card tinted"><h4><span class="zh">基本盘剧本</span><span class="en">Base case</span></h4><p><span class="zh">跟着能力前沿往上走：从偏好标注转向智能体评估、红队、RL 环境设计——永远做「当前模型恰好做不了」的那一层。首轮融资的 $1B 弹药用于扩张和收购。</span><span class="en">Climb with the frontier: shift from preference labels to agent evaluation, red-teaming, and RL environment design — always selling the layer just beyond current model ability. The ~$1B first round funds expansion and M&A.</span></p></div>
+          <div class="card tinted"><h4><span class="zh">乐观剧本</span><span class="en">Bull case</span></h4><p><span class="zh">成为 AI 界的「独立审计所」：模型能力、安全性的第三方认证机构。监管越严，独立评估越是刚需，这个角色反而在 AI 超越人类后更重要。</span><span class="en">Becomes AI's independent audit firm — third-party certification of capability and safety. The more regulation, the more indispensable independent evaluation becomes; this role grows even after AI surpasses humans.</span></p></div>
+          <div class="card tinted"><h4><span class="zh">悲观剧本</span><span class="en">Bear case</span></h4><p><span class="zh">RLAIF 吃掉大部分常规需求，实验室内化最关键的部分，Surge 被压缩在一个高价但很小的缝隙里——收入见顶回落，$30B 估值难以为继。</span><span class="en">RLAIF eats the routine work, labs internalize the critical work, and Surge is squeezed into a lucrative but tiny niche — revenue peaks, and the $30B valuation doesn't hold.</span></p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SECTION 4: MERCOR ============ -->
+<section id="mercor">
+  <div class="wrap">
+    <div class="secnum"><b>4</b><h2>Mercor</h2></div>
+    <div class="co">
+      <div class="co-head">
+        <h2><span class="zh">人才市场：不雇人干活，只做「人和需求」的匹配引擎</span><span class="en">The Marketplace: it doesn't do the work — it matches the people</span></h2>
+        <div class="tagline"><span class="zh">2023 年创立 · 三位创始人融资时年仅 22 岁（高中辩论队友，Thiel Fellows）· 史上增长最快的公司之一</span><span class="en">Founded 2023 · three 22-year-old founders (high-school debate teammates, Thiel Fellows) · among the fastest-growing companies ever</span></div>
+        <div class="snap">
+          <div class="s"><span class="zh">估值</span><span class="en">Valuation</span><b>$10B</b><span class="zh">2025.10 C 轮 $350M（Felicis 领投）</span><span class="en">$350M Series C, Oct 2025 (Felicis)</span></div>
+          <div class="s"><span class="zh">收入年化</span><span class="en">Run rate</span><b>$1.5B</b><span class="zh">2026.5（2025 底为 $760M）</span><span class="en">May 2026 (vs $760M at end of 2025)</span></div>
+          <div class="s"><span class="zh">专家网络</span><span class="en">Expert network</span><b>30,000+</b><span class="zh">平均时薪 $85+</span><span class="en">averaging $85+/hour</span></div>
+          <div class="s"><span class="zh">日付出</span><span class="en">Daily payouts</span><b>$2M+</b><span class="zh">每天付给专家的报酬</span><span class="en">paid to experts every day</span></div>
+        </div>
+      </div>
+      <div class="co-body">
+
+        <h3><span class="zh">它做什么：把「招专家」这件事自动化</span><span class="en">What it does: automating expert hiring itself</span></h3>
+        <p class="small"><span class="zh">Scale 和 Surge 的传统模式是「接下整个数据项目、再组织人完成」；Mercor 的基础模式更像双边人才市场——左边是想参与项目的医生、律师、博士、资深工程师，右边是需要他们的 AI 实验室，中间是一套 AI 驱动的筛选、匹配、合同和结算引擎。随着它向 RL 环境和整包交付上移，边界正在变得更模糊，但理解其核心仍要从下面三步开始：</span><span class="en">Scale and Surge traditionally take ownership of the data project and then organize the labor. Mercor's base model is closer to a two-sided talent marketplace—doctors, lawyers, PhDs, and senior engineers on one side; AI labs that need them on the other; and an AI-driven screening, matching, contracting, and payments engine in between. Its move into RL environments and full-project delivery is blurring that boundary, but the core still starts with these three steps:</span></p>
+        <div class="flow">
+          <div class="step"><div><b class="t"><span class="zh">专家入库：AI 面试官打分</span><span class="en">Onboarding: an AI interviewer does the vetting</span></b><p><span class="zh">申请人上传简历，再和 AI 面试官完成一场约 20 分钟的视频面试。模型从简历、对话内容、表达质量中给出多维评分。人类招聘官一天面 8 个人，Mercor 的系统一天能面几万人——这是它能规模化的根本。</span><span class="en">Applicants upload a résumé and complete a ~20-minute video interview with an AI interviewer, which scores them across dimensions from credentials, content, and communication. A human recruiter interviews eight people a day; Mercor's system can interview tens of thousands — that's the scalability unlock.</span></p></div></div>
+          <div class="step"><div><b class="t"><span class="zh">算法匹配：需求 → 人，几天而不是几个月</span><span class="en">Matching: demand → people in days, not months</span></b><p><span class="zh">实验室提需求：「50 名执业医师，评估模型的诊疗建议」「200 名资深码农，为编程智能体出题」。匹配模型从 3 万+ 专家库里挑人、发offer、管合同和发薪——传统招聘要几个月，Mercor 是几天。</span><span class="en">A lab posts: "50 licensed physicians to evaluate clinical advice," or "200 senior engineers to write problems for a coding agent." The matching model selects from 30,000+ experts, extends offers, and handles contracts and payroll — days instead of the months traditional hiring takes.</span></p></div></div>
+          <div class="step"><div><b class="t"><span class="zh">按小时加价：Cost-plus 模式</span><span class="en">Monetization: hourly cost-plus pricing</span></b><p><span class="zh">Mercor 会结合客户预算、岗位稀缺度、市场薪酬和候选人评估结果，确定专家的固定时薪 offer；再在这个人力成本之上向客户收取平台服务加价。客户不直接向专家喊价，专家也不是自由竞价。差额构成 Mercor 的收入，具体加价比例并未公开，外界数字只能作为估算。</span><span class="en">Mercor uses the client's budget, role scarcity, market pay, and candidate evaluation results to set a fixed hourly offer for the expert, then bills the client a higher rate that includes its service markup. The client does not directly bid to the expert, and experts do not freely auction their rates. The spread is Mercor's revenue; the exact markup is not publicly disclosed, so outside figures are estimates only.</span></p></div></div>
+        </div>
+
+        <div class="callout"><b><span class="zh">为什么这个模式恰好踩中现在？</span><span class="en">Why this model, why now?</span></b> <span class="zh">模型能力已超过普通标注员——2016 年训练 AI 需要「会画框的人」，2026 年需要「能考住模型的人」。而医生、律师不会去众包平台抢单，他们要的是体面的报酬和正规的合作方式——所以「专家数据」的瓶颈其实是<b>招聘</b>，而 Mercor 卖的就是招聘。</span><span class="en">Model ability has passed the average annotator: in 2016, training AI needed people who could draw boxes; in 2026, it needs people who can stump the model. And doctors and lawyers don't hunt gigs on crowdsourcing platforms — they expect professional pay and terms. So the real bottleneck in expert data is <b>recruiting</b> — and recruiting is exactly what Mercor sells.</span></div>
+
+        <details><summary><span class="zh">深入一层：数据飞轮，以及为什么它其实是家「招聘科技」公司</span><span class="en">Going deeper: the data flywheel — and why it's really a hiring-tech company</span></summary>
+          <div class="dbody">
+            <p><b><span class="zh">飞轮：</span><span class="en">The flywheel:</span></b> <span class="zh">每场 AI 面试、每小时工作的实际表现（客户满意度、任务通过率）都回流进匹配模型，形成一个自我强化的循环——双边网络效应叠加数据壁垒：</span><span class="en">Every AI interview and every hour of on-the-job performance (client satisfaction, task pass rates) feeds back into the matching model, creating a self-reinforcing loop — two-sided network effects compounded by a data moat:</span></p>
+            <svg viewBox="0 0 640 372" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:660px;display:block;margin:10px auto 6px;font-family:inherit">
+              <defs>
+                <marker id="arw" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                  <path d="M0,0 L10,5 L0,10 z" fill="#4472C4"/>
+                </marker>
+              </defs>
+              <circle cx="320" cy="186" r="118" fill="none" stroke="#DCE6F7" stroke-width="2" stroke-dasharray="3 6"/>
+              <path d="M375,82 A118,118 0 0 1 424,131" fill="none" stroke="#4472C4" stroke-width="2.5" marker-end="url(#arw)"/>
+              <path d="M424,241 A118,118 0 0 1 375,290" fill="none" stroke="#4472C4" stroke-width="2.5" marker-end="url(#arw)"/>
+              <path d="M265,290 A118,118 0 0 1 216,241" fill="none" stroke="#4472C4" stroke-width="2.5" marker-end="url(#arw)"/>
+              <path d="M216,131 A118,118 0 0 1 265,82" fill="none" stroke="#4472C4" stroke-width="2.5" marker-end="url(#arw)"/>
+              <!-- center -->
+              <text x="320" y="181" text-anchor="middle" font-size="16" font-weight="800" fill="#1e3a6e" class="zh">数据飞轮</text>
+              <text x="320" y="181" text-anchor="middle" font-size="15" font-weight="800" fill="#1e3a6e" class="en">The data flywheel</text>
+              <text x="320" y="202" text-anchor="middle" font-size="11.5" fill="#4a5a75" class="zh">越转越快，越晚入场越难追</text>
+              <text x="320" y="202" text-anchor="middle" font-size="11.5" fill="#4a5a75" class="en">every turn widens the lead</text>
+              <!-- top node -->
+              <rect x="228" y="6" width="184" height="58" rx="12" fill="#EDF2FB" stroke="#4472C4" stroke-width="1.5"/>
+              <text x="320" y="30" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1e3a6e" class="zh">更多面试 · 更多工时</text>
+              <text x="320" y="30" text-anchor="middle" font-size="13" font-weight="700" fill="#1e3a6e" class="en">More interviews &amp; hours</text>
+              <text x="320" y="50" text-anchor="middle" font-size="11" fill="#4a5a75" class="zh">每天 $200 万+ 报酬流过平台</text>
+              <text x="320" y="50" text-anchor="middle" font-size="11" fill="#4a5a75" class="en">$2M+ flows through daily</text>
+              <!-- right node -->
+              <rect x="450" y="157" width="184" height="58" rx="12" fill="#fff" stroke="#4472C4" stroke-width="1.5"/>
+              <text x="542" y="181" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1e3a6e" class="zh">绩效数据更厚</text>
+              <text x="542" y="181" text-anchor="middle" font-size="13" font-weight="700" fill="#1e3a6e" class="en">Richer outcome data</text>
+              <text x="542" y="201" text-anchor="middle" font-size="11" fill="#4a5a75" class="zh">谁在什么任务上真的干得好</text>
+              <text x="542" y="201" text-anchor="middle" font-size="11" fill="#4a5a75" class="en">who truly excels at what</text>
+              <!-- bottom node -->
+              <rect x="228" y="308" width="184" height="58" rx="12" fill="#EDF2FB" stroke="#4472C4" stroke-width="1.5"/>
+              <text x="320" y="332" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1e3a6e" class="zh">匹配模型更准</text>
+              <text x="320" y="332" text-anchor="middle" font-size="13" font-weight="700" fill="#1e3a6e" class="en">Sharper matching</text>
+              <text x="320" y="352" text-anchor="middle" font-size="11" fill="#4a5a75" class="zh">交付更快 · 人选命中率更高</text>
+              <text x="320" y="352" text-anchor="middle" font-size="11" fill="#4a5a75" class="en">faster, better-fit placements</text>
+              <!-- left node -->
+              <rect x="6" y="157" width="184" height="58" rx="12" fill="#fff" stroke="#4472C4" stroke-width="1.5"/>
+              <text x="98" y="181" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1e3a6e" class="zh">两边用户更多</text>
+              <text x="98" y="181" text-anchor="middle" font-size="13" font-weight="700" fill="#1e3a6e" class="en">More experts, more labs</text>
+              <text x="98" y="201" text-anchor="middle" font-size="11" fill="#4a5a75" class="zh">专家愿意来 · 实验室离不开</text>
+              <text x="98" y="201" text-anchor="middle" font-size="11" fill="#4a5a75" class="en">two-sided network effects</text>
+            </svg>
+            <div class="chips" style="justify-content:center">
+              <span class="chip" style="background:#f3f5f9;border-color:#d8dee9;color:#4a5a75">LinkedIn：<span class="zh">简历 = 自述</span><span class="en">résumés = self-reported</span></span>
+              <span class="chip g">Mercor：<span class="zh">绩效 = 实证</span><span class="en">performance = measured</span></span>
+            </div>
+            <p><b><span class="zh">向价值链上移：</span><span class="en">Moving up the stack:</span></b> <span class="zh">2026 年 2 月收购 Sepal AI，补上「RL 环境 + 评测基准」设计能力——从「介绍专家」升级为「带着专家交付整个数据项目」，直接切入 Scale/Surge 的地盘。（Anthropic 高层被报道讨论过 2026 年在 RL 环境上花 $1B+，这块蛋糕在急速变大。）</span><span class="en">In February 2026, Mercor acquired Sepal AI, adding RL-environment and benchmark design — upgrading from "introducing experts" to "delivering full data projects with those experts," a direct push into Scale and Surge territory. (Anthropic leadership has reportedly discussed spending $1B+ on RL environments in 2026 — this pie is growing fast.)</span></p>
+            <p><b><span class="zh">真正的野心：</span><span class="en">The real ambition:</span></b> <span class="zh">创始人反复强调 Mercor 不是数据公司，而是「AI 经济的劳动力市场」。今天 AI 实验室是最大买家，明天任何公司雇专家都可以用这套引擎。「给 AI 训练供人」只是这个大故事的第一章——也是 VC 给 $10B 估值的真正原因。</span><span class="en">The founders insist Mercor isn't a data company but "the labor market for the AI economy." AI labs are today's biggest buyer; tomorrow, any company hiring experts could use the same engine. Supplying AI training is chapter one of that story — and the real reason VCs paid a $10B valuation.</span></p>
+          </div>
+        </details>
+
+        <h3><span class="zh">怎么收费：专家时薪 + 平台服务加价</span><span class="en">How it charges: expert hourly pay plus a platform markup</span></h3>
+        <p class="small"><span class="zh">Mercor 的核心不是向客户出售一批已经完成的数据，而是向客户提供「经过筛选、可以立即开工的专家工时」。因此必须把三种角色和两个价格分开：客户是有用工/数据需求的企业，Mercor 是服务供应商，医生、律师、工程师等是独立专家。</span><span class="en">Mercor's core product is not a finished dataset but screened expert capacity that can begin work quickly. That means separating three roles and two prices: the client is the company with labor or data needs, Mercor is the service vendor, and doctors, lawyers, engineers, and other professionals are independent experts.</span></p>
+        <table class="mercor-pricing-table">
+          <tr><th><span class="zh">角色</span><span class="en">Role</span></th><th><span class="zh">负责什么</span><span class="en">What they control</span></th><th><span class="zh">价格关系</span><span class="en">Pricing relationship</span></th></tr>
+          <tr><td><b><span class="zh">客户企业</span><span class="en">Client company</span></b></td><td><span class="zh">提出需要什么人才、资历、人数、工时和期限，并与 Mercor 协商预算和客户账单价。</span><span class="en">Defines the talent profile, credentials, headcount, hours, and timeline, then negotiates the budget and client bill rate with Mercor.</span></td><td><span class="zh">影响专家薪酬上限，但通常不直接向每位专家出价。</span><span class="en">Shapes the compensation ceiling but usually does not bid directly to each expert.</span></td></tr>
+          <tr><td><b>Mercor</b></td><td><span class="zh">根据市场水平、项目难度和候选人评分设计 pay band，向专家发出写明固定时薪的 offer，并处理合同、工时、合规和发薪。</span><span class="en">Uses market rates, project complexity, and candidate scores to design a pay band, issues a fixed hourly offer, and handles contracts, time tracking, compliance, and payments.</span></td><td><span class="zh">决定专家看到的具体 offer，并在其上加入平台服务加价。</span><span class="en">Sets the specific offer shown to the expert and adds a platform service markup on top.</span></td></tr>
+          <tr><td><b><span class="zh">独立专家</span><span class="en">Independent expert</span></b></td><td><span class="zh">接受或拒绝 offer，按约定时薪和工时完成客户规定的任务。</span><span class="en">Accepts or declines the offer and performs the client's work at the stated hourly rate and approved hours.</span></td><td><span class="zh">通常不是在平台上自由喊价或竞价；项目开始后按 offer 结算。</span><span class="en">Typically does not freely quote or auction a rate; payment follows the accepted offer.</span></td></tr>
+        </table>
+        <div class="callout"><b><span class="zh">两层价格：</span><span class="en">Two price layers:</span></b> <span class="zh"><b>客户账单价 = 专家到手时薪 + Mercor 服务加价</b>。例如专家 offer 为 $100/时，客户可能支付更高的 hourly bill rate；差额要覆盖招募、筛选、替换、合同、税务、支付和平台运营，并形成 Mercor 的毛利。具体比例可能因客户和项目而异，并无公开统一数字。</span><span class="en"><b>Client bill rate = expert take-home hourly pay + Mercor's service markup.</b> If an expert's offer is $100/hour, the client may pay a higher hourly bill rate; the spread covers recruiting, screening, replacement, contracting, tax, payments, and platform operations, and contributes to Mercor's gross margin. The percentage may vary by client and project, and no universal public rate is available.</span></div>
+        <div class="grid2">
+          <div class="card tinted"><h4><span class="zh">谁决定专家时薪？</span><span class="en">Who sets expert pay?</span></h4><p><span class="zh">不是客户单方面决定，也不是专家随意报价。客户预算和岗位要求给出经济边界，Mercor 再结合市场薪酬、供需稀缺度和候选人评估，确定 pay band 和最终 offer。</span><span class="en">Neither the client nor the expert decides unilaterally. The client's budget and role requirements establish the economic boundary; Mercor then uses market compensation, supply scarcity, and candidate evaluation to set the pay band and final offer.</span></p></div>
+          <div class="card tinted"><h4><span class="zh">客户到底买什么？</span><span class="en">What is the client buying?</span></h4><p><span class="zh">客户买的是可弹性扩缩的专家团队，以及 Mercor 提供的招聘、验证、合同、合规、工时管理和结算服务。专家往往直接在客户自己的工作或标注平台中生产数据。</span><span class="en">The client buys an elastic expert workforce plus Mercor's recruiting, verification, contracting, compliance, time-management, and payment infrastructure. Experts often produce the data directly inside the client's own work or annotation platform.</span></p></div>
+        </div>
+
+        <h3><span class="zh">业务价值与竞争壁垒</span><span class="en">Value and moats</span></h3>
+        <div class="moat">
+          <div class="m yes"><h4><span class="zh">✓ 真实的壁垒</span><span class="en">✓ Real moats</span></h4>
+            <li><span class="zh"><b>双边网络效应</b>：专家越多，实验室越离不开；单越多，专家越留下。先发者的规模自我强化。</span><span class="en"><b>Two-sided network effects:</b> more experts make labs stickier; more work keeps experts around. The leader's scale is self-reinforcing.</span></li>
+            <li><span class="zh"><b>独有的绩效数据</b>：面试 + 真实工作表现的闭环数据，任何简历库都没有，且随时间越滚越厚。</span><span class="en"><b>Proprietary outcome data:</b> the interview-plus-performance loop produces data no résumé bank has, compounding over time.</span></li>
+            <li><span class="zh"><b>速度即产品</b>：几天交付 50 名医生 vs 传统渠道几个月——在按周迭代的 AI 竞赛里，快就是刚需。</span><span class="en"><b>Speed as the product:</b> 50 physicians in days versus months through traditional channels — in a race where labs iterate weekly, speed is non-negotiable.</span></li>
+          </div>
+          <div class="m no"><h4><span class="zh">✗ 风险敞口</span><span class="en">✗ Exposure</span></h4>
+            <li><span class="zh"><b>被绕开（去中介化）</b>：实验室认识了好专家，为什么不直接签？Mercor 赌的是实验室要的是弹性用工而非编制，且合同/合规/发薪的麻烦值那笔抽成。</span><span class="en"><b>Disintermediation:</b> once a lab meets a great expert, why not contract directly? Mercor's bet: labs want elastic labor rather than headcount, and the contracting/compliance/payroll hassle is worth the rake.</span></li>
+            <li><span class="zh"><b>收入极度依赖 AI 训练热潮</b>：客户集中在头部实验室；若训练支出降温或范式转向（模型自我博弈、合成数据），$1.5B 年化可能快上快下。</span><span class="en"><b>Hostage to the training boom:</b> revenue concentrates in a few labs; if training budgets cool or the paradigm shifts (self-play, synthetic data), a $1.5B run rate can fall as fast as it rose.</span></li>
+            <li><span class="zh"><b>模式最容易被模仿</b>：匹配算法可以复制，专家可以多平台注册。真正难复制的只有绩效数据的积累时间。</span><span class="en"><b>The most copyable model of the three:</b> matching algorithms can be rebuilt and experts can join rival platforms. The only hard part to copy is the accumulated outcome data.</span></li>
+          </div>
+        </div>
+
+        <h4><span class="zh">如果上下游来抢生意？</span><span class="en">What if upstream or downstream players invade?</span></h4>
+        <div class="vsline"><div class="who"><span class="zh">实验室直招</span><span class="en">Labs hiring directly</span></div><div><p><span class="zh">最现实的威胁。制衡因素：需求是脉冲式的（这个月要 500 个医生，下个月要 300 个律师），自建招聘团队养不起这种波动；而且 Mercor 一天付 $2M 的规模已形成专家侧的品牌聚集。</span><span class="en">The most realistic threat. The counterweight: demand comes in pulses (500 doctors this month, 300 lawyers next), which an internal recruiting team can't staff for — and paying out $2M a day has already made Mercor the default destination on the expert side.</span></p></div></div>
+        <div class="vsline"><div class="who">LinkedIn / Upwork</div><div><p><span class="zh">有海量用户，但只有「自述简历」，没有「实测绩效」；而且大平台动作慢、不懂 AI 实验室的交付标准。短期威胁有限，长期若微软（LinkedIn 母公司）认真下场则不可小觑。</span><span class="en">Massive user bases, but only self-reported résumés — no measured performance. Big platforms also move slowly and don't speak AI-lab delivery standards. A limited threat near-term; a serious one if Microsoft (LinkedIn's owner) ever commits.</span></p></div></div>
+        <div class="vsline"><div class="who"><span class="zh">Scale / Surge 下探</span><span class="en">Scale/Surge countering</span></div><div><p><span class="zh">Scale 的 Outlier 本质上就是自营版专家网络，Surge 也在扩专家池。区别在于它们是「自营雇佣」，Mercor 是「开放市场」——历史上开放市场模式在规模上通常跑赢自营（参考电商），但质量管控更难。</span><span class="en">Scale's Outlier is essentially a first-party expert network, and Surge keeps deepening its pool. The difference: they employ, Mercor intermediates. Open marketplaces historically out-scale first-party operations (see e-commerce) — but quality control is harder.</span></p></div></div>
+
+        <h3><span class="zh">追问：Agent 时代，Mercor 的机会比另外两家更大吗？</span><span class="en">A closer look: in the agent era, does Mercor have the biggest upside?</span></h3>
+        <p class="small"><span class="zh">一个常见判断：模型基础能力已经训到一定程度，下一战场是 AI Agent——而复杂任务恰恰最需要各领域专家，所以 Mercor 赢面最大。这个判断一半对，一半要打折：</span><span class="en">A popular thesis: base models are largely trained, the next battleground is AI agents — and complex tasks are exactly where domain experts matter most, so Mercor wins biggest. Half right, half in need of a discount:</span></p>
+        <div class="grid2">
+          <div class="card" style="border-left:4px solid var(--good)"><h4 style="color:var(--good)"><span class="zh">✓ 成立的部分：Agent 需求确实撞上 Mercor 的强项</span><span class="en">✓ What holds: agent demand hits Mercor's sweet spot</span></h4><p><span class="zh">Agent 要学的是「完成整件工作」，这产生三类只有专家能干的活：<b>设计任务</b>（什么才算真实的法律尽调流程）、<b>示范轨迹</b>（专家亲手做一遍给模型学）、<b>判定结果</b>（这份产出在行业里算合格吗）。这些人不在众包平台上，而「快速成规模找到他们」正是 Mercor 的引擎。$450M→$1.5B 的年化增长就是这个逻辑的验证。</span><span class="en">Agents must learn to complete whole jobs, which creates three tasks only experts can do: <b>designing tasks</b> (what does real legal due diligence look like?), <b>demonstrating trajectories</b> (an expert does the job once for the model to learn from), and <b>judging outcomes</b> (would this pass in the profession?). Those people aren't on crowdsourcing platforms — and finding them fast, at scale, is exactly Mercor's engine. The $450M→$1.5B run-rate jump is this thesis playing out.</span></p></div>
+          <div class="card" style="border-left:4px solid var(--warn)"><h4 style="color:var(--warn)"><span class="zh">✗ 要打折的部分：三个反作用力</span><span class="en">✗ The discounts: three counterforces</span></h4><p><span class="zh">① Agent 训练的另一半瓶颈是 <b>RL 环境本身</b>——搭模拟浏览器、代码库、ERP 系统是软件工程活，不是专家供给活（Mercor 收购 Sepal 正是在补这块；而环境和评分标准设计一体，这是 Surge 的看家领域）。② <b>有专家 ≠ 交付可用数据</b>，中间隔着质检、校准、与训练管线对接——Surge 的整个体系建在这层，Mercor 的市场模式天然更松。③ 凡是<b>结果能自动验证</b>的任务（代码跑不跑得通），恰恰不需要人判卷；专家只在难验证领域（医疗、法律、开放式研究）不可替代——这个域比想象的窄。</span><span class="en">① The other half of the agent bottleneck is the <b>RL environment itself</b> — building simulated browsers, codebases, and ERP systems is software engineering, not expert supply (the Sepal acquisition patches exactly this; and environment design is inseparable from rubric design, Surge's home turf). ② <b>Having experts ≠ delivering usable data</b> — QA, calibration, and pipeline integration sit in between, the layer Surge's whole system is built on, where a marketplace is inherently looser. ③ Any task whose <b>outcome can be verified automatically</b> (does the code pass?) needs no human grader; experts stay irreplaceable only where verification is hard — medicine, law, open-ended research — a narrower domain than it looks.</span></p></div>
+        </div>
+        <div class="callout"><b><span class="zh">结论：</span><span class="en">Verdict:</span></b> <span class="zh">Agent 时代的最大增量流向「<b>专家 × 环境</b>」的组合。Mercor 从专家侧往上爬、正在买入环境能力；Surge 从质量/评估侧往上爬、正在扩专家池——两家从两头爬同一座山，Mercor 斜率更陡，但谈不上「机会明显更多」。真正在这个战场掉队的是 Scale：众包基因两头都不占优，所以才转向政府与企业应用。</span><span class="en">The agent era's biggest prize goes to whoever combines <b>experts × environments</b>. Mercor is climbing from the expert side and buying environment capability; Surge is climbing from the quality/evaluation side and deepening its expert pool — two routes up the same mountain. Mercor's slope is steeper, but not decisively so. The one actually falling behind on this battlefield is Scale: its crowdsourcing DNA wins on neither front — which is precisely why it pivoted to government and enterprise.</span></div>
+
+        <h3><span class="zh">未来推演</span><span class="en">Where it goes from here</span></h3>
+        <div class="grid3">
+          <div class="card tinted"><h4><span class="zh">基本盘剧本</span><span class="en">Base case</span></h4><p><span class="zh">继续做 AI 实验室的「专家人力云」，借 Sepal 向 RL 环境等交付型业务延伸，收入随实验室训练预算同步扩张。</span><span class="en">Remains the labs' expert-labor cloud, extends into RL-environment delivery via Sepal, and grows in lockstep with lab training budgets.</span></p></div>
+          <div class="card tinted"><h4><span class="zh">乐观剧本</span><span class="en">Bull case</span></h4><p><span class="zh">「AI 面试 + 绩效数据」成为通用招聘基础设施，客户从 AI 实验室扩展到所有企业——对标的不再是 Scale，而是 LinkedIn。这是 $10B 估值想讲的故事。</span><span class="en">AI interviews plus outcome data become general hiring infrastructure; the customer base expands from AI labs to all employers — the comp stops being Scale and becomes LinkedIn. That's the story behind the $10B.</span></p></div>
+          <div class="card tinted"><h4><span class="zh">悲观剧本</span><span class="en">Bear case</span></h4><p><span class="zh">训练需求见顶 + 大客户直签绕开平台，增长神话反转；通用招聘市场迟迟打不开，夹在数据公司和招聘巨头之间两头不靠。</span><span class="en">Training demand peaks and big clients go direct; the growth story reverses. The general-hiring expansion stalls, leaving Mercor stranded between data companies and recruiting giants.</span></p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SECTION 5: COMPARE ============ -->
+<section id="compare">
+  <div class="wrap">
+    <div class="secnum"><b>5</b><h2><span class="zh">三家对照：同一门生意的三种解法</span><span class="en">Side by side: three answers to the same problem</span></h2></div>
+    <p class="sub"><span class="zh">一个记忆锚点：<b>Scale 是工厂</b>（靠流程和工具），<b>Surge 是精品作坊</b>（靠筛选和品质），<b>Mercor 是人才市场</b>（靠匹配和网络）。</span><span class="en">A mental anchor: <b>Scale is the factory</b> (process and tooling), <b>Surge is the boutique</b> (curation and quality), <b>Mercor is the marketplace</b> (matching and network).</span></p>
+
+    <h3><span class="zh">相同之处</span><span class="en">What they share</span></h3>
+    <div class="chips">
+      <span class="chip"><span class="zh">卖的都是「组织化的人类智慧」</span><span class="en">All sell organized human intelligence</span></span>
+      <span class="chip"><span class="zh">收入都集中在少数前沿实验室</span><span class="en">Revenue concentrated in a few frontier labs</span></span>
+      <span class="chip"><span class="zh">都在沿「标注→专家→RL 环境」上移</span><span class="en">All climbing: labels → experts → RL environments</span></span>
+      <span class="chip"><span class="zh">干活的人都是合同工而非员工</span><span class="en">The workforce is contractors, not employees</span></span>
+      <span class="chip r"><span class="zh">共同天敌：合成数据 + 实验室自建</span><span class="en">Shared threats: synthetic data + lab in-housing</span></span>
+    </div>
+
+    <h3><span class="zh">关键区别</span><span class="en">What separates them</span></h3>
+    <table>
+      <tr><th></th><th>Scale AI</th><th>Surge AI</th><th>Mercor</th></tr>
+      <tr><td><b><span class="zh">一句话定位</span><span class="en">In a phrase</span></b></td>
+        <td><span class="zh">全托管数据工厂</span><span class="en">Full-service data factory</span></td>
+        <td><span class="zh">高端人类反馈精品店</span><span class="en">Premium human-feedback boutique</span></td>
+        <td><span class="zh">专家人才市场</span><span class="en">Expert-labor marketplace</span></td></tr>
+      <tr><td><b><span class="zh">核心能力</span><span class="en">Core competence</span></b></td>
+        <td><span class="zh">流程 + 预标注工具 + 大规模运营</span><span class="en">Process + pre-labeling tools + ops at scale</span></td>
+        <td><span class="zh">筛选体系 + 质量口碑</span><span class="en">Vetting system + quality reputation</span></td>
+        <td><span class="zh">AI 面试 + 匹配算法 + 绩效数据</span><span class="en">AI interviews + matching + outcome data</span></td></tr>
+      <tr><td><b><span class="zh">谁在干活</span><span class="en">Who does the work</span></b></td>
+        <td><span class="zh">全球众包（Remotasks）+ 高技能兼职（Outlier）</span><span class="en">Global crowd (Remotasks) + skilled gig workers (Outlier)</span></td>
+        <td><span class="zh">严格筛选的精英标注员</span><span class="en">A hand-picked elite corps</span></td>
+        <td><span class="zh">3 万+ 持证专家（医生/律师/工程师）</span><span class="en">30k+ credentialed pros (MDs, JDs, engineers)</span></td></tr>
+      <tr><td><b><span class="zh">怎么收钱</span><span class="en">How they charge</span></b></td>
+        <td><span class="zh">小型用量可自助计费；企业按 task / 数据集 / 项目议价；另有政府合同</span><span class="en">Self-serve usage for smaller needs; negotiated task/dataset/project pricing for enterprises; plus government contracts</span></td>
+        <td><span class="zh">几乎全部企业议价；按 task、数据包或项目规模计量，并收取质量溢价</span><span class="en">Predominantly negotiated enterprise deals, measured by task, dataset, or project scope with a quality premium</span></td>
+        <td><span class="zh">Cost-plus 专家工时：客户账单价 = 专家时薪 + 平台服务加价（比例未公开）</span><span class="en">Cost-plus expert hours: client bill rate = expert pay + platform markup (rate undisclosed)</span></td></tr>
+      <tr><td><b><span class="zh">资本路径</span><span class="en">Capital path</span></b></td>
+        <td><span class="zh">重度融资 → Meta 半收购</span><span class="en">Heavy VC → Meta semi-acquisition</span></td>
+        <td><span class="zh">零融资自举 → 首轮即 ~$30B</span><span class="en">Bootstrapped → first round at ~$30B</span></td>
+        <td><span class="zh">经典 VC 路线（A→B→C，$10B）</span><span class="en">Classic VC ladder (A→B→C, $10B)</span></td></tr>
+      <tr><td><b><span class="zh">最新估值 / 收入</span><span class="en">Valuation / revenue</span></b></td>
+        <td><b>$29B</b> / <span class="zh">~$1B（2025）</span><span class="en">~$1B (2025)</span></td>
+        <td><b>~$30B</b> / <span class="zh">$1.2B（2024）</span><span class="en">$1.2B (2024)</span></td>
+        <td><b>$10B</b> / <span class="zh">$1.5B 年化（2026.5）</span><span class="en">$1.5B run rate (May '26)</span></td></tr>
+      <tr><td><b><span class="zh">最怕的事</span><span class="en">Worst nightmare</span></b></td>
+        <td><span class="zh">低端标注被机器与对手两头蚕食</span><span class="en">Commodity labeling eaten from both ends</span></td>
+        <td><span class="zh">AI 评委（RLAIF）替代人类评委</span><span class="en">AI judges (RLAIF) replacing human judges</span></td>
+        <td><span class="zh">客户绕开平台直接签专家</span><span class="en">Clients cutting out the middleman</span></td></tr>
+      <tr><td><b><span class="zh">正在讲的新故事</span><span class="en">The next story</span></b></td>
+        <td><span class="zh">国防 AI + 企业应用</span><span class="en">Defense AI + enterprise apps</span></td>
+        <td><span class="zh">模型评估/审计权威</span><span class="en">The authority on model evaluation</span></td>
+        <td><span class="zh">AI 经济的通用招聘基础设施</span><span class="en">Hiring infrastructure for the AI economy</span></td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- ============ SECTION 6: FUTURE ============ -->
+<section id="future">
+  <div class="wrap">
+    <div class="secnum"><b>6</b><h2><span class="zh">行业未来：这门生意能做多久？</span><span class="en">The big question: how long does this business last?</span></h2></div>
+    <p class="sub"><span class="zh">数据层的宿命问题：它靠「模型还不如人」赚钱，而客户的目标正是「让模型超过人」。四个趋势决定三家公司的命运——</span><span class="en">The data layer's existential riddle: it profits from models being worse than humans, while its customers' explicit goal is to make models better than humans. Four forces will decide how this plays out —</span></p>
+
+    <div class="grid2">
+      <div class="card"><h4><span class="zh">① 需求在升级，不是在消失</span><span class="en">① Demand is upgrading, not vanishing</span></h4><p><span class="zh">低端标注（画框、简单判断）正被合成数据和 AI 评委吞噬；但专家数据、模型评估、RL 环境的单价和总量都在暴涨。市场的形状从「金字塔」变成「尖塔」：量变少，价变高。受益排序：Mercor/Surge ＞ Scale。</span><span class="en">Low-end labeling (boxes, simple judgments) is being swallowed by synthetic data and AI judges; but expert data, evaluation, and RL environments are exploding in both price and volume. The market is going from pyramid to spire — fewer units, far higher value. Beneficiary order: Mercor and Surge over Scale.</span></p></div>
+      <div class="card"><h4><span class="zh">② RL 环境是新战场</span><span class="en">② RL environments are the new battleground</span></h4><p><span class="zh">训练能「干活」的智能体，需要成千上万个仿真工作场景（模拟的浏览器、代码库、财务系统）供模型试错。据报道 Anthropic 曾讨论 2026 年在此投入超 $10 亿。这类业务更像软件工程而非标注——重塑了三家的能力要求，也吸引了新一批创业者入场。</span><span class="en">Training agents that can do real jobs requires thousands of simulated workplaces — browsers, codebases, finance systems — for trial and error. Anthropic reportedly discussed spending over $1B on these in 2026. The work looks more like software engineering than annotation — resetting which capabilities matter and inviting a wave of new entrants.</span></p></div>
+      <div class="card"><h4><span class="zh">③ 中立是行业的隐形宪法</span><span class="en">③ Neutrality is the industry's invisible constitution</span></h4><p><span class="zh">Scale-Meta 事件证明：谁被单一实验室「绑定」，谁就失去其他所有实验室。这条规则保护独立的 Surge 和 Mercor，也解释了为什么实验室宁愿同时养多家供应商——它们需要一个中立的数据层存在。</span><span class="en">The Scale–Meta episode proved it: bind yourself to one lab and you lose all the others. This rule shields the independent Surge and Mercor — and explains why labs deliberately keep multiple vendors alive. They need a neutral data layer to exist.</span></p></div>
+      <div class="card"><h4><span class="zh">④ 终局考验：模型超过专家之日</span><span class="en">④ Endgame: the day models pass the experts</span></h4><p><span class="zh">如果模型在多数领域超过人类专家，「教模型」的需求会塌缩。三家的备胎各不相同：Scale 押政府和企业应用，Surge 押「独立审计」（越是超人的 AI 越需要第三方验证），Mercor 押通用劳动市场。<b>看懂三家的分化，本质是看它们各自为这一天买了什么保险。</b></span><span class="en">If models surpass human experts across most domains, demand for teaching them collapses. Each firm holds a different hedge: Scale bets on government and enterprise apps; Surge on independent auditing (superhuman AI needs third-party verification more, not less); Mercor on the general labor market. <b>Understanding how the three diverge is really about seeing what insurance each bought against that day.</b></span></p></div>
+    </div>
+
+    <div class="callout" style="margin-top:22px"><b><span class="zh">带走三句话：</span><span class="en">Three takeaways:</span></b><br>
+      <span class="zh">1）三家做的是同一门生意——把人类智慧包装成模型的养料——但分别押注了流程（Scale）、品质（Surge）、匹配（Mercor）三种壁垒。<br>2）行业的价值中枢正从「便宜的手」转向「昂贵的脑」，再转向「仿真的世界」。<br>3）它们共同的风险不是彼此，而是客户：实验室既是买家，也是潜在的替代者（自建团队），甚至终结者（做出不再需要人教的模型）。</span>
+      <span class="en">1) All three run the same business — packaging human intelligence as model fuel — but each bet on a different moat: process (Scale), quality (Surge), matching (Mercor).<br>2) The industry's center of value is shifting from cheap hands to expensive minds to simulated worlds.<br>3) Their common risk isn't each other — it's the customer: the labs are at once buyers, potential substitutes (in-housing), and potential terminators (building models that no longer need teachers).</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SECTION 7: DATA OPS ============ -->
+<section id="dataops">
+  <div class="wrap">
+    <div class="secnum"><b>7</b><h2><span class="zh">数据实务：怎么整理、怎么交付、怎么保密</span><span class="en">Data in practice: how it's processed, delivered, and protected</span></h2></div>
+    <p class="sub"><span class="zh">前面讲的是商业模式，这一部分下沉到操作层：几万名分散在全球的人产出的数据，是怎么被整理成能用的训练集、以什么形式交到客户手里、又怎么防止互为对手的客户看到彼此的底牌。</span><span class="en">The sections above covered business models; this one goes down to the operating layer: how output from tens of thousands of distributed workers gets refined into usable training sets, in what form it reaches clients, and how vendors keep fiercely competing clients from seeing each other's cards.</span></p>
+
+    <h3><span class="zh">整理流程：所有人都遵循同一条流水线</span><span class="en">The pipeline: everyone runs the same assembly line</span></h3>
+    <p class="small"><span class="zh">不管是众包画框还是专家判卷，大流程是一样的：客户需求 → 写详细的标注指南（rubric，定义什么算好答案、按什么维度打分）→ 把大项目拆成小任务分发 → 标注 → 质检 → 汇总交付。真正的功夫全在质检这一环，通用武器有四件：</span><span class="en">Whether it's crowd workers drawing boxes or experts grading answers, the flow is identical: client brief → detailed annotation guidelines (a rubric defining what counts as good and how to score) → decompose the project into micro-tasks → annotate → QA → aggregate and deliver. The real craft is in QA, which relies on four universal weapons:</span></p>
+    <div class="grid2">
+      <div class="card tinted"><h4><span class="zh">① 金标准题（Gold Tasks）</span><span class="en">① Gold tasks</span></h4><p><span class="zh">把已知正确答案的题暗中混进任务流，标注员不知道哪题是测试。答错率一高，权重下降甚至被移出任务池——这是识别「不靠谱的人」的主探测器。</span><span class="en">Questions with known answers are secretly mixed into the task stream; workers can't tell which ones are tests. A high miss rate means down-weighting or removal from the pool — the primary detector of unreliable workers.</span></p></div>
+      <div class="card tinted"><h4><span class="zh">② 多人共识（Consensus）</span><span class="en">② Consensus</span></h4><p><span class="zh">同一条数据发给多人独立标注，用多数投票或加权投票（资深者权重更高）定最终答案。主观性越强的任务（偏好排序、安全判断）越依赖这一招。</span><span class="en">The same item goes to multiple annotators independently; majority or weighted voting (senior judges count more) decides the final label. The more subjective the task — preference ranking, safety calls — the more this matters.</span></p></div>
+      <div class="card tinted"><h4><span class="zh">③ 分层审核</span><span class="en">③ Layered review</span></h4><p><span class="zh">金字塔结构：一线标注员打底 → 资深审核员复查纠错、补漏 → 交付前抽样终审。一批数据在交付前通常被过手好几遍。</span><span class="en">A pyramid: frontline annotators produce, senior reviewers correct and fill gaps, and a final sampled audit runs before delivery. A batch typically passes through several hands before it ships.</span></p></div>
+      <div class="card tinted"><h4><span class="zh">④ 统计监控</span><span class="en">④ Statistical monitoring</span></h4><p><span class="zh">实时看板追踪每个人的准确率、标注员间一致性（inter-annotator agreement）、耗时异常。低质量批次自动打回重做，信任分掉线的人自动换掉。</span><span class="en">Live dashboards track per-worker accuracy, inter-annotator agreement, and timing anomalies. Low-quality batches are auto-reassigned; workers whose trust score drops are automatically rotated out.</span></p></div>
+    </div>
+
+    <h4><span class="zh">同一条流水线，三种侧重</span><span class="en">Same pipeline, three emphases</span></h4>
+    <div class="vsline"><div class="who">Scale</div><div><p><span class="zh"><b>重软件流水线</b>：任务在平台里自动拆解、路由、分派；机器先预标注，人只改错；可选「标准管线」（一轮审核）或「共识管线」（多人多轮裁决），主观任务走后者。</span><span class="en"><b>Heavy on the software pipeline:</b> tasks are auto-decomposed, routed, and dispatched; machines pre-label and humans only fix errors; clients choose a standard pipeline (one review pass) or a consensus pipeline (multiple judges, multiple rounds) for subjective work.</span></p></div></div>
+    <div class="vsline"><div class="who">Surge</div><div><p><span class="zh"><b>重入口筛选 + 实时监控</b>：先用领域资格考试和背景审查把人筛掉一大半，进来后持续用金标准题和信任评分动态考核。因为人的水平高，审核层级反而可以更薄。</span><span class="en"><b>Heavy on entry screening plus live monitoring:</b> domain exams and background checks filter out most applicants up front; those admitted are continuously tested with gold tasks and trust scores. Because the people are better, the review pyramid can be thinner.</span></p></div></div>
+    <div class="vsline"><div class="who">Mercor</div><div><p><span class="zh"><b>重匹配、轻管理</b>：用 AI 面试给 3 万+ 专家建档、按需求精准匹配；数据生产环节靠高时薪激励质量，具体任务流程往往由客户实验室自己定，Mercor 管工时、结算和绩效追踪。</span><span class="en"><b>Heavy on matching, light on management:</b> AI interviews profile 30k+ experts for precise matching; quality is incentivized through premium hourly pay, task workflows are usually defined by the client lab itself, and Mercor handles hours, payouts, and performance tracking.</span></p></div></div>
+
+    <h3><span class="zh">存储形式：基本都是 JSON / JSONL</span><span class="en">Storage: it's JSON / JSONL almost all the way down</span></h3>
+    <p class="small"><span class="zh">每条标注数据存成一个结构化的 JSON 对象，任务类型不同，结构不同：</span><span class="en">Each labeled item is stored as a structured JSON object, with the schema varying by task type:</span></p>
+    <table>
+      <tr><th><span class="zh">数据类型</span><span class="en">Data type</span></th><th><span class="zh">存成什么样</span><span class="en">What it looks like on disk</span></th></tr>
+      <tr><td><b><span class="zh">图像 / 传感器标注</span><span class="en">Image / sensor labels</span></b></td><td><span class="zh">每个框的坐标（left、top、width、height）+ 类别标签 + attributes 字段（遮挡程度、朝向角度等附加属性）；也常导出为 COCO 等业界通用格式。</span><span class="en">Per-box coordinates (left, top, width, height) + class label + an attributes object (occlusion, heading angle, etc.); often also exported to industry formats like COCO.</span><pre class="code zh">{
+  "label": "car",
+  "left": 320, "top": 180, "width": 150, "height": 90,
+  "attributes": { "occlusion": "部分遮挡", "heading": 45 }
+}</pre><pre class="code en">{
+  "label": "car",
+  "left": 320, "top": 180, "width": 150, "height": 90,
+  "attributes": { "occlusion": "partial", "heading": 45 }
+}</pre></td></tr>
+      <tr><td><b><span class="zh">RLHF 偏好数据</span><span class="en">RLHF preference data</span></b></td><td><span class="zh">一条记录 = prompt + 模型的多个候选回答 + 人的排序/评分 + 评语，通常存成 JSONL（每行一个 JSON），可直接喂给训练管线。</span><span class="en">One record = prompt + candidate model answers + human rankings/scores + rationale, typically stored as JSONL (one JSON per line), ready to feed straight into a training pipeline.</span><pre class="code zh">{
+  "prompt": "解释什么是黑洞",
+  "responses": [
+    { "id": "A", "text": "黑洞是一种密度无限大的星体……" },
+    { "id": "B", "text": "黑洞是时空中引力强到光都无法逃逸的区域……" }
+  ],
+  "ranking": ["B", "A"],
+  "rationale": "B 定义准确；A 说『密度无限大的星体』有事实错误"
+}</pre><pre class="code en">{
+  "prompt": "Explain what a black hole is",
+  "responses": [
+    { "id": "A", "text": "A black hole is a star of infinite density..." },
+    { "id": "B", "text": "A black hole is a region of spacetime where gravity..." }
+  ],
+  "ranking": ["B", "A"],
+  "rationale": "B is accurate; A's 'star of infinite density' is factually wrong"
+}</pre></td></tr>
+      <tr><td><b><span class="zh">对话 / 示范数据</span><span class="en">Dialogue / demonstration data</span></b></td><td><span class="zh">完整的多轮对话记录，逐轮标明是人写的还是模型写的。</span><span class="en">Full multi-turn transcripts, with each turn tagged as human-written or model-generated.</span><pre class="code zh">{
+  "turns": [
+    { "role": "user",      "content": "帮我写一封请假邮件" },
+    { "role": "assistant", "content": "好的，请问您要请几天假？" },
+    { "role": "user",      "content": "两天，家里有事" }
+  ]
+}</pre><pre class="code en">{
+  "turns": [
+    { "role": "user",      "content": "Help me write a leave-request email" },
+    { "role": "assistant", "content": "Sure — how many days off?" },
+    { "role": "user",      "content": "Two days, family matter" }
+  ]
+}</pre></td></tr>
+      <tr><td><b><span class="zh">元数据（每条都带）</span><span class="en">Metadata (on every record)</span></b></td><td><span class="zh">数据的「身世」：谁标的、什么时候、经过几轮审核、金标准得分、标注员间一致性——客户用它做筛选和追溯。</span><span class="en">The record's provenance: who labeled it, when, how many review rounds, gold-task scores, inter-annotator agreement — used by clients for filtering and audits.</span><pre class="code">{
+  "annotator_id": "A1024",
+  "labeled_at": "2026-07-01T09:32:00Z",
+  "review_rounds": 2,
+  "gold_score": 0.97,
+  "agreement": 0.88
+}</pre></td></tr>
+    </table>
+
+    <h3><span class="zh">交付方式：像调用云服务一样收数据</span><span class="en">Delivery: receiving data like a cloud service</span></h3>
+    <div class="grid3">
+      <div class="card"><h4><span class="zh">API 拉取</span><span class="en">Pull via API</span></h4><p><span class="zh">客户通过 API 提交任务，完成后按 task ID 程序化取回 JSON 结果，或按条件批量列出。</span><span class="en">Clients submit tasks through an API and programmatically retrieve JSON results by task ID, or list them in bulk with filters.</span></p></div>
+      <div class="card"><h4><span class="zh">Webhook 回调</span><span class="en">Webhook callbacks</span></h4><p><span class="zh">任务一完成就主动推送到客户指定接口，数据全自动流转，无需人工介入。</span><span class="en">The moment a task completes, results are pushed to a client-specified endpoint — a fully automated flow with no human in the loop.</span></p></div>
+      <div class="card"><h4><span class="zh">平台批量导出</span><span class="en">Bulk export</span></h4><p><span class="zh">网页端按时间/项目筛选一键导出整批数据集；大项目按约定节奏（如每周一批）分批交付。</span><span class="en">One-click export of filtered datasets from the web console; large projects deliver in scheduled batches (weekly, for instance).</span></p></div>
+    </div>
+    <div class="callout"><b><span class="zh">Mercor 是例外：</span><span class="en">Mercor is the exception:</span></b> <span class="zh">因为它卖的是「人」而非数据管线，专家往往直接在客户实验室自己的标注平台上干活——数据从产生那一刻就落在客户系统里，根本不存在「交付」环节。此外，大客户通常要求数据存放在专属安全云存储（如客户自己的 S3 bucket），并附带数据隔离、不得复用于其他客户的合同条款。</span><span class="en">Because it sells people rather than a data pipeline, its experts usually work directly inside the client lab's own annotation platform — the data lands in the client's systems from the moment it's created, so there is no "delivery" step at all. Separately, major clients typically require data to live in dedicated secure storage (their own S3 buckets, say) with contractual isolation and no-reuse clauses.</span></div>
+
+    <h3><span class="zh">安全与隔离：制度很完整，翻车也很真实</span><span class="en">Security and isolation: solid on paper, real failures in practice</span></h3>
+    <p class="small"><span class="zh">这是行业最核心的商业风险——客户全是彼此的直接竞争对手。制度设计上有一整套隔离机制，但三家都出过真实事故：</span><span class="en">This is the industry's core commercial risk — every client is a direct competitor of every other. The isolation playbook is comprehensive, yet all three firms have had real incidents:</span></p>
+    <div class="moat">
+      <div class="m yes"><h4><span class="zh">✓ 隔离机制（行业通行做法）</span><span class="en">✓ The isolation playbook (industry standard)</span></h4>
+        <li><span class="zh"><b>项目代号制</b>：标注员通常不知道自己在给谁干活，项目用代号（如 xAI 在 Scale 的「Project Xylophone」），文档抹掉客户名。</span><span class="en"><b>Project codenames:</b> workers usually don't know which client they serve; projects run under codenames (xAI's "Project Xylophone" at Scale) with client names scrubbed from docs.</span></li>
+        <li><span class="zh"><b>马甲平台</b>：Surge 通过 DataAnnotation.tech、Taskup.ai、GetHybrid.io 等表面互不相关的平台招募派活，很多标注员连自己在为 Surge 工作都不知道。</span><span class="en"><b>Front platforms:</b> Surge recruits through seemingly unrelated brands — DataAnnotation.tech, Taskup.ai, GetHybrid.io — and many workers don't even know they're working for Surge, let alone the end client.</span></li>
+        <li><span class="zh"><b>人员与数据隔离</b>：一人同期只进一个项目池，每个项目单独签 NDA（保密协议）；按客户分开的存储桶和访问权限，合同约定数据不得复用、项目结束后删除。</span><span class="en"><b>People and data silos:</b> one worker, one project pool at a time, with per-project NDAs; per-client storage buckets and access controls, plus contractual no-reuse and post-project deletion clauses.</span></li>
+        <li><span class="zh"><b>合规认证</b>：SOC 2 等第三方安全审计认证，加密、访问日志、权限分级。</span><span class="en"><b>Compliance:</b> SOC 2-style audits, encryption, access logging, tiered permissions.</span></li>
+      </div>
+      <div class="m no"><h4><span class="zh">✗ 真实的翻车记录</span><span class="en">✗ The actual track record</span></h4>
+        <li><span class="zh"><b>Scale，2025.6</b>：被曝用公开的 Google Docs 管理项目，85+ 份文档任何人可看甚至可编辑，泄露 Meta、Google、xAI 的训练指南、机密提示词和标注员个人信息。</span><span class="en"><b>Scale, Jun 2025:</b> found running projects on public Google Docs — 85+ documents viewable and even editable by anyone, exposing Meta, Google, and xAI training guides, confidential prompts, and contractor data.</span></li>
+        <li><span class="zh"><b>Scale，2025（结构性）</b>：Meta 入股后，隔离机制再好也没用——「你的东家是我的对手」，Google、OpenAI、xAI 迅速撤单。</span><span class="en"><b>Scale, 2025 (structural):</b> after Meta's stake, no isolation mechanism mattered — "your owner is my rival" — and Google, OpenAI, and xAI pulled orders within days.</span></li>
+        <li><span class="zh"><b>Surge，2025</b>：一份内部 AI 安全指南文档被设成公开状态遭媒体曝光；其马甲平台的不透明运作也持续受批评。</span><span class="en"><b>Surge, 2025:</b> an internal AI-safety guidelines doc was left publicly accessible and surfaced by the press; the opacity of its front platforms draws ongoing criticism.</span></li>
+        <li><span class="zh"><b>Mercor，2026.3（最严重）</b>：开源组件 LiteLLM 遭供应链攻击，黑客借此窃取约 4TB 数据——4 万+ 承包商个人信息、源代码及多家前沿实验室的训练方法。Meta 随即无限期暂停全部合同，OpenAI 介入调查，并引来集体诉讼。</span><span class="en"><b>Mercor, Mar 2026 (the worst):</b> a supply-chain attack on the open-source component LiteLLM let hackers exfiltrate ~4TB — personal data of 40k+ contractors, source code, and training methodologies of multiple frontier labs. Meta paused all contracts indefinitely, OpenAI opened an investigation, and a class action followed.</span></li>
+      </div>
+    </div>
+    <div class="callout warn"><b><span class="zh">这一节的结论：</span><span class="en">The takeaway:</span></b> <span class="zh">制度上有代号、马甲、分池、NDA、合同条款一整套设计，但泄密方式五花八门——从低级失误（公开 Google Docs）到供应链攻击（LiteLLM），再到股权结构本身（Meta 入股）。这也是前沿实验室越来越倾向于把最敏感的数据工作收回内部、或要求专家直接在自己系统里干活的原因。</span><span class="en">Codenames, front brands, siloed pools, NDAs, and contracts make a complete design on paper — but leaks arrive through every door: basic negligence (public Google Docs), supply-chain attacks (LiteLLM), and ownership structure itself (Meta's stake). Which is exactly why frontier labs increasingly pull their most sensitive data work in-house, or require experts to work directly inside their own systems.</span></div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p><b><span class="zh">数据说明</span><span class="en">Data notes</span></b> · <span class="zh">信息截至 2026 年 7 月，主要来源：</span><span class="en">Information as of July 2026. Key sources:</span>
+    <a href="https://techcrunch.com/2025/06/13/scale-ai-confirms-significant-investment-from-meta-says-ceo-alexandr-wang-is-leaving/" target="_blank">TechCrunch (Scale–Meta)</a> ·
+    <a href="https://www.forbes.com/sites/richardnieva/2026/05/14/scale-meta-deal/" target="_blank">Forbes (Scale 2026)</a> ·
+    <a href="https://www.forbes.com/sites/aliciapark/2026/05/06/pentagon-hands-meta-backed-scale-ai-500-million-contract-5-times-last-years-deal-report-says/" target="_blank">Forbes (Pentagon)</a> ·
+    <a href="https://www.bloomberg.com/news/articles/2025-07-30/scale-rival-surge-ai-in-talks-for-funding-at-25-billion-value" target="_blank">Bloomberg (Surge)</a> ·
+    <a href="https://sacra.com/c/surge-ai/" target="_blank">Sacra (Surge)</a> ·
+    <a href="https://techcrunch.com/2025/10/27/mercor-quintuples-valuation-to-10b-with-350m-series-c/" target="_blank">TechCrunch (Mercor)</a> ·
+    <a href="https://sacra.com/c/mercor/" target="_blank">Sacra (Mercor)</a> ·
+    <a href="https://www.techrepublic.com/article/news-scale-ai-security-lapse-google-docs-meta-xai/" target="_blank">TechRepublic (Scale <span class="zh">泄密</span><span class="en">leak</span>)</a> ·
+    <a href="https://techcrunch.com/2026/04/09/after-data-breach-10b-valued-startup-mercor-is-having-a-month/" target="_blank">TechCrunch (Mercor <span class="zh">数据泄露</span><span class="en">breach</span>)</a></p>
+    <p style="margin-top:8px"><span class="zh">注：Surge AI 估值为媒体报道的融资谈判/交易口径，未经公司确认；Mercor 未公开统一平台加价比例，外部 take-rate 数字仅为估算。本页仅供学习参考，不构成投资建议。</span><span class="en">Note: Surge AI's valuation reflects reported fundraise terms, not company confirmation; Mercor does not disclose a universal platform markup, and outside take-rate figures are estimates only. For learning purposes only — not investment advice.</span></p>
+  </div>
+</footer>
+
+<script>
+function toggleLang(){
+  document.body.classList.toggle('lang-en');
+  var en = document.body.classList.contains('lang-en');
+  document.getElementById('langBtn').textContent = en ? '中文' : 'English';
+  document.documentElement.lang = en ? 'en' : 'zh';
+}
+</script>
+
+
+
+</body>
+</html>

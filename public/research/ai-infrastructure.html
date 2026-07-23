@@ -1,0 +1,1474 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AI 基建专有知识可视化</title>
+  <style>
+    :root {
+      --bg: #f5f3ee;
+      --paper: #ffffff;
+      --paper-soft: #faf9f5;
+      --ink: #20242a;
+      --muted: #65707c;
+      --line: #dde2e7;
+      --line-soft: #edf0f2;
+      --blue: #2563eb;
+      --green: #168a61;
+      --violet: #7c3aed;
+      --amber: #b7791f;
+      --red: #c24135;
+      --teal: #0f766e;
+      --shadow: 0 20px 54px rgba(32, 36, 42, .08);
+      --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--sans);
+      line-height: 1.55;
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    button {
+      appearance: none;
+      border: 0;
+      background: transparent;
+      color: inherit;
+    }
+
+    a { color: inherit; }
+
+    h1, h2, h3, h4, p { margin-top: 0; }
+
+    .page {
+      width: min(1500px, calc(100% - 28px));
+      margin: 0 auto;
+      padding: 18px 0 44px;
+    }
+
+    .shell {
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: var(--paper);
+      box-shadow: var(--shadow);
+    }
+
+    header {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 370px;
+      gap: 18px;
+      align-items: end;
+      padding: 26px;
+      border-bottom: 1px solid var(--line-soft);
+      background: var(--paper);
+    }
+
+    .title-tools {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .eyebrow {
+      margin: 0;
+      color: var(--green);
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 780;
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin-bottom: 9px;
+      font-size: clamp(31px, 4vw, 54px);
+      line-height: 1.06;
+      letter-spacing: 0;
+    }
+
+    .lead {
+      max-width: 980px;
+      margin: 0;
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .lang-toggle {
+      display: inline-flex;
+      gap: 4px;
+      padding: 4px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--paper-soft);
+    }
+
+    .lang-button {
+      cursor: pointer;
+      min-width: 72px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 780;
+      line-height: 1;
+    }
+
+    .lang-button.active {
+      background: var(--green);
+      color: #fff;
+    }
+
+    .read-card {
+      display: grid;
+      gap: 8px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--paper-soft);
+      font-size: 12px;
+    }
+
+    .read-card strong {
+      color: var(--ink);
+      font-size: 13px;
+    }
+
+    .read-card span {
+      color: var(--muted);
+      line-height: 1.4;
+    }
+
+    .content {
+      display: grid;
+      gap: 18px;
+      padding: 18px;
+    }
+
+    .section {
+      display: grid;
+      gap: 14px;
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--paper);
+    }
+
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: end;
+    }
+
+    .section-head h2 {
+      margin: 4px 0 0;
+      font-size: 22px;
+      line-height: 1.2;
+      letter-spacing: 0;
+    }
+
+    .hint {
+      max-width: 540px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.4;
+      text-align: right;
+    }
+
+    .signal-map {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 10px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: var(--paper-soft);
+    }
+
+    .signal-node {
+      --tone: var(--green);
+      position: relative;
+      min-width: 0;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    .signal-node::after {
+      content: "→";
+      position: absolute;
+      top: 50%;
+      right: -14px;
+      z-index: 1;
+      transform: translateY(-50%);
+      color: #aab2bb;
+      font-family: var(--mono);
+      font-weight: 800;
+    }
+
+    .signal-node:last-child::after { display: none; }
+    .signal-node.power { --tone: var(--red); }
+    .signal-node.compute { --tone: var(--violet); }
+    .signal-node.cooling { --tone: var(--teal); }
+    .signal-node.network { --tone: var(--blue); }
+    .signal-node.storage { --tone: var(--amber); }
+    .signal-node.ops { --tone: var(--green); }
+
+    .signal-node em {
+      display: inline-flex;
+      margin-bottom: 8px;
+      padding: 3px 7px;
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--tone) 12%, #fff);
+      color: var(--tone);
+      font-family: var(--mono);
+      font-size: 10px;
+      font-style: normal;
+      font-weight: 800;
+    }
+
+    .signal-node strong {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 14px;
+      line-height: 1.22;
+      overflow-wrap: anywhere;
+    }
+
+    .signal-node span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+      overflow-wrap: anywhere;
+    }
+
+    .legend-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .metric-card,
+    .formula-card,
+    .bottleneck-card,
+    .term-card,
+    .source-card,
+    .visual-card {
+      min-width: 0;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    .metric-card {
+      padding: 12px;
+    }
+
+    .metric-card b {
+      display: block;
+      margin-bottom: 4px;
+      color: var(--ink);
+      font-size: 16px;
+      line-height: 1.15;
+    }
+
+    .metric-card span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .visual-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .visual-card {
+      overflow: hidden;
+    }
+
+    .visual-card.wide {
+      grid-column: span 2;
+    }
+
+    .visual-card img {
+      display: block;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 1672 / 941;
+      object-fit: contain;
+      background: #fff;
+      border-bottom: 1px solid var(--line-soft);
+    }
+
+    .visual-copy {
+      display: grid;
+      gap: 5px;
+      padding: 11px;
+    }
+
+    .visual-copy h3 {
+      margin: 0;
+      font-size: 14px;
+      line-height: 1.25;
+      letter-spacing: 0;
+      overflow-wrap: anywhere;
+    }
+
+    .visual-copy p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.4;
+      overflow-wrap: anywhere;
+    }
+
+    .tool-grid {
+      display: grid;
+      grid-template-columns: minmax(280px, 420px) minmax(0, 1fr);
+      gap: 14px;
+      align-items: start;
+    }
+
+    .filter-panel {
+      display: grid;
+      gap: 12px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--paper-soft);
+    }
+
+    .search-box {
+      display: grid;
+      gap: 6px;
+    }
+
+    .search-box label,
+    .input-field label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 760;
+    }
+
+    .search-input,
+    .number-input {
+      width: 100%;
+      min-height: 38px;
+      padding: 8px 10px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      color: var(--ink);
+      outline: none;
+    }
+
+    .search-input:focus,
+    .number-input:focus {
+      border-color: rgba(22, 138, 97, .55);
+      box-shadow: 0 0 0 3px rgba(22, 138, 97, .12);
+    }
+
+    .category-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .category-button {
+      cursor: pointer;
+      display: grid;
+      grid-template-columns: 10px minmax(0, 1fr) auto;
+      gap: 8px;
+      align-items: center;
+      padding: 9px 10px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      text-align: left;
+    }
+
+    .category-button i {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--tone, var(--green));
+    }
+
+    .category-button span {
+      min-width: 0;
+      font-size: 13px;
+      font-weight: 760;
+      line-height: 1.2;
+      overflow-wrap: anywhere;
+    }
+
+    .category-button small {
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 11px;
+    }
+
+    .category-button.active {
+      border-color: rgba(22, 138, 97, .5);
+      background: #f5fbf8;
+    }
+
+    .result-line {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    .term-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .term-card {
+      display: grid;
+      gap: 8px;
+      padding: 12px;
+    }
+
+    .term-top {
+      display: grid;
+      gap: 4px;
+    }
+
+    .term-card h3 {
+      margin: 0;
+      font-size: 15px;
+      line-height: 1.2;
+      letter-spacing: 0;
+      overflow-wrap: anywhere;
+    }
+
+    .term-card .en-name {
+      color: #1f5fbf;
+      font-family: var(--mono);
+      font-size: 12px;
+      line-height: 1.25;
+      overflow-wrap: anywhere;
+    }
+
+    .term-card .tag-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      min-height: 21px;
+      padding: 3px 6px;
+      border-radius: 7px;
+      background: var(--paper-soft);
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 10.5px;
+      line-height: 1;
+    }
+
+    .tag.category {
+      background: color-mix(in srgb, var(--tone, var(--green)) 11%, #fff);
+      color: var(--tone, var(--green));
+      font-weight: 780;
+    }
+
+    .term-copy {
+      display: grid;
+      gap: 7px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.38;
+    }
+
+    .term-copy p {
+      margin: 0;
+      overflow-wrap: anywhere;
+    }
+
+    .term-copy b {
+      color: var(--ink);
+      font-weight: 760;
+    }
+
+    .formula-grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .formula-card {
+      display: grid;
+      gap: 8px;
+      padding: 12px;
+    }
+
+    .formula-card code {
+      display: block;
+      padding: 8px;
+      border-radius: 7px;
+      background: #101820;
+      color: #f7fafc;
+      font-family: var(--mono);
+      font-size: 12px;
+      line-height: 1.35;
+      overflow-wrap: anywhere;
+      white-space: normal;
+    }
+
+    .formula-card h3 {
+      margin: 0;
+      font-size: 14px;
+      line-height: 1.22;
+    }
+
+    .formula-card p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.38;
+    }
+
+    .calculator-grid {
+      display: grid;
+      grid-template-columns: minmax(260px, 430px) minmax(0, 1fr);
+      gap: 14px;
+      align-items: stretch;
+    }
+
+    .input-panel,
+    .output-panel {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--paper-soft);
+      padding: 14px;
+    }
+
+    .input-panel {
+      display: grid;
+      gap: 11px;
+    }
+
+    .input-row {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .input-field {
+      display: grid;
+      gap: 6px;
+    }
+
+    .output-panel {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .output-box {
+      min-width: 0;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    .output-box strong {
+      display: block;
+      margin-bottom: 6px;
+      font-family: var(--mono);
+      font-size: 20px;
+      line-height: 1.1;
+      overflow-wrap: anywhere;
+    }
+
+    .output-box span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .bottleneck-grid {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .bottleneck-card {
+      --tone: var(--green);
+      display: grid;
+      gap: 8px;
+      padding: 12px;
+      border-top: 4px solid var(--tone);
+    }
+
+    .bottleneck-card h3 {
+      margin: 0;
+      font-size: 14px;
+      line-height: 1.2;
+      letter-spacing: 0;
+      overflow-wrap: anywhere;
+    }
+
+    .bottleneck-card p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    .source-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .source-card {
+      display: grid;
+      gap: 6px;
+      padding: 12px;
+      text-decoration: none;
+      transition: border-color .16s ease, transform .16s ease, box-shadow .16s ease;
+    }
+
+    .source-card:hover {
+      border-color: rgba(37, 99, 235, .42);
+      box-shadow: 0 10px 24px rgba(32, 36, 42, .07);
+      transform: translateY(-1px);
+    }
+
+    .source-card strong {
+      color: #1f5fbf;
+      font-size: 13px;
+      line-height: 1.25;
+      overflow-wrap: anywhere;
+    }
+
+    .source-card span {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+      overflow-wrap: anywhere;
+    }
+
+    .empty-state {
+      padding: 18px;
+      border: 1px dashed var(--line);
+      border-radius: 8px;
+      color: var(--muted);
+      font-size: 13px;
+      text-align: center;
+    }
+
+    @media (max-width: 1260px) {
+      header,
+      .tool-grid,
+      .calculator-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .hint { text-align: left; }
+      .signal-map,
+      .bottleneck-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .signal-node::after { display: none; }
+      .legend-grid,
+      .formula-grid,
+      .output-panel {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .visual-grid,
+      .term-grid,
+      .source-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .visual-card.wide { grid-column: auto; }
+    }
+
+    @media (max-width: 760px) {
+      .page {
+        width: min(100% - 14px, 1500px);
+        padding-top: 8px;
+      }
+
+      header {
+        padding: 18px 14px;
+      }
+
+      .content {
+        padding: 12px;
+      }
+
+      .section-head {
+        display: grid;
+      }
+
+      .signal-map,
+      .legend-grid,
+      .visual-grid,
+      .term-grid,
+      .formula-grid,
+      .input-row,
+      .output-panel,
+      .bottleneck-grid,
+      .source-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .lang-button {
+        min-width: 66px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="shell">
+      <header>
+        <div>
+          <div class="title-tools">
+            <p class="eyebrow" id="headerEyebrow">AI infrastructure primer</p>
+            <div class="lang-toggle" aria-label="Language switch">
+              <button class="lang-button active" data-lang="zh" type="button">中文</button>
+              <button class="lang-button" data-lang="en" type="button">English</button>
+            </div>
+          </div>
+          <h1 id="headerTitle">AI 基建专有知识可视化</h1>
+          <p class="lead" id="headerLead">把 AI 基建看成一条工程链：电力进来，GPU/服务器把电变成算力，散热系统把热带走，网络把 GPU 连成集群，存储和调度把利用率拉高，最后形成可销售的算力服务。</p>
+        </div>
+        <div class="read-card">
+          <strong id="readTitle">核心读法</strong>
+          <span id="readLineOne">先看总图建立主线，再用术语地图补概念，最后用公式和计算器把 MW、PUE、机柜功率这些指标连起来。</span>
+          <span id="readLineTwo">所有术语都保留中文和英文解释，方便投研、供应链和工程资料之间互相对照。</span>
+        </div>
+      </header>
+
+      <div class="content">
+        <section class="section" aria-labelledby="mapTitle">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow" id="mapKicker">Operating loop</p>
+              <h2 id="mapTitle">一张总图：AI 基建如何把电变成可售算力</h2>
+            </div>
+            <span class="hint" id="mapHint">这条链上任何一环受限，GPU 都可能买得到但跑不满。</span>
+          </div>
+          <div class="signal-map" id="signalMap"></div>
+          <div class="legend-grid" id="legendGrid"></div>
+        </section>
+
+        <section class="section" aria-labelledby="visualTitle">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow" id="visualKicker">Visual explainers</p>
+              <h2 id="visualTitle">关键图解</h2>
+            </div>
+            <span class="hint" id="visualHint">复用现有教学剖面图，覆盖供电、液冷、服务器、网络和光模块。</span>
+          </div>
+          <div class="visual-grid" id="visualGrid"></div>
+        </section>
+
+        <section class="section" aria-labelledby="termsTitle">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow" id="termsKicker">Bilingual glossary</p>
+              <h2 id="termsTitle">术语地图</h2>
+            </div>
+            <span class="hint" id="termsHint">用筛选和搜索快速定位概念，每张卡片都同时显示中文和英文。</span>
+          </div>
+          <div class="tool-grid">
+            <aside class="filter-panel">
+              <div class="search-box">
+                <label for="termSearch" id="searchLabel">搜索术语、缩写或解释</label>
+                <input class="search-input" id="termSearch" type="search" placeholder="例如 PUE、液冷、RDMA、机柜功率">
+              </div>
+              <div class="category-list" id="categoryList"></div>
+              <div class="result-line" id="resultLine"></div>
+            </aside>
+            <div class="term-grid" id="termGrid"></div>
+          </div>
+        </section>
+
+        <section class="section" aria-labelledby="formulaTitle">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow" id="formulaKicker">Formulas</p>
+              <h2 id="formulaTitle">把指标算明白</h2>
+            </div>
+            <span class="hint" id="formulaHint">这些不是为了做电气设计，而是帮你读懂数据中心公告和供应链资料。</span>
+          </div>
+          <div class="formula-grid" id="formulaGrid"></div>
+        </section>
+
+        <section class="section" aria-labelledby="calculatorTitle">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow" id="calculatorKicker">Rack power calculator</p>
+              <h2 id="calculatorTitle">小计算器：从机柜功率推到园区用电</h2>
+            </div>
+            <span class="hint" id="calculatorHint">输入机柜功率、机柜数量和 PUE，估算 IT 负载、设施负载和全年耗电。</span>
+          </div>
+          <div class="calculator-grid">
+            <div class="input-panel">
+              <div class="input-row">
+                <div class="input-field">
+                  <label for="rackKw" id="rackKwLabel">单柜功率 kW</label>
+                  <input class="number-input" id="rackKw" type="number" min="1" step="1" value="80">
+                </div>
+                <div class="input-field">
+                  <label for="rackCount" id="rackCountLabel">机柜数量</label>
+                  <input class="number-input" id="rackCount" type="number" min="1" step="1" value="500">
+                </div>
+                <div class="input-field">
+                  <label for="pueInput" id="pueLabel">PUE</label>
+                  <input class="number-input" id="pueInput" type="number" min="1" step="0.01" value="1.25">
+                </div>
+              </div>
+              <p class="result-line" id="calculatorNote">示例：500 个 80kW AI 机柜，IT 负载就是 40MW；PUE 1.25 时，设施总负载约 50MW。</p>
+            </div>
+            <div class="output-panel" id="calculatorOutput"></div>
+          </div>
+        </section>
+
+        <section class="section" aria-labelledby="bottleneckTitle">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow" id="bottleneckKicker">Investment lens</p>
+              <h2 id="bottleneckTitle">最该盯的瓶颈</h2>
+            </div>
+            <span class="hint" id="bottleneckHint">AI 基建的投资线索通常来自瓶颈迁移，而不只是 GPU 单点供给。</span>
+          </div>
+          <div class="bottleneck-grid" id="bottleneckGrid"></div>
+        </section>
+
+        <section class="section" aria-labelledby="sourceTitle">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow" id="sourceKicker">Sources</p>
+              <h2 id="sourceTitle">参考来源</h2>
+            </div>
+            <span class="hint" id="sourceHint">页面内容为投研入门解释，链接用于回到官方或行业定义。</span>
+          </div>
+          <div class="source-grid" id="sourceGrid"></div>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const categories = [
+      { id: "all", zh: "全部术语", en: "All Terms", tone: "#168a61" },
+      { id: "power", zh: "电力/供配电", en: "Power", tone: "#c24135" },
+      { id: "rack", zh: "机柜/服务器", en: "Rack & Server", tone: "#7c3aed" },
+      { id: "cooling", zh: "散热", en: "Cooling", tone: "#0f766e" },
+      { id: "network", zh: "网络互联", en: "Interconnect", tone: "#2563eb" },
+      { id: "ops", zh: "存储/软件/效率", en: "Storage & Ops", tone: "#b7791f" }
+    ];
+
+    const uiText = {
+      zh: {
+        documentTitle: "AI 基建专有知识可视化",
+        headerEyebrow: "AI infrastructure primer",
+        headerTitle: "AI 基建专有知识可视化",
+        headerLead: "把 AI 基建看成一条工程链：电力进来，GPU/服务器把电变成算力，散热系统把热带走，网络把 GPU 连成集群，存储和调度把利用率拉高，最后形成可销售的算力服务。",
+        readTitle: "核心读法",
+        readLineOne: "先看总图建立主线，再用术语地图补概念，最后用公式和计算器把 MW、PUE、机柜功率这些指标连起来。",
+        readLineTwo: "所有术语都保留中文和英文解释，方便投研、供应链和工程资料之间互相对照。",
+        mapKicker: "Operating loop",
+        mapTitle: "一张总图：AI 基建如何把电变成可售算力",
+        mapHint: "这条链上任何一环受限，GPU 都可能买得到但跑不满。",
+        visualKicker: "Visual explainers",
+        visualTitle: "关键图解",
+        visualHint: "复用现有教学剖面图，覆盖供电、液冷、服务器、网络和光模块。",
+        termsKicker: "Bilingual glossary",
+        termsTitle: "术语地图",
+        termsHint: "用筛选和搜索快速定位概念，每张卡片都同时显示中文和英文。",
+        searchLabel: "搜索术语、缩写或解释",
+        searchPlaceholder: "例如 PUE、液冷、RDMA、机柜功率",
+        resultLine: count => `当前显示 ${count} 个术语`,
+        noResults: "没有匹配术语，换一个关键词试试。",
+        chineseExplain: "中文解释",
+        englishExplain: "English explanation",
+        whyItMatters: "为什么重要",
+        formulaKicker: "Formulas",
+        formulaTitle: "把指标算明白",
+        formulaHint: "这些不是为了做电气设计，而是帮你读懂数据中心公告和供应链资料。",
+        calculatorKicker: "Rack power calculator",
+        calculatorTitle: "小计算器：从机柜功率推到园区用电",
+        calculatorHint: "输入机柜功率、机柜数量和 PUE，估算 IT 负载、设施负载和全年耗电。",
+        rackKwLabel: "单柜功率 kW",
+        rackCountLabel: "机柜数量",
+        pueLabel: "PUE",
+        calculatorNote: "示例：500 个 80kW AI 机柜，IT 负载就是 40MW；PUE 1.25 时，设施总负载约 50MW。",
+        itLoad: "IT 负载",
+        facilityLoad: "设施总负载",
+        overhead: "非 IT 负载",
+        annualEnergy: "全年耗电",
+        bottleneckKicker: "Investment lens",
+        bottleneckTitle: "最该盯的瓶颈",
+        bottleneckHint: "AI 基建的投资线索通常来自瓶颈迁移，而不只是 GPU 单点供给。",
+        sourceKicker: "Sources",
+        sourceTitle: "参考来源",
+        sourceHint: "页面内容为投研入门解释，链接用于回到官方或行业定义。"
+      },
+      en: {
+        documentTitle: "AI Infrastructure Knowledge Map",
+        headerEyebrow: "AI infrastructure primer",
+        headerTitle: "AI Infrastructure Knowledge Map",
+        headerLead: "Think of AI infrastructure as an engineering chain: power enters the site, GPUs and servers turn electricity into compute, cooling removes the heat, networking connects GPUs into clusters, and storage plus scheduling raise utilization until the capacity becomes a sellable compute service.",
+        readTitle: "Reading Order",
+        readLineOne: "Start with the loop, use the glossary to fill concept gaps, then connect MW, PUE, and rack power with the formulas and calculator.",
+        readLineTwo: "Every glossary card keeps both Chinese and English explanations so research, supply-chain, and engineering materials can be cross-checked.",
+        mapKicker: "Operating loop",
+        mapTitle: "One Map: Turning Electricity Into Sellable Compute",
+        mapHint: "If one part of the chain is constrained, GPUs can be purchased yet still run below potential.",
+        visualKicker: "Visual explainers",
+        visualTitle: "Key Diagrams",
+        visualHint: "Existing teaching diagrams cover power delivery, liquid cooling, servers, networking, and optical links.",
+        termsKicker: "Bilingual glossary",
+        termsTitle: "Terminology Map",
+        termsHint: "Filter or search concepts. Each card shows Chinese and English at the same time.",
+        searchLabel: "Search terms, acronyms, or explanations",
+        searchPlaceholder: "Try PUE, liquid cooling, RDMA, rack density",
+        resultLine: count => `${count} terms shown`,
+        noResults: "No matching terms. Try another keyword.",
+        chineseExplain: "中文解释",
+        englishExplain: "English explanation",
+        whyItMatters: "Why it matters",
+        formulaKicker: "Formulas",
+        formulaTitle: "Make the Metrics Legible",
+        formulaHint: "These formulas are for investment reading, not formal electrical design.",
+        calculatorKicker: "Rack power calculator",
+        calculatorTitle: "Mini Calculator: Rack Power to Facility Load",
+        calculatorHint: "Enter rack power, rack count, and PUE to estimate IT load, facility load, and annual electricity use.",
+        rackKwLabel: "Rack power kW",
+        rackCountLabel: "Rack count",
+        pueLabel: "PUE",
+        calculatorNote: "Example: 500 AI racks at 80kW each equal 40MW of IT load. At 1.25 PUE, total facility load is about 50MW.",
+        itLoad: "IT Load",
+        facilityLoad: "Facility Load",
+        overhead: "Non-IT Load",
+        annualEnergy: "Annual Energy",
+        bottleneckKicker: "Investment lens",
+        bottleneckTitle: "Bottlenecks To Watch",
+        bottleneckHint: "AI infrastructure signals usually come from shifting constraints, not only GPU supply.",
+        sourceKicker: "Sources",
+        sourceTitle: "Reference Sources",
+        sourceHint: "The page is an investment-primer explanation; links point back to official or industry definitions."
+      }
+    };
+
+    const signalNodes = [
+      {
+        tone: "power",
+        code: "01",
+        zhTitle: "电力进来",
+        enTitle: "Power In",
+        zhText: "并网容量、PPA、变压器、UPS、PDU 决定多少 MW 能落地。",
+        enText: "Grid capacity, PPAs, transformers, UPS, and PDUs decide how many MW can be deployed."
+      },
+      {
+        tone: "compute",
+        code: "02",
+        zhTitle: "服务器运行",
+        enTitle: "Servers Run",
+        zhText: "GPU、HBM、CPU、NIC、PSU 把电转成训练和推理吞吐。",
+        enText: "GPUs, HBM, CPUs, NICs, and PSUs convert electricity into training and inference throughput."
+      },
+      {
+        tone: "cooling",
+        code: "03",
+        zhTitle: "热量排出去",
+        enTitle: "Heat Out",
+        zhText: "风冷、冷板液冷、CDU、后门换热器决定高密机柜能否稳定运行。",
+        enText: "Air cooling, cold plates, CDUs, and rear-door exchangers decide whether dense racks stay stable."
+      },
+      {
+        tone: "network",
+        code: "04",
+        zhTitle: "GPU 连起来",
+        enTitle: "GPUs Connect",
+        zhText: "NVLink/NVSwitch 负责机内或柜内，InfiniBand/RoCE 负责跨节点集群。",
+        enText: "NVLink/NVSwitch handle scale-up domains; InfiniBand/RoCE handle scale-out clusters."
+      },
+      {
+        tone: "storage",
+        code: "05",
+        zhTitle: "数据跟得上",
+        enTitle: "Data Keeps Up",
+        zhText: "SSD、IOPS、吞吐、checkpoint、KV cache 会影响昂贵 GPU 是否空转。",
+        enText: "SSDs, IOPS, throughput, checkpoints, and KV cache affect whether expensive GPUs sit idle."
+      },
+      {
+        tone: "ops",
+        code: "06",
+        zhTitle: "算力可销售",
+        enTitle: "Compute Sold",
+        zhText: "调度、利用率、tokens/s、P99 延迟决定成本、毛利和客户体验。",
+        enText: "Scheduling, utilization, tokens/s, and P99 latency determine cost, margin, and customer experience."
+      }
+    ];
+
+    const metrics = [
+      { zh: "功率 Power", en: "Power", zhText: "瞬时用电能力，AI 园区常用 kW/MW 表示。", enText: "Instantaneous electrical capacity, often expressed in kW or MW." },
+      { zh: "热负载 Heat", en: "Heat", zhText: "IT 用掉的电几乎最终都变成热，必须被带走。", enText: "Electricity used by IT equipment almost all becomes heat that must be removed." },
+      { zh: "带宽 Bandwidth", en: "Bandwidth", zhText: "GPU 之间同步越频繁，网络越像第二个算力瓶颈。", enText: "The more GPUs synchronize, the more networking becomes a compute bottleneck." },
+      { zh: "利用率 Utilization", en: "Utilization", zhText: "买到 GPU 只是 CAPEX，跑满 GPU 才产生收入。", enText: "Buying GPUs is capex; keeping them busy creates revenue." }
+    ];
+
+    const visuals = [
+      {
+        image: "image2_diagrams/07-ai-data-center-power-chain.png",
+        zhTitle: "数据中心供电链",
+        enTitle: "Data-Center Power Chain",
+        zhText: "从电网/PPA 到变电、UPS/BESS、PDU 和 GPU 机柜，解释 MW 为什么先卡在电力接入。",
+        enText: "From grid/PPA to substations, UPS/BESS, PDU, and GPU racks, showing why MW capacity starts with power access."
+      },
+      {
+        image: "image2_diagrams/02-gpu-server-cutaway.png",
+        zhTitle: "AI 服务器剖面",
+        enTitle: "AI Server Cutaway",
+        zhText: "把 GPU、HBM、CPU、SSD、NIC/DPU、电源和液冷放回同一台服务器里看。",
+        enText: "Places GPU, HBM, CPU, SSD, NIC/DPU, power, and liquid cooling inside the same server."
+      },
+      {
+        image: "image2_diagrams/08-liquid-cooling-loop.png",
+        zhTitle: "液冷回路",
+        enTitle: "Liquid Cooling Loop",
+        zhText: "冷板、manifold、CDU、设施侧水环路和 heat rejection 共同决定高密机柜上限。",
+        enText: "Cold plates, manifolds, CDUs, facility water loops, and heat rejection set the ceiling for dense racks."
+      },
+      {
+        image: "image2_diagrams/04-scale-up-vs-scale-out-network.png",
+        zhTitle: "Scale-up vs Scale-out",
+        enTitle: "Scale-up vs Scale-out",
+        zhText: "区分 GPU 域内互联和跨服务器互联，避免把 NVLink、InfiniBand、RoCE 混成一类。",
+        enText: "Separates intra-domain GPU interconnect from cross-server networking so NVLink, InfiniBand, and RoCE do not blur together."
+      },
+      {
+        image: "image2_diagrams/05-optical-module-link.png",
+        zhTitle: "光模块链路",
+        enTitle: "Optical Module Link",
+        zhText: "交换机、SerDes/DSP、可插拔光模块、光纤和 patch panel 组成 AI 后端网络的高速通道。",
+        enText: "Switches, SerDes/DSP, pluggable optical modules, fiber, and patch panels form high-speed AI backend links."
+      },
+      {
+        image: "image2_diagrams/19-data-center-cooling-paths.png",
+        zhTitle: "三种冷却路径",
+        enTitle: "Cooling Paths",
+        zhText: "风冷、冷板液冷、浸没式液冷的边界不同，对改造成本和供应链弹性也不同。",
+        enText: "Air, cold-plate liquid, and immersion cooling have different limits, retrofit costs, and supply-chain implications."
+      }
+    ];
+
+    const formulas = [
+      {
+        zhTitle: "直流/单相近似功率",
+        enTitle: "DC or single-phase approximation",
+        code: "P = V × I",
+        zhText: "电压 V 乘以电流 A 得到功率 W。功率一定时，提高电压可以降低电流。",
+        enText: "Voltage times current gives power. For the same power, higher voltage reduces current."
+      },
+      {
+        zhTitle: "三相交流功率",
+        enTitle: "Three-phase AC power",
+        code: "P = √3 × V × I × PF",
+        zhText: "大型数据中心常用三相电，PF 是功率因数，用来区分有效功率和视在功率。",
+        enText: "Large data centers use three-phase power. PF separates real power from apparent power."
+      },
+      {
+        zhTitle: "电量",
+        enTitle: "Energy",
+        code: "kWh = kW × hours",
+        zhText: "功率是速度，电量是累计消耗。1MW 连续运行 1 小时就是 1MWh。",
+        enText: "Power is the rate; energy is accumulated use. 1MW running for 1 hour equals 1MWh."
+      },
+      {
+        zhTitle: "PUE",
+        enTitle: "Power Usage Effectiveness",
+        code: "PUE = Total Facility Energy / IT Energy",
+        zhText: "数据中心总耗电除以 IT 设备耗电。越接近 1，非 IT 开销越低。",
+        enText: "Total facility energy divided by IT energy. Closer to 1 means lower non-IT overhead."
+      },
+      {
+        zhTitle: "WUE",
+        enTitle: "Water Usage Effectiveness",
+        code: "WUE = Site Water Use / IT Energy",
+        zhText: "常用 L/kWh 表示，衡量为了支撑 IT 负载消耗了多少水。",
+        enText: "Often expressed as L/kWh, measuring water consumed to support IT energy use."
+      }
+    ];
+
+    const bottlenecks = [
+      { tone: "#c24135", zhTitle: "电力接入", enTitle: "Power Access", zhText: "看可用 MW、并网排队、PPA、电价和变电站建设节奏。", enText: "Track available MW, interconnection queues, PPAs, power price, and substation timing." },
+      { tone: "#0f766e", zhTitle: "液冷能力", enTitle: "Liquid Cooling", zhText: "高功率机柜会把需求推向冷板、CDU、接头、泵和热交换器。", enText: "High-power racks push demand toward cold plates, CDUs, fittings, pumps, and heat exchangers." },
+      { tone: "#7c3aed", zhTitle: "HBM/先进封装", enTitle: "HBM / Packaging", zhText: "GPU 出货受 HBM、CoWoS/先进封装、基板和良率共同约束。", enText: "GPU shipments are constrained by HBM, advanced packaging, substrates, and yield." },
+      { tone: "#2563eb", zhTitle: "光模块/交换机", enTitle: "Optics / Switches", zhText: "集群越大，400G/800G/1.6T 链路和交换芯片越关键。", enText: "As clusters grow, 400G/800G/1.6T links and switch silicon become more critical." },
+      { tone: "#b7791f", zhTitle: "存储 IO", enTitle: "Storage IO", zhText: "训练数据、checkpoint、KV cache 跟不上时，GPU 会等待数据。", enText: "If datasets, checkpoints, or KV cache cannot keep up, GPUs wait for data." },
+      { tone: "#168a61", zhTitle: "GPU 利用率", enTitle: "GPU Utilization", zhText: "调度、网络、软件栈和客户负载共同决定资本开支能否转成收入。", enText: "Scheduling, networking, software stack, and demand determine whether capex turns into revenue." }
+    ];
+
+    const sources = [
+      {
+        title: "NVIDIA NVLink / NVLink Switch",
+        href: "https://www.nvidia.com/en-us/data-center/nvlink/",
+        zhText: "用于解释 NVLink、NVSwitch、scale-up GPU 通信和机柜级 GPU 域。",
+        enText: "For NVLink, NVSwitch, scale-up GPU communication, and rack-scale GPU domains."
+      },
+      {
+        title: "NVIDIA NCCL documentation",
+        href: "https://docs.nvidia.com/deeplearning/nccl/user-guide/docs/overview.html",
+        zhText: "用于解释 NCCL、collective operations、AllReduce 和 GPU 集群通信软件层。",
+        enText: "For NCCL, collective operations, AllReduce, and the GPU-cluster communication software layer."
+      },
+      {
+        title: "InfiniBand Trade Association",
+        href: "https://www.infinibandta.org/about-infiniband/",
+        zhText: "用于解释 InfiniBand、低延迟、高带宽、RDMA 和 HPC/AI 集群网络。",
+        enText: "For InfiniBand, low latency, high bandwidth, RDMA, and HPC/AI cluster networking."
+      },
+      {
+        title: "Eaton Coolant Distribution Units",
+        href: "https://www.eaton.com/us/en-us/markets/data-centers/data-center-cooling/cdus/coolant-distribution-unit-technical-paper.html",
+        zhText: "用于解释 CDU、冷板液冷、设施水和机柜级热管理。",
+        enText: "For CDUs, cold-plate liquid cooling, facility water, and rack-level thermal management."
+      },
+      {
+        title: "PUE definition",
+        href: "https://en.wikipedia.org/wiki/Power_usage_effectiveness",
+        zhText: "用于解释 Power Usage Effectiveness 的公式、含义和接近 1 的直觉。",
+        enText: "For the formula and intuition of Power Usage Effectiveness."
+      },
+      {
+        title: "WUE definition",
+        href: "https://en.wikipedia.org/wiki/Water_usage_effectiveness",
+        zhText: "用于解释 Water Usage Effectiveness 以及 L/kWh 的数据中心用水口径。",
+        enText: "For Water Usage Effectiveness and the L/kWh data-center water metric."
+      }
+    ];
+
+    const terms = [
+      { cat: "power", zh: "电压", en: "Voltage", abbr: "V", zhExplain: "推动电流流动的电势差，像电路里的压力。", enExplain: "The electric potential difference that pushes current through a circuit.", whyZh: "功率一定时，提高电压可以降低电流，减少线缆损耗和铜材压力。", whyEn: "For fixed power, higher voltage lowers current and reduces cable losses and copper burden." },
+      { cat: "power", zh: "电流", en: "Current", abbr: "A", zhExplain: "单位时间流过导体的电荷量。", enExplain: "The amount of electric charge flowing through a conductor per unit time.", whyZh: "AI 高功率机柜电流很大，线路、接头、母线和保护设备都要按电流设计。", whyEn: "High-power AI racks create large currents, shaping cables, connectors, busways, and protection gear." },
+      { cat: "power", zh: "功率", en: "Power", abbr: "W / kW / MW", zhExplain: "设备瞬时消耗或承载电能的能力。", enExplain: "The instantaneous rate at which equipment consumes or carries energy.", whyZh: "数据中心容量常说 20MW、100MW，指的是能承载的持续功率规模。", whyEn: "Data-center capacity is often quoted as 20MW or 100MW, meaning sustained power capacity." },
+      { cat: "power", zh: "电量", en: "Energy", abbr: "kWh / MWh", zhExplain: "功率在一段时间内累积后的用电量。", enExplain: "Power accumulated over time.", whyZh: "电费、碳排、水耗通常按电量而非瞬时功率结算。", whyEn: "Electricity cost, emissions, and water metrics are usually tied to energy rather than instantaneous power." },
+      { cat: "power", zh: "千瓦/兆瓦", en: "Kilowatt / Megawatt", abbr: "kW / MW", zhExplain: "1kW = 1,000W；1MW = 1,000kW。", enExplain: "1kW equals 1,000W; 1MW equals 1,000kW.", whyZh: "单柜看 kW，园区和并网容量看 MW。", whyEn: "Rack power is tracked in kW; campus and grid capacity are tracked in MW." },
+      { cat: "power", zh: "千瓦时/兆瓦时", en: "Kilowatt-hour / Megawatt-hour", abbr: "kWh / MWh", zhExplain: "1kW 运行 1 小时是 1kWh；1MW 运行 1 小时是 1MWh。", enExplain: "1kW for 1 hour is 1kWh; 1MW for 1 hour is 1MWh.", whyZh: "年耗电、PPA 采购量和能源成本都要落到 MWh。", whyEn: "Annual energy use, PPA volumes, and energy cost all land in MWh." },
+      { cat: "power", zh: "三相电", en: "Three-phase Power", abbr: "3Φ", zhExplain: "三组相位相差 120 度的交流电，大型负载常用。", enExplain: "AC power with three phases separated by 120 degrees, common for large loads.", whyZh: "数据中心配电、变压器和 UPS 容量通常按三相系统设计。", whyEn: "Data-center distribution, transformers, and UPS capacity are usually designed around three-phase systems." },
+      { cat: "power", zh: "功率因数", en: "Power Factor", abbr: "PF", zhExplain: "有效功率与视在功率的比例。", enExplain: "The ratio of real power to apparent power.", whyZh: "PF 低会让电网、UPS、变压器承载更大视在功率。", whyEn: "Low PF forces grids, UPS systems, and transformers to carry more apparent power." },
+      { cat: "power", zh: "视在功率", en: "Apparent Power", abbr: "kVA", zhExplain: "电压和电流相乘得到的容量口径，交流设备常用。", enExplain: "The voltage-current capacity measure commonly used for AC equipment.", whyZh: "UPS、发电机和变压器常按 kVA 标称，不能直接等同于 kW。", whyEn: "UPS, generators, and transformers are often rated in kVA, not directly the same as kW." },
+      { cat: "power", zh: "线路损耗", en: "I-squared-R Loss", abbr: "I²R", zhExplain: "电流通过电阻时产生的发热损耗，与电流平方成正比。", enExplain: "Heat loss from current flowing through resistance, proportional to current squared.", whyZh: "这解释了为什么高功率系统倾向提高电压、缩短路径、优化母线和连接器。", whyEn: "It explains the push toward higher voltage, shorter paths, better busways, and better connectors." },
+      { cat: "power", zh: "变压器", en: "Transformer", abbr: "", zhExplain: "把电网高压转换为数据中心可用电压的电气设备。", enExplain: "Electrical equipment that converts grid voltage to levels usable by the data center.", whyZh: "变压器交期和容量会影响 AI 数据中心上电节奏。", whyEn: "Transformer capacity and lead times influence when AI data centers can energize." },
+      { cat: "power", zh: "开关柜", en: "Switchgear", abbr: "", zhExplain: "用于电力分配、隔离、保护和故障切断的设备组合。", enExplain: "Equipment used for power distribution, isolation, protection, and fault interruption.", whyZh: "高压/中压开关柜是从电网进入园区的关键设备。", whyEn: "Medium- and high-voltage switchgear is key infrastructure between the grid and site." },
+      { cat: "power", zh: "不间断电源", en: "Uninterruptible Power Supply", abbr: "UPS", zhExplain: "市电中断或波动时提供短时备电的系统。", enExplain: "A system that provides short-term backup power during grid outages or voltage disturbances.", whyZh: "AI 集群中断代价高，UPS 是连续运行和电能质量的核心环节。", whyEn: "AI cluster interruptions are costly, making UPS central to uptime and power quality." },
+      { cat: "power", zh: "电池备份单元", en: "Battery Backup Unit", abbr: "BBU", zhExplain: "服务器、机柜或电力系统中的电池备份模块。", enExplain: "A battery backup module used in servers, racks, or power systems.", whyZh: "高密服务器可能把部分备电下沉到机柜或服务器层级。", whyEn: "Dense servers can move some backup power closer to rack or server level." },
+      { cat: "power", zh: "配电单元", en: "Power Distribution Unit", abbr: "PDU", zhExplain: "把上游电力分配到机柜或设备的装置。", enExplain: "A device that distributes upstream power to racks or equipment.", whyZh: "PDU 额定电流、监控能力和可靠性影响机柜可用功率。", whyEn: "PDU current ratings, monitoring, and reliability affect usable rack power." },
+      { cat: "power", zh: "母线槽", en: "Busway", abbr: "", zhExplain: "用封闭母线系统在机房内分配大电流。", enExplain: "An enclosed busbar system for distributing high current inside the data hall.", whyZh: "高密机柜要求更灵活、更高容量的配电路径，母线槽价值量提升。", whyEn: "High-density racks need flexible high-capacity distribution paths, raising busway relevance." },
+      { cat: "power", zh: "冗余等级", en: "Redundancy", abbr: "N / N+1 / 2N", zhExplain: "N 是刚好够用，N+1 是多一套备用，2N 是两套完整系统。", enExplain: "N is just enough, N+1 adds one spare, and 2N duplicates the full system.", whyZh: "冗余越高，可靠性越高，但资本开支和空间占用也越高。", whyEn: "More redundancy improves reliability but raises capex and space requirements." },
+      { cat: "power", zh: "电能使用效率", en: "Power Usage Effectiveness", abbr: "PUE", zhExplain: "数据中心总耗电除以 IT 设备耗电。", enExplain: "Total data-center energy divided by IT-equipment energy.", whyZh: "PUE 越接近 1，说明制冷、配电损耗等非 IT 开销越低。", whyEn: "The closer PUE is to 1, the lower the cooling and power-distribution overhead." },
+
+      { cat: "rack", zh: "机柜功率密度", en: "Rack Density", abbr: "kW/rack", zhExplain: "单个机柜可承载的 IT 功率。", enExplain: "The IT power a rack can support.", whyZh: "AI 机柜从十几 kW 升到 80kW 以上，会倒逼供电和散热重构。", whyEn: "AI racks moving from tens of kW to 80kW+ force power and cooling redesign." },
+      { cat: "rack", zh: "U 位", en: "Rack Unit", abbr: "U", zhExplain: "服务器高度单位，1U 约 1.75 英寸。", enExplain: "A rack height unit; 1U is about 1.75 inches.", whyZh: "整柜方案会在有限 U 位里塞入 GPU、交换模块、电源和冷却部件。", whyEn: "Rack-scale systems pack GPUs, switching, power, and cooling into finite rack units." },
+      { cat: "rack", zh: "AI 服务器", en: "AI Server", abbr: "", zhExplain: "面向训练或推理工作负载配置 GPU/ASIC、CPU、内存、网卡和存储的服务器。", enExplain: "A server configured with GPUs/ASICs, CPUs, memory, NICs, and storage for training or inference.", whyZh: "它是 GPU 从芯片变成可部署算力的系统载体。", whyEn: "It is the system vehicle that turns accelerator chips into deployable compute." },
+      { cat: "rack", zh: "整柜系统", en: "Rack-scale System", abbr: "", zhExplain: "以机柜为交付单元集成服务器、交换、供电和冷却。", enExplain: "A rack-level delivery unit integrating servers, switching, power, and cooling.", whyZh: "GB200/NVL 等架构让竞争从单机转向整柜协同。", whyEn: "Architectures such as NVL shift competition from single servers to rack-level integration." },
+      { cat: "rack", zh: "电源模块", en: "Power Supply Unit", abbr: "PSU", zhExplain: "把交流或高压直流转换成服务器内部可用电压。", enExplain: "Converts AC or high-voltage DC into voltages used inside the server.", whyZh: "PSU 效率、冗余和功率密度影响整机能效和可维护性。", whyEn: "PSU efficiency, redundancy, and density affect system energy efficiency and serviceability." },
+      { cat: "rack", zh: "48V 架构", en: "48V Architecture", abbr: "48V", zhExplain: "在服务器或机柜内部使用 48V 配电，再向芯片侧转换。", enExplain: "Uses 48V distribution inside servers or racks before conversion near chips.", whyZh: "相比 12V，48V 在高功率下可降低电流和损耗。", whyEn: "Compared with 12V, 48V lowers current and losses at high power." },
+      { cat: "rack", zh: "图形处理器", en: "Graphics Processing Unit", abbr: "GPU", zhExplain: "擅长并行矩阵计算的加速器，是当前 AI 训练和推理主流硬件。", enExplain: "A parallel processor well suited to matrix operations and dominant in AI training and inference.", whyZh: "GPU 是算力 CapEx 的核心，但系统价值还包括 HBM、网络、电源和散热。", whyEn: "GPUs are core compute capex, but system value also includes HBM, networking, power, and cooling." },
+      { cat: "rack", zh: "中央处理器", en: "Central Processing Unit", abbr: "CPU", zhExplain: "通用处理器，负责控制、调度、预处理和非加速任务。", enExplain: "A general-purpose processor for control, scheduling, preprocessing, and non-accelerated tasks.", whyZh: "CPU/GPU 配比影响数据加载、推理服务和系统总成本。", whyEn: "The CPU/GPU ratio affects data loading, inference serving, and total system cost." },
+      { cat: "rack", zh: "高带宽存储器", en: "High Bandwidth Memory", abbr: "HBM", zhExplain: "贴近 GPU/ASIC 封装的堆叠式 DRAM。", enExplain: "Stacked DRAM placed close to GPU/ASIC packages.", whyZh: "模型权重、激活值和 KV cache 需要极高带宽，HBM 是关键瓶颈。", whyEn: "Weights, activations, and KV cache need very high bandwidth, making HBM a key bottleneck." },
+      { cat: "rack", zh: "热设计功耗", en: "Thermal Design Power / Total Graphics Power", abbr: "TDP / TGP", zhExplain: "芯片或 GPU 在设计散热时参考的功率/热量水平。", enExplain: "The power or heat level used to design cooling for a chip or GPU.", whyZh: "TDP/TGP 越高，冷板、CDU、机柜供电和设施散热压力越大。", whyEn: "Higher TDP/TGP increases pressure on cold plates, CDUs, rack power, and facility cooling." },
+      { cat: "rack", zh: "电压调节模块/电源管理芯片", en: "Voltage Regulator Module / Power Management IC", abbr: "VRM / PMIC", zhExplain: "把输入电压精确转换为芯片所需低电压大电流。", enExplain: "Converts input voltage into the low-voltage, high-current rails required by chips.", whyZh: "GPU 板级功率上升后，VRM/PMIC 的效率和散热很关键。", whyEn: "As GPU board power rises, VRM/PMIC efficiency and thermal behavior become critical." },
+      { cat: "rack", zh: "网卡/数据处理器", en: "Network Interface Card / Data Processing Unit", abbr: "NIC / DPU", zhExplain: "NIC 接入网络，DPU 可卸载网络、存储、安全和虚拟化任务。", enExplain: "A NIC connects servers to the network; a DPU can offload networking, storage, security, and virtualization.", whyZh: "它是服务器和后端网络之间的关键接口，不是光模块也不是 GPU。", whyEn: "It is the key interface between servers and backend networks, not an optical module or GPU." },
+      { cat: "rack", zh: "高速外设互联", en: "PCI Express", abbr: "PCIe", zhExplain: "连接 CPU、GPU、网卡和 SSD 的高速总线标准。", enExplain: "A high-speed bus standard connecting CPUs, GPUs, NICs, and SSDs.", whyZh: "PCIe 带宽和拓扑会影响 GPU、网卡、存储之间的数据路径。", whyEn: "PCIe bandwidth and topology affect data paths among GPUs, NICs, and storage." },
+
+      { cat: "cooling", zh: "热负载", en: "Thermal Load", abbr: "W / kW", zhExplain: "设备运行产生、需要被散热系统带走的热量。", enExplain: "The heat generated by equipment that must be removed by cooling systems.", whyZh: "IT 用电几乎最终都变成热，所以 1MW IT 负载近似 1MW 热负载。", whyEn: "Almost all IT electricity becomes heat, so 1MW of IT load is roughly 1MW of heat load." },
+      { cat: "cooling", zh: "风冷", en: "Air Cooling", abbr: "", zhExplain: "用风扇、空气流动和机房空调带走热量。", enExplain: "Uses fans, airflow, and room cooling to remove heat.", whyZh: "风冷成熟简单，但面对高功率 AI 机柜会接近物理和能效上限。", whyEn: "Air cooling is mature and simple but approaches physical and efficiency limits with high-power AI racks." },
+      { cat: "cooling", zh: "液冷", en: "Liquid Cooling", abbr: "", zhExplain: "用水或冷却液在靠近热源的位置吸收并搬运热量。", enExplain: "Uses water or coolant to absorb and move heat close to the source.", whyZh: "高功率 GPU 使液冷从可选方案变成许多 AI 集群的必要条件。", whyEn: "High-power GPUs make liquid cooling necessary for many AI clusters." },
+      { cat: "cooling", zh: "冷板", en: "Cold Plate", abbr: "", zhExplain: "贴近 CPU/GPU 等热源，内部有冷却液流道的换热部件。", enExplain: "A heat-exchange component with coolant channels mounted near CPUs/GPUs.", whyZh: "冷板把热量从芯片带到液冷回路，是 direct-to-chip 液冷核心。", whyEn: "Cold plates move chip heat into the liquid loop and are central to direct-to-chip cooling." },
+      { cat: "cooling", zh: "冷却液分配单元", en: "Coolant Distribution Unit", abbr: "CDU", zhExplain: "连接设施侧冷源和 IT 侧液冷回路，控制流量、温度和压力。", enExplain: "Connects facility cooling to IT liquid loops and controls flow, temperature, and pressure.", whyZh: "CDU 是液冷系统的枢纽，影响机柜密度、可靠性和运维。", whyEn: "The CDU is the hub of liquid cooling, shaping rack density, reliability, and operations." },
+      { cat: "cooling", zh: "后门换热器", en: "Rear-door Heat Exchanger", abbr: "RDHx", zhExplain: "安装在机柜后门，用液体吸收服务器排出的热风热量。", enExplain: "A rack rear door that uses liquid to absorb heat from server exhaust air.", whyZh: "适合部分改造场景，可提高机柜热管理能力。", whyEn: "Useful for some retrofit scenarios and improves rack-level thermal management." },
+      { cat: "cooling", zh: "浸没式液冷", en: "Immersion Cooling", abbr: "", zhExplain: "把服务器或部件浸入绝缘冷却液中直接换热。", enExplain: "Submerges servers or components in dielectric coolant for direct heat transfer.", whyZh: "散热能力强，但维护、材料兼容、标准化和供应链复杂度更高。", whyEn: "It offers strong cooling but adds maintenance, material compatibility, standardization, and supply-chain complexity." },
+      { cat: "cooling", zh: "温差", en: "Delta T", abbr: "ΔT", zhExplain: "冷却介质进出口之间的温度差。", enExplain: "The temperature difference between coolant or air inlet and outlet.", whyZh: "在相同流量下，ΔT 越大，能带走的热量越多。", whyEn: "At the same flow rate, higher Delta T can carry away more heat." },
+      { cat: "cooling", zh: "流量", en: "Flow Rate", abbr: "L/min", zhExplain: "单位时间通过液冷回路的冷却液体积。", enExplain: "The volume of coolant moving through a liquid loop per unit time.", whyZh: "流量不足会造成芯片温度升高，流量过高会增加泵耗和压降。", whyEn: "Too little flow raises chip temperature; too much flow increases pump power and pressure drop." },
+      { cat: "cooling", zh: "压降", en: "Pressure Drop", abbr: "ΔP", zhExplain: "冷却液经过冷板、管路和接头时损失的压力。", enExplain: "Pressure lost as coolant moves through cold plates, pipes, and fittings.", whyZh: "压降影响泵选型、可靠性和冷却系统能耗。", whyEn: "Pressure drop affects pump sizing, reliability, and cooling-system energy use." },
+      { cat: "cooling", zh: "用水效率", en: "Water Usage Effectiveness", abbr: "WUE", zhExplain: "数据中心用水量除以 IT 设备电量，常用 L/kWh 表示。", enExplain: "Data-center water use divided by IT energy, often expressed in L/kWh.", whyZh: "液冷不一定高耗水，但园区冷却方式、气候和闭环程度会影响水资源压力。", whyEn: "Liquid cooling does not automatically mean high water use, but cooling design, climate, and loop closure affect water stress." },
+
+      { cat: "network", zh: "带宽", en: "Bandwidth", abbr: "Gb/s / GB/s", zhExplain: "单位时间能传输的数据量。", enExplain: "The amount of data that can be transmitted per unit time.", whyZh: "训练和 MoE 推理需要频繁同步，带宽不足会拖慢 GPU。", whyEn: "Training and MoE inference synchronize often, so insufficient bandwidth slows GPUs." },
+      { cat: "network", zh: "延迟", en: "Latency", abbr: "ns / μs / ms", zhExplain: "数据从一端到另一端所需时间。", enExplain: "The time needed for data to travel from one endpoint to another.", whyZh: "小批量推理、参数同步和集群调度对低延迟很敏感。", whyEn: "Small-batch inference, parameter synchronization, and cluster scheduling are latency-sensitive." },
+      { cat: "network", zh: "NVIDIA 高速互联", en: "NVLink", abbr: "NVLink", zhExplain: "NVIDIA 的 GPU 到 GPU 高速互联技术。", enExplain: "NVIDIA's high-speed GPU-to-GPU interconnect technology.", whyZh: "用于 scale-up，把同服务器、同机柜或特定 GPU 域内的 GPU 更紧密连接。", whyEn: "Used for scale-up, tightly connecting GPUs inside a server, rack, or GPU domain." },
+      { cat: "network", zh: "NVIDIA 交换互联芯片", en: "NVSwitch", abbr: "NVSwitch", zhExplain: "基于 NVLink 的交换互联，让多颗 GPU 形成高带宽通信域。", enExplain: "An NVLink-based switching fabric that creates a high-bandwidth GPU communication domain.", whyZh: "多 GPU 系统需要接近全互联能力，NVSwitch 是 NVIDIA 整柜路线核心。", whyEn: "Large GPU systems need near all-to-all connectivity, making NVSwitch core to NVIDIA rack-scale systems." },
+      { cat: "network", zh: "纵向扩展", en: "Scale-up", abbr: "", zhExplain: "在单机、单柜或紧密 GPU 域内扩展计算资源。", enExplain: "Expanding compute within a server, rack, or tightly coupled GPU domain.", whyZh: "Scale-up 通信越快，大模型并行和 MoE 通信越顺。", whyEn: "Faster scale-up communication helps model parallelism and MoE traffic." },
+      { cat: "network", zh: "横向扩展", en: "Scale-out", abbr: "", zhExplain: "跨服务器、跨机柜甚至跨数据中心扩展集群。", enExplain: "Expanding clusters across servers, racks, or even data centers.", whyZh: "AI 集群规模上去后，scale-out 网络决定上万 GPU 的有效算力。", whyEn: "At large scale, scale-out networking determines effective compute across thousands of GPUs." },
+      { cat: "network", zh: "InfiniBand", en: "InfiniBand", abbr: "IB", zhExplain: "面向 HPC/AI 集群的低延迟高带宽网络技术。", enExplain: "A low-latency, high-bandwidth networking technology for HPC and AI clusters.", whyZh: "训练集群常用 IB 来降低同步开销和 CPU 负担。", whyEn: "Training clusters use IB to reduce synchronization overhead and CPU burden." },
+      { cat: "network", zh: "以太网", en: "Ethernet", abbr: "", zhExplain: "最广泛使用的网络基础技术。", enExplain: "The most widely used networking foundation.", whyZh: "AI 以太网通过 RoCE、拥塞控制和专用交换机进入后端训练网络。", whyEn: "AI Ethernet enters backend training networks through RoCE, congestion control, and dedicated switches." },
+      { cat: "network", zh: "融合以太网上的 RDMA", en: "RDMA over Converged Ethernet", abbr: "RoCE", zhExplain: "让 RDMA 能在以太网上运行的协议。", enExplain: "A protocol that enables RDMA to run over Ethernet.", whyZh: "它是以太网挑战 InfiniBand 的关键路径，但需要更强网络调优。", whyEn: "It is a key path for Ethernet to challenge InfiniBand, but requires stronger network tuning." },
+      { cat: "network", zh: "远程直接内存访问", en: "Remote Direct Memory Access", abbr: "RDMA", zhExplain: "网卡直接读写远端服务器内存，减少 CPU 参与和数据拷贝。", enExplain: "Allows a NIC to directly read or write remote server memory with less CPU involvement and copying.", whyZh: "AI/HPC 集群大量节点通信时，RDMA 能降低延迟和 CPU 开销。", whyEn: "For AI/HPC node-to-node traffic, RDMA reduces latency and CPU overhead." },
+      { cat: "network", zh: "NVIDIA 集合通信库", en: "NVIDIA Collective Communications Library", abbr: "NCCL", zhExplain: "NVIDIA 用于多 GPU、多节点 collective communication 的软件库。", enExplain: "NVIDIA's software library for collective communication across GPUs and nodes.", whyZh: "AllReduce、AllGather 等操作的效率会直接影响分布式训练吞吐。", whyEn: "Efficiency of AllReduce, AllGather, and related operations directly affects distributed training throughput." },
+      { cat: "network", zh: "全规约", en: "AllReduce", abbr: "", zhExplain: "把多个 GPU 的数据聚合计算后，再把结果分发回所有 GPU。", enExplain: "Aggregates data across GPUs and distributes the result back to all GPUs.", whyZh: "梯度同步常用 AllReduce，是训练通信瓶颈的代表操作。", whyEn: "Gradient synchronization often uses AllReduce, making it a representative training communication bottleneck." },
+      { cat: "network", zh: "拓扑结构", en: "Topology", abbr: "", zhExplain: "节点和交换机如何连接的结构，比如 fat-tree、dragonfly、rail-optimized。", enExplain: "The structure of how nodes and switches connect, such as fat-tree, dragonfly, or rail-optimized.", whyZh: "拓扑决定拥塞、跳数、容错和集群扩展效率。", whyEn: "Topology determines congestion, hop count, fault tolerance, and cluster scaling efficiency." },
+      { cat: "network", zh: "光模块", en: "Optical Module", abbr: "400G / 800G / 1.6T", zhExplain: "把电信号和光信号转换的可插拔高速通信模块。", enExplain: "A pluggable high-speed module that converts electrical and optical signals.", whyZh: "AI 后端网络链路多、速率高，光模块价值量显著提升。", whyEn: "AI backend networks need many high-speed links, raising optical-module content." },
+      { cat: "network", zh: "共封装光学", en: "Co-Packaged Optics", abbr: "CPO", zhExplain: "把光学引擎靠近或集成到交换芯片封装附近。", enExplain: "Places optical engines close to or integrated near switch ASIC packages.", whyZh: "CPO 试图缩短高速电连接距离，降低功耗和信号完整性压力。", whyEn: "CPO aims to shorten high-speed electrical paths, reducing power and signal-integrity pressure." },
+
+      { cat: "ops", zh: "固态硬盘/企业级固态硬盘", en: "Solid-State Drive / Enterprise SSD", abbr: "SSD / eSSD", zhExplain: "基于 NAND 的高速非易失性存储，用于数据集、checkpoint 和缓存。", enExplain: "High-speed NAND-based non-volatile storage for datasets, checkpoints, and caches.", whyZh: "SSD/eSSD 不是 HBM，但它决定数据管道是否能喂饱 GPU。", whyEn: "SSD/eSSD is not HBM, but it determines whether the data pipeline can feed GPUs." },
+      { cat: "ops", zh: "每秒输入输出次数", en: "Input/Output Operations Per Second", abbr: "IOPS", zhExplain: "存储系统每秒能处理多少次读写操作。", enExplain: "How many read/write operations a storage system can handle per second.", whyZh: "小文件、随机访问和在线服务常看 IOPS。", whyEn: "Small-file, random-access, and online-serving workloads often depend on IOPS." },
+      { cat: "ops", zh: "吞吐量", en: "Throughput", abbr: "GB/s", zhExplain: "单位时间能传输的数据量。", enExplain: "The amount of data moved per unit time.", whyZh: "大模型训练加载大数据集和保存 checkpoint 时更看吞吐。", whyEn: "Large-model training depends on throughput when loading datasets and saving checkpoints." },
+      { cat: "ops", zh: "训练快照", en: "Checkpoint", abbr: "", zhExplain: "训练过程中保存的模型权重和状态快照。", enExplain: "A saved snapshot of model weights and training state.", whyZh: "大模型 checkpoint 巨大，会冲击存储容量、吞吐和网络。", whyEn: "Large-model checkpoints are huge and stress storage capacity, throughput, and networking." },
+      { cat: "ops", zh: "键值缓存", en: "Key-Value Cache", abbr: "KV Cache", zhExplain: "推理时保存 attention 的 key/value 状态，减少重复计算。", enExplain: "A cache of attention key/value states during inference that avoids recomputation.", whyZh: "长上下文推理会让 KV cache 消耗大量显存或外部存储带宽。", whyEn: "Long-context inference makes KV cache consume large amounts of memory or external bandwidth." },
+      { cat: "ops", zh: "NVIDIA 并行计算生态", en: "Compute Unified Device Architecture", abbr: "CUDA", zhExplain: "NVIDIA 的 GPU 并行计算平台和软件生态。", enExplain: "NVIDIA's GPU parallel-computing platform and software ecosystem.", whyZh: "CUDA 生态影响开发者迁移成本和 GPU 利用率，是 NVIDIA 护城河之一。", whyEn: "CUDA affects developer switching cost and GPU utilization, forming part of NVIDIA's moat." },
+      { cat: "ops", zh: "AMD GPU 计算生态", en: "Radeon Open Compute platform", abbr: "ROCm", zhExplain: "AMD 面向 GPU 加速计算的开放软件栈。", enExplain: "AMD's open software stack for GPU-accelerated computing.", whyZh: "ROCm 成熟度影响 AMD GPU 在训练和推理集群中的可替代性。", whyEn: "ROCm maturity affects how substitutable AMD GPUs are in training and inference clusters." },
+      { cat: "ops", zh: "容器编排", en: "Kubernetes", abbr: "K8s", zhExplain: "管理容器化应用部署、扩缩容和服务发现的系统。", enExplain: "A system for managing containerized application deployment, scaling, and service discovery.", whyZh: "AI 推理平台常用 Kubernetes 管理服务和资源。", whyEn: "AI inference platforms often use Kubernetes to manage services and resources." },
+      { cat: "ops", zh: "高性能集群调度", en: "Slurm", abbr: "", zhExplain: "HPC 和 AI 训练集群常用的作业调度系统。", enExplain: "A job scheduler widely used in HPC and AI training clusters.", whyZh: "训练作业排队、资源分配和利用率离不开调度系统。", whyEn: "Training queues, resource allocation, and utilization depend on scheduling systems." },
+      { cat: "ops", zh: "GPU 利用率", en: "GPU Utilization", abbr: "%", zhExplain: "GPU 实际用于有效计算的比例。", enExplain: "The share of time or capacity a GPU spends on useful computation.", whyZh: "利用率低会让昂贵 CapEx 无法转化成收入和利润。", whyEn: "Low utilization prevents expensive capex from converting into revenue and profit." },
+      { cat: "ops", zh: "每秒 token 数", en: "Tokens Per Second", abbr: "tokens/s", zhExplain: "模型推理单位时间生成或处理的 token 数量。", enExplain: "The number of tokens a model generates or processes per second.", whyZh: "tokens/s 是推理吞吐和单位成本的重要指标。", whyEn: "tokens/s is a key metric for inference throughput and unit cost." },
+      { cat: "ops", zh: "首 token 延迟", en: "Time To First Token", abbr: "TTFT", zhExplain: "用户请求到模型输出第一个 token 的时间。", enExplain: "The time from a user request to the model producing the first token.", whyZh: "TTFT 影响交互式应用体感，尤其是聊天、代码助手和 Agent。", whyEn: "TTFT affects perceived responsiveness in chat, coding assistants, and agents." },
+      { cat: "ops", zh: "P99 延迟", en: "P99 Latency", abbr: "P99", zhExplain: "99% 请求延迟低于该值。", enExplain: "The latency threshold below which 99% of requests fall.", whyZh: "P99 比平均值更能反映真实用户体验和服务稳定性。", whyEn: "P99 reflects real user experience and service stability better than averages." },
+      { cat: "ops", zh: "批处理大小", en: "Batch Size", abbr: "", zhExplain: "一次训练或推理处理的样本/请求数量。", enExplain: "The number of samples or requests processed at once.", whyZh: "batch size 影响吞吐、延迟、显存占用和模型效果。", whyEn: "Batch size affects throughput, latency, memory use, and model quality." }
+    ];
+
+    let lang = "zh";
+    let activeCategory = "all";
+    let searchTerm = "";
+
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>"']/g, char => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;"
+      }[char]));
+    }
+
+    function ui(key) {
+      return uiText[lang][key] || uiText.zh[key] || key;
+    }
+
+    function localized(item, key) {
+      const value = item[`${lang}${key}`];
+      if (value) return value;
+      return lang === "zh" ? item[`zh${key}`] : item[`en${key}`];
+    }
+
+    function categoryById(id) {
+      return categories.find(category => category.id === id) || categories[0];
+    }
+
+    function setStaticText() {
+      document.documentElement.lang = lang === "zh" ? "zh-CN" : "en";
+      document.title = ui("documentTitle");
+      [
+        "headerEyebrow", "headerTitle", "headerLead", "readTitle", "readLineOne", "readLineTwo",
+        "mapKicker", "mapTitle", "mapHint", "visualKicker", "visualTitle", "visualHint",
+        "termsKicker", "termsTitle", "termsHint", "searchLabel", "formulaKicker", "formulaTitle",
+        "formulaHint", "calculatorKicker", "calculatorTitle", "calculatorHint", "rackKwLabel",
+        "rackCountLabel", "pueLabel", "calculatorNote", "bottleneckKicker", "bottleneckTitle",
+        "bottleneckHint", "sourceKicker", "sourceTitle", "sourceHint"
+      ].forEach(id => {
+        const node = document.getElementById(id);
+        if (node) node.textContent = ui(id);
+      });
+      document.getElementById("termSearch").placeholder = ui("searchPlaceholder");
+      document.querySelectorAll("[data-lang]").forEach(button => {
+        button.classList.toggle("active", button.dataset.lang === lang);
+      });
+    }
+
+    function renderSignalMap() {
+      document.getElementById("signalMap").innerHTML = signalNodes.map(node => `
+        <article class="signal-node ${escapeHtml(node.tone)}">
+          <em>${escapeHtml(node.code)}</em>
+          <strong>${escapeHtml(lang === "zh" ? node.zhTitle : node.enTitle)}</strong>
+          <span>${escapeHtml(lang === "zh" ? node.zhText : node.enText)}</span>
+        </article>
+      `).join("");
+      document.getElementById("legendGrid").innerHTML = metrics.map(metric => `
+        <article class="metric-card">
+          <b>${escapeHtml(lang === "zh" ? metric.zh : metric.en)}</b>
+          <span>${escapeHtml(lang === "zh" ? metric.zhText : metric.enText)}</span>
+        </article>
+      `).join("");
+    }
+
+    function renderVisuals() {
+      document.getElementById("visualGrid").innerHTML = visuals.map((item, index) => `
+        <article class="visual-card ${index === 0 ? "wide" : ""}">
+          <img src="${escapeHtml(item.image)}" alt="${escapeHtml(lang === "zh" ? item.zhTitle : item.enTitle)}" loading="lazy">
+          <div class="visual-copy">
+            <h3>${escapeHtml(lang === "zh" ? item.zhTitle : item.enTitle)}</h3>
+            <p>${escapeHtml(lang === "zh" ? item.zhText : item.enText)}</p>
+          </div>
+        </article>
+      `).join("");
+    }
+
+    function termMatches(term) {
+      const text = [
+        term.zh, term.en, term.abbr, term.zhExplain, term.enExplain, term.whyZh, term.whyEn,
+        categoryById(term.cat).zh, categoryById(term.cat).en
+      ].join(" ").toLowerCase();
+      const categoryOk = activeCategory === "all" || term.cat === activeCategory;
+      const searchOk = !searchTerm || text.includes(searchTerm.toLowerCase());
+      return categoryOk && searchOk;
+    }
+
+    function renderCategories() {
+      const counts = categories.reduce((acc, category) => {
+        acc[category.id] = category.id === "all" ? terms.length : terms.filter(term => term.cat === category.id).length;
+        return acc;
+      }, {});
+      document.getElementById("categoryList").innerHTML = categories.map(category => `
+        <button class="category-button ${activeCategory === category.id ? "active" : ""}" type="button" data-category="${escapeHtml(category.id)}" style="--tone:${escapeHtml(category.tone)}">
+          <i aria-hidden="true"></i>
+          <span>${escapeHtml(lang === "zh" ? category.zh : category.en)}</span>
+          <small>${escapeHtml(counts[category.id])}</small>
+        </button>
+      `).join("");
+      document.querySelectorAll("[data-category]").forEach(button => {
+        button.addEventListener("click", () => {
+          activeCategory = button.dataset.category;
+          renderGlossary();
+        });
+      });
+    }
+
+    function renderGlossary() {
+      renderCategories();
+      const filteredTerms = terms.filter(termMatches);
+      document.getElementById("resultLine").textContent = ui("resultLine")(filteredTerms.length);
+      document.getElementById("termGrid").innerHTML = filteredTerms.length ? filteredTerms.map(term => {
+        const category = categoryById(term.cat);
+        return `
+          <article class="term-card" style="--tone:${escapeHtml(category.tone)}">
+            <div class="term-top">
+              <h3>${escapeHtml(term.zh)}</h3>
+              <span class="en-name">${escapeHtml(term.en)}${term.abbr ? ` / ${escapeHtml(term.abbr)}` : ""}</span>
+            </div>
+            <div class="tag-row">
+              <span class="tag category">${escapeHtml(lang === "zh" ? category.zh : category.en)}</span>
+              ${term.abbr ? `<span class="tag">${escapeHtml(term.abbr)}</span>` : ""}
+            </div>
+            <div class="term-copy">
+              <p><b>${escapeHtml(ui("chineseExplain"))}:</b> ${escapeHtml(term.zhExplain)}</p>
+              <p><b>${escapeHtml(ui("englishExplain"))}:</b> ${escapeHtml(term.enExplain)}</p>
+              <p><b>${escapeHtml(ui("whyItMatters"))}:</b> ${escapeHtml(lang === "zh" ? term.whyZh : term.whyEn)}</p>
+            </div>
+          </article>
+        `;
+      }).join("") : `<div class="empty-state">${escapeHtml(ui("noResults"))}</div>`;
+    }
+
+    function renderFormulas() {
+      document.getElementById("formulaGrid").innerHTML = formulas.map(item => `
+        <article class="formula-card">
+          <h3>${escapeHtml(lang === "zh" ? item.zhTitle : item.enTitle)}</h3>
+          <code>${escapeHtml(item.code)}</code>
+          <p>${escapeHtml(lang === "zh" ? item.zhText : item.enText)}</p>
+        </article>
+      `).join("");
+    }
+
+    function formatNumber(value, digits = 1) {
+      return Number.isFinite(value) ? value.toLocaleString(undefined, { maximumFractionDigits: digits }) : "0";
+    }
+
+    function calculateLoad() {
+      const rackKw = Math.max(0, Number(document.getElementById("rackKw").value) || 0);
+      const rackCount = Math.max(0, Number(document.getElementById("rackCount").value) || 0);
+      const pue = Math.max(1, Number(document.getElementById("pueInput").value) || 1);
+      const itMw = rackKw * rackCount / 1000;
+      const facilityMw = itMw * pue;
+      const overheadMw = facilityMw - itMw;
+      const annualMwh = facilityMw * 24 * 365;
+      const cards = [
+        { label: ui("itLoad"), value: `${formatNumber(itMw, 2)} MW`, text: `${formatNumber(rackKw * rackCount, 0)} kW IT` },
+        { label: ui("facilityLoad"), value: `${formatNumber(facilityMw, 2)} MW`, text: `PUE ${formatNumber(pue, 2)}` },
+        { label: ui("overhead"), value: `${formatNumber(overheadMw, 2)} MW`, text: lang === "zh" ? "冷却、配电等" : "Cooling, distribution, etc." },
+        { label: ui("annualEnergy"), value: `${formatNumber(annualMwh, 0)} MWh`, text: lang === "zh" ? "按全年 24/7 估算" : "Assuming 24/7 full-year run" }
+      ];
+      document.getElementById("calculatorOutput").innerHTML = cards.map(card => `
+        <article class="output-box">
+          <strong>${escapeHtml(card.value)}</strong>
+          <span>${escapeHtml(card.label)}</span>
+          <span>${escapeHtml(card.text)}</span>
+        </article>
+      `).join("");
+    }
+
+    function renderBottlenecks() {
+      document.getElementById("bottleneckGrid").innerHTML = bottlenecks.map(item => `
+        <article class="bottleneck-card" style="--tone:${escapeHtml(item.tone)}">
+          <h3>${escapeHtml(lang === "zh" ? item.zhTitle : item.enTitle)}</h3>
+          <p>${escapeHtml(lang === "zh" ? item.zhText : item.enText)}</p>
+        </article>
+      `).join("");
+    }
+
+    function renderSources() {
+      document.getElementById("sourceGrid").innerHTML = sources.map(source => `
+        <a class="source-card" href="${escapeHtml(source.href)}" target="_blank" rel="noopener">
+          <strong>${escapeHtml(source.title)}</strong>
+          <span>${escapeHtml(lang === "zh" ? source.zhText : source.enText)}</span>
+        </a>
+      `).join("");
+    }
+
+    function renderAll() {
+      setStaticText();
+      renderSignalMap();
+      renderVisuals();
+      renderGlossary();
+      renderFormulas();
+      calculateLoad();
+      renderBottlenecks();
+      renderSources();
+    }
+
+    document.querySelectorAll("[data-lang]").forEach(button => {
+      button.addEventListener("click", () => {
+        lang = button.dataset.lang === "en" ? "en" : "zh";
+        renderAll();
+      });
+    });
+
+    document.getElementById("termSearch").addEventListener("input", event => {
+      searchTerm = event.target.value.trim();
+      renderGlossary();
+    });
+
+    ["rackKw", "rackCount", "pueInput"].forEach(id => {
+      document.getElementById(id).addEventListener("input", calculateLoad);
+    });
+
+    renderAll();
+  </script>
+</body>
+</html>

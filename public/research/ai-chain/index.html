@@ -1,0 +1,2435 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AI 全产业链闭环交互信息图</title>
+  <style>
+    :root {
+      --bg: #f6f4ef;
+      --paper: #ffffff;
+      --paper-soft: #fbfaf7;
+      --ink: #20242a;
+      --muted: #68717c;
+      --line: #dde2e7;
+      --line-soft: #edf0f2;
+      --blue: #2563eb;
+      --green: #168a61;
+      --violet: #7c3aed;
+      --amber: #b7791f;
+      --red: #c24135;
+      --shadow: 0 20px 54px rgba(32, 36, 42, .08);
+      --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--sans);
+      line-height: 1.55;
+    }
+
+    button {
+      appearance: none;
+      border: 0;
+      background: transparent;
+      color: inherit;
+      font: inherit;
+    }
+
+    a { color: inherit; }
+
+    .page {
+      width: min(1500px, calc(100% - 28px));
+      margin: 0 auto;
+      padding: 18px 0 42px;
+    }
+
+    .shell {
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: var(--paper);
+      box-shadow: var(--shadow);
+    }
+
+    header {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 360px;
+      gap: 18px;
+      align-items: end;
+      padding: 26px;
+      border-bottom: 1px solid var(--line-soft);
+      background: var(--paper);
+    }
+
+    .eyebrow {
+      margin: 0 0 7px;
+      color: var(--green);
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 780;
+      text-transform: uppercase;
+    }
+
+    h1, h2, h3, h4, p { margin-top: 0; }
+
+    h1 {
+      margin-bottom: 8px;
+      font-size: clamp(32px, 4vw, 52px);
+      line-height: 1.06;
+      letter-spacing: 0;
+    }
+
+    .lead {
+      max-width: 980px;
+      margin: 0;
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .read-card {
+      display: grid;
+      gap: 8px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--paper-soft);
+      font-size: 12px;
+    }
+
+    .read-card strong { font-size: 13px; }
+    .read-card span { color: var(--muted); line-height: 1.4; }
+
+    .title-tools {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 7px;
+    }
+
+    .title-tools .eyebrow {
+      margin: 0;
+    }
+
+    .lang-toggle {
+      display: inline-flex;
+      gap: 4px;
+      padding: 4px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--paper-soft);
+    }
+
+    .lang-button {
+      cursor: pointer;
+      padding: 5px 9px;
+      border-radius: 999px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 760;
+      line-height: 1;
+    }
+
+    .lang-button.active {
+      background: var(--green);
+      color: #fff;
+    }
+
+    .content {
+      display: grid;
+      gap: 18px;
+      padding: 18px;
+    }
+
+    .flow-strip {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 10px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 15px;
+      background: var(--paper-soft);
+    }
+
+    .flow-step {
+      --tone: var(--green);
+      position: relative;
+      min-width: 0;
+      cursor: pointer;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fff;
+      text-align: left;
+      transition: border-color .16s ease, box-shadow .16s ease, transform .16s ease;
+    }
+
+    .flow-step::after {
+      content: "→";
+      position: absolute;
+      top: 50%;
+      right: -14px;
+      z-index: 2;
+      transform: translateY(-50%);
+      color: #aab2bb;
+      font-family: var(--mono);
+      font-weight: 800;
+    }
+
+    .flow-step:last-child::after { display: none; }
+    .flow-step.application { --tone: var(--blue); }
+    .flow-step.model { --tone: var(--green); }
+    .flow-step.compute { --tone: var(--violet); }
+    .flow-step.semi { --tone: var(--amber); }
+    .flow-step.energy { --tone: var(--red); }
+
+    .flow-step:hover,
+    .flow-step.active {
+      border-color: color-mix(in srgb, var(--tone) 55%, var(--line));
+      box-shadow: 0 14px 30px rgba(32, 36, 42, .08);
+      transform: translateY(-1px);
+    }
+
+    .flow-step em {
+      display: inline-flex;
+      margin-bottom: 7px;
+      padding: 3px 7px;
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--tone) 12%, #fff);
+      color: var(--tone);
+      font-family: var(--mono);
+      font-size: 10px;
+      font-style: normal;
+      font-weight: 800;
+    }
+
+    .flow-step strong {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 14px;
+      line-height: 1.2;
+      overflow-wrap: anywhere;
+    }
+
+    .flow-step span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+      overflow-wrap: anywhere;
+    }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: minmax(360px, .42fr) minmax(0, .58fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: 15px;
+      background: var(--paper);
+    }
+
+    .panel-pad { padding: 16px; }
+
+    .panel-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: start;
+      margin-bottom: 14px;
+    }
+
+    .panel-head h2 {
+      margin: 0;
+      font-size: 21px;
+      line-height: 1.2;
+      letter-spacing: 0;
+    }
+
+    .hint {
+      max-width: 360px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+      text-align: right;
+    }
+
+    .layer-stack {
+      display: grid;
+      gap: 10px;
+    }
+
+    .layer-button {
+      --tone: var(--green);
+      display: grid;
+      grid-template-columns: 58px minmax(0, 1fr);
+      gap: 12px;
+      align-items: center;
+      width: 100%;
+      cursor: pointer;
+      padding: 13px;
+      border: 1px solid var(--line);
+      border-radius: 13px;
+      background: linear-gradient(180deg, #fff, var(--paper-soft));
+      text-align: left;
+      transition: border-color .16s ease, box-shadow .16s ease, transform .16s ease;
+    }
+
+    .layer-button.application { --tone: var(--blue); }
+    .layer-button.model { --tone: var(--green); }
+    .layer-button.compute { --tone: var(--violet); }
+    .layer-button.semi { --tone: var(--amber); }
+    .layer-button.energy { --tone: var(--red); }
+
+    .layer-button:hover,
+    .layer-button.active {
+      border-color: color-mix(in srgb, var(--tone) 58%, var(--line));
+      box-shadow: 0 14px 32px rgba(32, 36, 42, .08);
+      transform: translateY(-1px);
+    }
+
+    .layer-no {
+      display: grid;
+      place-items: center;
+      width: 54px;
+      height: 54px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fff;
+      color: var(--tone);
+      font-family: var(--mono);
+      font-size: 17px;
+      font-weight: 800;
+    }
+
+    .layer-button h3 {
+      margin: 0 0 4px;
+      font-size: 18px;
+      line-height: 1.2;
+      letter-spacing: 0;
+    }
+
+    .layer-button p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12.5px;
+      line-height: 1.35;
+      overflow-wrap: anywhere;
+    }
+
+    .audit-list {
+      display: grid;
+      gap: 8px;
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid var(--line-soft);
+    }
+
+    .audit-list h3 {
+      margin: 0;
+      font-size: 15px;
+    }
+
+    .audit-list p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12.5px;
+      line-height: 1.42;
+    }
+
+    .detail {
+      --tone: var(--green);
+      overflow: hidden;
+    }
+
+    .detail-head {
+      padding: 16px;
+      border-bottom: 1px solid var(--line-soft);
+      background: linear-gradient(180deg, color-mix(in srgb, var(--tone) 10%, #fff), #fff);
+    }
+
+    .detail-head.application { --tone: var(--blue); }
+    .detail-head.model { --tone: var(--green); }
+    .detail-head.compute { --tone: var(--violet); }
+    .detail-head.semi { --tone: var(--amber); }
+    .detail-head.energy { --tone: var(--red); }
+
+    .detail-head h2 {
+      margin: 0 0 8px;
+      font-size: 26px;
+      line-height: 1.16;
+      letter-spacing: 0;
+    }
+
+    .summary {
+      margin: 0;
+      color: #39424d;
+      font-size: 15px;
+    }
+
+    .detail-body {
+      display: grid;
+      gap: 14px;
+      padding: 16px;
+    }
+
+    .meta-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .meta-box,
+    .info-card,
+    .company-card,
+    .process-card,
+    .role-card,
+    .source-card {
+      min-width: 0;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fff;
+    }
+
+    .meta-box {
+      padding: 11px;
+    }
+
+    .meta-box strong,
+    .info-card strong {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 12px;
+      line-height: 1.2;
+    }
+
+    .meta-box span,
+    .info-card span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.38;
+      overflow-wrap: anywhere;
+    }
+
+    .chain {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      align-items: center;
+      padding: 11px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--paper-soft);
+    }
+
+    .chain b {
+      padding: 6px 8px;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      background: #fff;
+      font-size: 12px;
+      line-height: 1.15;
+      overflow-wrap: anywhere;
+    }
+
+    .chain i {
+      color: var(--green);
+      font-family: var(--mono);
+      font-style: normal;
+      font-weight: 800;
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .info-card {
+      padding: 12px;
+    }
+
+    .pill-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .pill {
+      max-width: 100%;
+      padding: 5px 7px;
+      border: 1px solid var(--line-soft);
+      border-radius: 8px;
+      background: var(--paper-soft);
+      color: #303740;
+      font-size: 11.5px;
+      line-height: 1.18;
+      overflow-wrap: anywhere;
+    }
+
+    .company-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 9px;
+    }
+
+    .company-card {
+      padding: 11px;
+    }
+
+    .company-card h4,
+    .process-card h3,
+    .role-card h3,
+    .source-card h3 {
+      margin: 0 0 6px;
+      font-size: 14px;
+      line-height: 1.2;
+      letter-spacing: 0;
+      overflow-wrap: anywhere;
+    }
+
+    .company-card p,
+    .process-card p,
+    .role-card p,
+    .source-card p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.38;
+      overflow-wrap: anywhere;
+    }
+
+    .company-card small {
+      display: block;
+      margin-top: 8px;
+      padding-top: 7px;
+      border-top: 1px solid var(--line-soft);
+      color: #43505d;
+      font-size: 11.5px;
+      line-height: 1.35;
+      overflow-wrap: anywhere;
+    }
+
+    .section {
+      display: grid;
+      gap: 12px;
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 15px;
+      background: var(--paper);
+    }
+
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: end;
+    }
+
+    .section-head h2 {
+      margin: 0;
+      font-size: 21px;
+      line-height: 1.2;
+      letter-spacing: 0;
+    }
+
+    .process-grid {
+      display: grid;
+      grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .process-card {
+      position: relative;
+      padding: 12px;
+    }
+
+    .process-card::after {
+      content: "→";
+      position: absolute;
+      top: 50%;
+      right: -13px;
+      transform: translateY(-50%);
+      color: #aab2bb;
+      font-family: var(--mono);
+      font-weight: 800;
+    }
+
+    .process-card:last-child::after { display: none; }
+
+    .process-card em {
+      display: inline-flex;
+      margin-bottom: 7px;
+      padding: 2px 7px;
+      border-radius: 999px;
+      background: var(--paper-soft);
+      color: var(--green);
+      font-family: var(--mono);
+      font-size: 10px;
+      font-style: normal;
+      font-weight: 800;
+    }
+
+    .branch-grid,
+    .role-grid,
+    .source-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .role-card,
+    .source-card {
+      padding: 12px;
+    }
+
+    .role-card.active {
+      border-color: rgba(22, 138, 97, .48);
+      background: #f7fcfa;
+    }
+
+    .role-chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin: 8px 0;
+    }
+
+    .role-chip {
+      padding: 3px 6px;
+      border: 1px solid var(--line-soft);
+      border-radius: 7px;
+      background: var(--paper-soft);
+      color: #3c4650;
+      font-size: 10.5px;
+      line-height: 1.1;
+    }
+
+    .role-chip.current {
+      border-color: rgba(22, 138, 97, .38);
+      background: #eaf7f0;
+      color: var(--green);
+      font-weight: 760;
+    }
+
+    .source-card a {
+      color: #1f5fbf;
+      font-size: 12px;
+      overflow-wrap: anywhere;
+    }
+
+    .visual-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .visual-grid.single {
+      grid-template-columns: 1fr;
+    }
+
+    .visual-grid.single .visual-card {
+      width: 100%;
+      max-width: 1080px;
+      margin-inline: auto;
+    }
+
+    .visual-card {
+      min-width: 0;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fff;
+    }
+
+    .visual-card.wide {
+      grid-column: 1 / -1;
+    }
+
+    .visual-card img {
+      display: block;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 1672 / 941;
+      object-fit: contain;
+      background: #fff;
+      border-bottom: 1px solid var(--line-soft);
+    }
+
+    .visual-copy {
+      display: grid;
+      gap: 5px;
+      padding: 11px;
+    }
+
+    .visual-copy h3 {
+      margin: 0;
+      font-size: 14px;
+      line-height: 1.25;
+      letter-spacing: 0;
+      overflow-wrap: anywhere;
+    }
+
+    .visual-copy p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.4;
+      overflow-wrap: anywhere;
+    }
+
+    .visual-points {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    .visual-point {
+      min-width: 0;
+      padding: 8px;
+      border: 1px solid var(--line-soft);
+      border-radius: 8px;
+      background: #f8fafc;
+    }
+
+    .visual-point strong {
+      display: block;
+      margin-bottom: 3px;
+      color: var(--ink);
+      font-size: 11px;
+      line-height: 1.2;
+      overflow-wrap: anywhere;
+    }
+
+    .visual-point span {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.35;
+      overflow-wrap: anywhere;
+    }
+
+    .glossary-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .term-card {
+      min-width: 0;
+      padding: 11px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fff;
+    }
+
+    .term-card a {
+      display: block;
+      margin-bottom: 5px;
+      color: #1f5fbf;
+      font-size: 13px;
+      font-weight: 780;
+      line-height: 1.2;
+      overflow-wrap: anywhere;
+      text-decoration: none;
+    }
+
+    .term-card a:hover {
+      text-decoration: underline;
+    }
+
+    .term-card span,
+    .term-card p {
+      display: block;
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+      overflow-wrap: anywhere;
+    }
+
+    .term-card p + p {
+      margin-top: 6px;
+      padding-top: 6px;
+      border-top: 1px solid var(--line-soft);
+    }
+
+    .term-card b {
+      margin-right: 6px;
+      color: var(--text);
+      font-weight: 760;
+    }
+
+    .term-card em {
+      display: inline-flex;
+      margin-top: 8px;
+      padding: 2px 6px;
+      border-radius: 7px;
+      background: var(--paper-soft);
+      color: var(--green);
+      font-family: var(--mono);
+      font-size: 10px;
+      font-style: normal;
+      font-weight: 760;
+    }
+
+    .disclaimer {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    @media (max-width: 1180px) {
+      header,
+      .workspace {
+        grid-template-columns: 1fr;
+      }
+
+      .hint { text-align: left; }
+      .flow-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .flow-step::after { display: none; }
+      .process-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .branch-grid, .source-grid, .visual-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .visual-points { grid-template-columns: 1fr; }
+      .glossary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 760px) {
+      .page {
+        width: min(100% - 14px, 1500px);
+        padding-top: 8px;
+      }
+
+      header {
+        padding: 18px 14px;
+      }
+
+      .content {
+        padding: 12px;
+      }
+
+      .flow-strip,
+      .meta-grid,
+      .info-grid,
+      .company-grid,
+      .process-grid,
+      .branch-grid,
+      .role-grid,
+      .source-grid,
+      .visual-grid,
+      .glossary-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .panel-head,
+      .section-head {
+        display: grid;
+      }
+
+      .process-card::after {
+        content: "↓";
+        top: auto;
+        right: 50%;
+        bottom: -18px;
+        transform: translateX(50%);
+      }
+
+      .process-card {
+        margin-bottom: 10px;
+      }
+
+      .process-card:last-child {
+        margin-bottom: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="shell">
+      <header>
+        <div>
+          <div class="title-tools">
+            <p class="eyebrow" id="headerEyebrow">AI value chain loop</p>
+            <div class="lang-toggle" aria-label="Language switch">
+              <button class="lang-button active" data-lang="zh" type="button">中文</button>
+              <button class="lang-button" data-lang="en" type="button">English</button>
+            </div>
+          </div>
+          <h1 id="headerTitle">AI 全产业链闭环交互信息图</h1>
+          <p class="lead" id="headerLead">从“谁为 AI 付费”开始，沿着应用需求、模型服务、算力基础设施、半导体制造、能源和数据中心资源逐层下钻。每一层都不是公司名单，而是解释业务流程、瓶颈、公司角色和可跟踪的投研观察指标。</p>
+        </div>
+        <div class="read-card">
+          <strong id="readTitle">读图顺序</strong>
+          <span id="readStepOne">先看传导链：应用付费变成模型调用，模型调用变成算力采购，算力采购继续传导到芯片、封装、设备、材料、电力和液冷。</span>
+          <span id="readStepTwo">再点击任意层级：右侧会切换该层的子赛道、流程、瓶颈、公司角色和观察指标。</span>
+        </div>
+      </header>
+
+      <div class="content">
+        <nav class="flow-strip" id="flowStrip" aria-label="AI 产业链传导层级"></nav>
+
+        <section class="section" id="overviewVisualPanel"></section>
+
+        <section class="workspace">
+          <aside class="panel panel-pad">
+            <div class="panel-head">
+              <h2 id="layerStackTitle">五层产业链</h2>
+              <span class="hint" id="layerStackHint">越往下越接近物理瓶颈和资本开支；公司可跨层出现，但角色必须重新定义。</span>
+            </div>
+            <div class="layer-stack" id="layerStack"></div>
+            <div class="audit-list" id="auditList"></div>
+          </aside>
+
+          <article class="panel detail" id="detailPanel"></article>
+        </section>
+
+        <section class="section" id="visualPanel"></section>
+
+        <section class="section" id="processPanel"></section>
+
+        <section class="section" id="rolePanel"></section>
+
+        <section class="section" id="indicatorVisualPanel"></section>
+
+        <section class="section" id="glossaryPanel"></section>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const layers = [
+      {
+        id: "application",
+        no: "01",
+        tone: "application",
+        title: "应用需求层",
+        short: "应用付费",
+        question: "谁愿意为 AI 付费，为什么会产生模型调用？",
+        summary: "应用层的核心不是“哪个公司很 AI”，而是模型能力进入真实工作流后能否带来付费、留存和 ROI。应用越高频、越嵌入业务系统，向下游模型和算力传导越持续。",
+        input: "用户任务、行业数据、业务系统、传感器、端侧设备",
+        output: "SaaS 订阅、按量调用、企业 Agent、行业方案、端侧 AI 和物理世界 AI 产品",
+        pressure: "推理调用量、低延迟、数据权限、行业合规、端侧 NPU 和用户付费意愿",
+        flow: ["业务痛点", "AI 功能/Agent", "模型 API 或私有化", "交付到工作流", "付费与数据回流"],
+        sectors: ["办公/代码/内容生成", "企业 Agent 和客服销售", "金融/法律/医疗/工业垂直", "自动驾驶和机器人", "AI 手机/PC/终端"],
+        bottlenecks: ["客户 ROI 是否可量化", "推理成本能否被定价覆盖", "企业数据权限和合规", "与 CRM/ERP/ITSM 等系统集成", "端侧隐私、功耗和体验"],
+        watch: ["AI 功能付费席位和 ARR", "使用频次、留存和续约", "推理成本占收入比例", "客户案例是否从试点走向规模化", "监管、版权和数据授权变化"],
+        companies: [
+          ["Microsoft", "Copilot、GitHub Copilot 和企业工作流入口", "AI 订阅 attach rate、Azure AI 消耗、企业续约"],
+          ["Adobe", "Firefly 嵌入创意软件", "生成式功能使用量、创意云 ARPU"],
+          ["Salesforce", "Agentforce、CRM 和客服销售流程", "Agent 部署客户、CRM 数据闭环"],
+          ["ServiceNow", "ITSM/企业流程 Agent", "工作流自动化收入和大客户扩展"],
+          ["Cursor / Anysphere", "AI 编程 IDE", "开发者付费、代码生成留存"],
+          ["Bloomberg / Harvey", "金融和法律专业工作流", "专业数据壁垒、合规客户扩展"],
+          ["Tempus AI / Recursion", "医疗数据和 AI 药物发现", "临床/药研合作、数据资产质量"],
+          ["Tesla / Waymo", "自动驾驶和物理世界 AI", "行驶数据、仿真训练、监管许可"],
+          ["Apple / Qualcomm", "端侧 AI 和 NPU 生态", "端侧模型体验、换机周期、NPU 性能"],
+          ["金山办公 / 科大讯飞", "中国办公、教育和语音应用", "AI 付费转化、政企客户渗透"]
+        ],
+        guardrails: ["Microsoft、Google、Amazon 同时是应用入口和云平台，但在本层讨论的是产品需求，不是芯片制造。", "Tesla 在本层是自动驾驶/机器人应用和数据闭环，在算力层才讨论训练集群，在半导体层通常不是代工厂。", "应用层机会必须用付费、留存和 ROI 验证，不能只看发布会和下载量。"],
+        process: [
+          ["A1", "找到高频任务", "从办公、代码、客服、销售、金融、医疗、汽车等场景里找到可被 AI 改写的工作流。"],
+          ["A2", "接入模型和数据", "调用模型 API、私有化模型或端侧模型，并接入企业知识库、权限和行业数据。"],
+          ["A3", "嵌入业务系统", "把回答、生成、检索和操作能力放进 CRM、ERP、IDE、Office、车端或机器人控制系统。"],
+          ["A4", "形成付费和反馈", "通过订阅、按量、项目制或硬件溢价收费，并用使用数据继续优化产品。"]
+        ]
+      },
+      {
+        id: "model",
+        no: "02",
+        tone: "model",
+        title: "模型与平台层",
+        short: "模型调用",
+        question: "模型如何训练、对齐，并变成可调用的服务？",
+        summary: "模型层把数据和算力变成可调用能力：先训练基础模型，再做指令微调、偏好对齐和评测，最后通过 API、RAG、Agent 平台或私有化部署进入应用。",
+        input: "语料、标注和偏好数据、训练框架、GPU/TPU 集群、企业数据",
+        output: "基础模型、对齐模型、模型 API、开放权重、企业 RAG 和 Agent 平台",
+        pressure: "高质量数据、训练 GPU 小时、MoE 通信、推理吞吐、模型安全和企业数据治理",
+        flow: ["数据清洗", "Tokenize", "预训练", "多卡并行", "评测/Checkpoint", "SFT/RLHF/DPO", "API/RAG/Agent"],
+        sectors: ["基础模型", "开放权重生态", "模型 API 和推理平台", "数据标注/评测/RLHF", "企业数据平台和 MLOps", "云模型服务"],
+        bottlenecks: ["高质量数据和版权授权", "推理成本和 token 价格下行", "MoE 带来的通信和调度复杂度", "安全、幻觉和合规评测", "模型同质化和客户迁移成本"],
+        watch: ["API 调用量和 token 价格", "模型能力差距与成本/延迟", "企业合同和私有化部署", "开源生态活跃度", "云厂商承载的训练/推理消耗"],
+        companies: [
+          ["OpenAI", "GPT、ChatGPT、API 和企业平台", "API 消耗、企业席位、推理成本"],
+          ["Anthropic", "Claude 和企业安全路线", "企业客户、模型效果和合规定位"],
+          ["Google DeepMind", "Gemini、TPU 协同和 Google Cloud", "模型能力、云端承载、TPU 利用"],
+          ["Meta", "Llama 开放权重生态", "开发者生态、企业私有化采用"],
+          ["DeepSeek / Qwen / 智谱", "开放权重和中国企业私有化路线", "生态适配、国产算力支持、商业化"],
+          ["Hugging Face", "Model Hub、Transformers 和生态分发", "模型下载、企业服务和社区活跃"],
+          ["Scale AI", "标注、RLHF、评测数据", "大客户集中度、数据质量"],
+          ["Databricks / Snowflake", "数据湖、企业数据云和模型开发平台", "企业数据进入 AI 工作流的速度"],
+          ["Oracle OCI / Azure / AWS / Google Cloud", "训练、推理、模型托管和企业数据承载", "云 AI 收入、GPU/ASIC 容量、客户长约"]
+        ],
+        guardrails: ["模型公司不等于一定拥有芯片制造能力；多数是算力采购方或云资源使用方。", "云平台出现在模型层时，是模型托管和企业数据平台角色；出现在算力层时，才讨论 GPU/TPU 集群和 CapEx。", "Dense、MoE、开放权重、闭源 API 是路线选择，不是简单的上下游顺序。"],
+        process: [
+          ["M1", "数据和评测集", "清洗语料、代码、多模态数据、偏好样本和行业数据，并建立评测口径。"],
+          ["M2", "预训练", "在大量 token 上做矩阵乘法训练，决定基础能力，也直接消耗 GPU/TPU 小时。"],
+          ["M3", "并行和通信", "数据并行、张量并行、流水线并行和 MoE 路由把模型拆到多卡集群。"],
+          ["M4", "对齐和安全", "通过 SFT、RLHF、DPO、GRPO/RLVR 等方法让模型可对话、可遵循指令并降低风险。"],
+          ["M5", "部署成服务", "通过 API、推理引擎、RAG、Agent 框架和云平台进入应用，形成持续推理负载。"]
+        ]
+      },
+      {
+        id: "compute",
+        no: "03",
+        tone: "compute",
+        title: "算力基础设施层",
+        short: "算力采购",
+        question: "为什么模型调用会拉动 GPU、HBM、服务器、PCB、MLCC、网络和光模块？",
+        summary: "算力层把模型任务变成可运行的集群。主流路径是 GPU/TPU/ASIC + HBM + AI 服务器 + 板级 BOM + Scale-up/Scale-out 网络 + 光模块 + 云资源；Cerebras 等晶圆级系统是差异化路线，但也需要电力、散热和数据中心承载。",
+        input: "训练任务、推理请求、云厂商和模型公司的 CapEx、企业私有化需求",
+        output: "可部署、可租用、可扩展的训练和推理算力",
+        pressure: "GPU/ASIC 供给、HBM 分配、CoWoS/ABF 产能、高多层 PCB/CCL、MLCC/VRM 供电完整性、网络延迟、800G/1.6T 光模块、液冷和上架电力",
+        flow: ["需求定义", "集群方案", "核心部件采购", "服务器/整柜集成", "IDC 部署", "云平台调度计量", "可租用算力运营"],
+        sectors: ["AI 加速器/GPU/TPU/ASIC", "HBM、DRAM 和企业 SSD", "AI 服务器、ODM 和整柜", "PCB/CCL、MLCC、VRM/PMIC 和连接器", "交换机、NIC/DPU 和网络芯片", "光模块、光器件和光纤", "GPU 云和 AI 云"],
+        bottlenecks: ["高端 GPU/ASIC 和软件生态", "HBM3E/HBM4 供给和良率", "先进封装、ABF 和整柜交付", "高多层 PCB、MLCC 和板级供电/信号完整性", "网络拥塞、光模块良率和功耗", "GPU 利用率、客户集中度和融资成本"],
+        watch: ["AI 服务器订单、积压和出货", "GPU/ASIC 代际切换和毛利率", "HBM bit supply、ASP 和客户认证", "高层数 PCB、CCL 材料、MLCC 用量和 VRM 功率密度", "800G/1.6T 出货、硅光/CPO/LPO 进展", "GPU 云利用率、长约质量和电力成本"],
+        companies: [
+          ["NVIDIA", "GPU、NVLink、Networking、CUDA 生态", "Blackwell/Rubin 供给、数据中心收入、对华限制"],
+          ["AMD", "Instinct GPU、EPYC CPU、ROCm", "MI350/MI400 放量、云厂商导入、ROCm 生态"],
+          ["Google TPU / AWS Trainium", "云厂商自研加速器", "自用负载迁移、外部云客户采用"],
+          ["Broadcom / Marvell", "定制 AI XPU、交换芯片、DSP/光互联硅", "大客户 ASIC、以太网 AI 集群、光电集成"],
+          ["Cerebras", "WSE-3、CS-3、MemoryX、SwarmX", "专用训练/推理吞吐、客户适配、系统扩展"],
+          ["SK hynix / Micron / Samsung", "HBM、服务器 DRAM、部分 NAND/eSSD", "HBM 供给、认证、内存价格"],
+          ["Dell / HPE / Supermicro", "AI 服务器、整柜、液冷系统集成", "订单、积压、交付和毛利"],
+          ["工业富联 / Quanta / Wistron / 浪潮信息", "服务器 ODM/OEM 和智算方案", "云客户订单、国产芯片适配、液冷占比"],
+          ["沪电股份 / 深南电路 / 胜宏科技 / 生益科技", "AI 服务器和交换机高多层 PCB、CCL 和封装基板相关能力", "高速板占比、客户认证、层数和材料升级"],
+          ["Murata / TDK / Yageo / Amphenol / TE Connectivity", "MLCC、板级被动元件、高速连接器和线缆互联", "单机用量、规格升级、连接速率和客户导入"],
+          ["Arista / Cisco / NVIDIA Networking", "AI 数据中心交换机和网络设备", "800G/1.6T 交换机、以太网/IB 部署"],
+          ["Coherent / Lumentum / 中际旭创 / 新易盛 / 天孚通信", "高速光模块、激光器、光器件和光引擎", "800G/1.6T 出货、客户结构、海外产能"],
+          ["CoreWeave / Oracle OCI / AWS / Azure / Google Cloud", "GPU/ASIC 云和 AI 基础设施服务", "GPU 利用率、长约、云 AI 收入"],
+          ["SanDisk / Micron", "企业 SSD、NAND、训练数据和 checkpoint 存储", "eSSD 价格、容量和数据管道需求"]
+        ],
+        guardrails: ["SanDisk/企业 SSD 是存储链，不是 HBM；HBM 是贴近加速器的高带宽 DRAM。", "ABF substrate 属于芯片封装基板；PCB/CCL、MLCC、VRM 和连接器属于板级/系统级供应链，不是 GPU 或 HBM。", "光模块公司解决跨服务器和跨机柜的物理连接，不是 GPU 制造商。", "Applied Digital、IREN、Core Scientific、Hut 8 等如果出现，应按 AI 云、colocation 或电力资源转型拆分，不要当成芯片公司。", "Cerebras 是算力芯片和系统路线，不是 CPO 或光模块公司。"],
+        process: [
+          ["C1", "需求定义", "模型平台、云客户或企业提出训练、推理、Agent、HPC 等负载需求，明确算力规模、延迟、显存、网络、数据安全和交付周期。"],
+          ["C2", "集群方案设计", "决定采用通用 GPU、云厂商 ASIC、国产算力或晶圆级系统，并同步设计网络、存储、散热、电力和软件栈。"],
+          ["C3", "核心部件采购", "采购或分配 GPU/TPU/ASIC、HBM、CPU、DRAM、企业 SSD、NIC/DPU、交换机、光模块、电源、液冷组件，以及 PCB/CCL、MLCC、VRM/PMIC、连接器和 retimer 等板级 BOM。"],
+          ["C4", "服务器/整柜集成", "OEM/ODM 和服务器厂把芯片封装装到加速卡或主板 PCB 上，再把加速器、CPU、内存、存储、网卡、电源和液冷做成 AI 服务器、整柜或 rack-scale system。"],
+          ["C5", "IDC 与集群部署", "数据中心提供机房、电力、制冷、网络接入和运维环境，把服务器、交换机、光纤、PDU、UPS、液冷/CDU 部署成可运行集群。"],
+          ["C6", "云平台调度计量", "云厂商或 GPU 云用 Kubernetes、Slurm、Ray、虚拟化、监控、安全和计费系统，把底层硬件抽象成可分配资源。"],
+          ["C7", "可租用算力运营", "最终交付 GPU 小时、训练集群、推理 endpoint、裸金属、私有部署或长期租赁容量，并用利用率、故障率和续约反馈扩容。"]
+        ],
+        branches: [
+          ["算力路线分叉", "GPU/HBM 集群、云厂商 ASIC、Cerebras 晶圆级和国产算力是不同硬件路线；比较重点是生态、供给、成本和客户验证。"],
+          ["板级 BOM 分叉", "ABF/interposer 解决芯片封装内连接；PCB/CCL、MLCC、VRM、连接器和 retimer 解决板卡上的供电、信号和机械承载。"],
+          ["网络路线分叉", "同服务器或整柜看 NVLink/NVSwitch、PCIe/CXL；跨服务器看 InfiniBand、Ethernet/RoCE，远距离高带宽再拉动光模块、光纤和 CPO/LPO。"],
+          ["部署路线分叉", "Hyperscaler 自建、GPU 云、IDC 托管、矿场/旧 IDC 改造和企业私有集群，对应不同的电力、融资、客户和运维约束。"],
+          ["散热路线分叉", "风冷、冷板液冷和浸没式液冷对应不同机柜功率密度；液冷公司解决热管理，不是生产 GPU。"],
+          ["商业交付分叉", "收入形态可以是 GPU 小时、长约包量、推理 API、裸金属、私有化交付或 colocation，跟踪指标也应分别看利用率、价格、续约和客户集中度。"]
+        ]
+      },
+      {
+        id: "semi",
+        no: "04",
+        tone: "semi",
+        title: "半导体制造层",
+        short: "芯片制造",
+        question: "AI 芯片需求如何传到代工、封装、设备和材料？",
+        summary: "半导体制造层不是单线装配。芯片设计、EDA/IP、GPU/ASIC 晶圆、HBM/DRAM、ABF 基板和封装材料并行推进，最后在 CoWoS/2.5D/3D 封装和测试环节汇合。",
+        input: "GPU/ASIC/交换芯片设计、HBM 需求、晶圆厂和封装厂 CapEx、设备材料订单",
+        output: "可交付的加速器、HBM 堆叠、交换芯片、先进封装产能和良率",
+        pressure: "先进制程、CoWoS/先进封装、HBM、ABF 载板、EUV/DUV、刻蚀沉积清洗、出口管制和良率",
+        flow: ["芯片定义", "EDA/IP", "晶圆制造", "HBM/基板并行", "先进封装", "测试交付"],
+        sectors: ["Fabless 芯片设计", "EDA/IP", "晶圆代工", "HBM/DRAM 制造", "先进封装/OSAT", "半导体设备", "材料、ABF 和测试"],
+        bottlenecks: ["3nm/2nm 与先进节点产能", "CoWoS/2.5D/混合键合产能", "HBM4 认证和 TSV/堆叠良率", "ABF 基板和关键材料", "出口管制和设备交期"],
+        watch: ["TSMC/三星/Intel Foundry 先进节点和 HPC 收入", "CoWoS/先进封装扩产节奏", "HBM3E/HBM4 客户认证", "设备订单、book-to-bill 和国产替代", "封测良率、ABF 供需和材料国产化"],
+        companies: [
+          ["NVIDIA / AMD / Broadcom / Marvell", "GPU、AI ASIC、交换芯片的无晶圆设计方", "产品路线、代工和封装排产"],
+          ["Synopsys / Cadence / Arm", "EDA、验证工具和 IP", "AI 芯片设计复杂度、授权收入"],
+          ["TSMC", "先进制程、CoWoS、HPC/AI 代工", "3nm/2nm、CoWoS、HPC 占比"],
+          ["Samsung Foundry / Intel Foundry / SMIC / 华虹", "先进或特色晶圆代工", "客户导入、产能、制程进展"],
+          ["SK hynix / Micron / Samsung", "HBM、DRAM、NAND 制造", "HBM 供货、价格、良率"],
+          ["ASE 日月光 / Amkor / 长电科技 / 通富微电", "OSAT、先进封装和封测", "高端封装订单、测试良率"],
+          ["ASML / Applied Materials / Lam / KLA / TEL", "光刻、沉积、刻蚀、量检测和前道设备", "先进逻辑和存储 CapEx"],
+          ["北方华创 / 中微公司 / 拓荆科技 / 盛美上海 / 华海清科", "国产刻蚀、薄膜、清洗、CMP 等设备", "国产验证、订单和客户覆盖"],
+          ["Ibiden / Shinko / Ajinomoto / Resonac", "ABF 载板、膜材和封装材料", "高端基板供需、材料迭代"],
+          ["Advantest / Teradyne", "ATE 测试设备", "高端芯片测试需求和利用率"]
+        ],
+        guardrails: ["NVIDIA、AMD、Broadcom 是芯片设计方，不是晶圆代工厂。", "TSMC 是代工和先进封装核心，不是 GPU 品牌或云厂商。", "光模块的主归属仍是算力基础设施；只有光芯片、硅光、光电集成等上游器件才进入半导体制造讨论。", "设备材料是横向支撑，贯穿晶圆、HBM、封装和测试，不是制造结束后的附属环节。"],
+        process: [
+          ["S1", "芯片定义和设计", "芯片公司定义 GPU、AI ASIC、交换芯片，并用 EDA/IP 完成设计和验证。"],
+          ["S2", "晶圆制造", "代工厂用先进或特色制程制造 GPU/ASIC/交换芯片 die，设备和材料决定良率。"],
+          ["S3", "HBM 与基板并行", "内存厂制造 HBM stack，基板材料厂准备 ABF、interposer 和封装材料。"],
+          ["S4", "先进封装汇合", "GPU/ASIC die、HBM、interposer 和 ABF 在 CoWoS/2.5D/3D 封装处汇合。"],
+          ["S5", "测试与交付", "ATE、封测和老化筛选可交付芯片，再进入板卡、服务器和云厂商供应链。"]
+        ],
+        branches: [
+          ["GPU/ASIC die", "先进逻辑制程，关注 3nm/2nm、良率、掩膜和排产。"],
+          ["HBM stack", "DRAM 晶圆、TSV、堆叠和测试，关注 HBM3E/HBM4 认证。"],
+          ["ABF/Interposer/材料", "封装承载和连接材料，关注高端基板供需和材料升级。"]
+        ]
+      },
+      {
+        id: "energy",
+        no: "05",
+        tone: "energy",
+        title: "能源与数据中心资源层",
+        short: "资源约束",
+        question: "算力最后受哪些物理资源约束？",
+        summary: "能源和数据中心资源层回答“算力能不能落地”。AI 集群需要稳定电力、并网、变电、UPS/配电、高密机柜、冷却、水资源、土地、网络接入和长期客户合约。",
+        input: "AI 负荷预测、长期 PPA、并网容量、数据中心建设计划、机柜和液冷需求",
+        output: "稳定、低成本、可持续的高密度数据中心承载能力",
+        pressure: "电源可得性、输配电容量、储能和备用电源、UPS/PDU、PUE、水资源、土地许可和融资",
+        flow: ["负荷规划", "购电/PPA", "电网和变电", "储能/备用", "UPS/配电", "机柜/液冷", "PUE/碳管理"],
+        sectors: ["核电/燃气/风光和 PPA", "电网、变压器和开关柜", "BESS、备用和现场发电", "UPS/PDU/母线槽", "IDC/Colocation/GPU 云园区", "液冷、温控和水系统", "DCIM/EMS/PUE"],
+        bottlenecks: ["可接入 MW 和并网排队", "变压器、燃气轮机和电力设备交期", "高密机柜热管理", "水资源、噪音和社区许可", "客户长约、融资成本和上架率"],
+        watch: ["MW 已签约、在建和可交付", "PPA、电价和电网接入进度", "PUE、单柜功率和液冷渗透", "IDC 上架率和客户信用", "地方审批、用水和社区反馈"],
+        companies: [
+          ["Constellation / NextEra / 中国广核 / 中国核电", "核电、风光储和长期 PPA", "签约容量、电价、核电/绿电供给"],
+          ["GE Vernova / Siemens Energy", "燃气轮机、电力设备和调峰电源", "设备交付周期、调峰需求"],
+          ["国家电网 / 南方电网 / ABB / Siemens", "输配电、变电、开关柜和电网接入", "并网容量、变压器和电力设备订单"],
+          ["Tesla / Fluence / 宁德时代 / 比亚迪 / 阳光电源", "BESS、PCS、EMS 和储能系统", "储能装机、毛利和项目交付"],
+          ["Vertiv / Schneider Electric / Eaton", "UPS、配电、PDU、冷却和数据中心基础设施", "订单、积压、液冷和电力系统需求"],
+          ["Equinix / Digital Realty / GDS 万国数据 / 润泽科技", "零售/批发 IDC、互联和 AIDC 资源", "上架率、MW、租约、客户结构"],
+          ["Applied Digital / IREN / Core Scientific / Hut 8 / Cipher", "高密园区、colocation 或矿场/电力资源转 AI", "客户长约、融资、电力成本、转型兑现"],
+          ["英维克 / 申菱环境 / 科华数据 / 科士达 / 曙光数创", "温控、液冷、UPS、数据中心和国产方案", "液冷订单、运营商和互联网客户"],
+          ["Submer / GRC / Stulz", "浸没式液冷、热排出和精密温控", "高密应用、维护生态、客户验证"]
+        ],
+        guardrails: ["IDC 和能源公司不是芯片公司，核心指标是 MW、上架率、PUE、电价和客户信用。", "矿企转 AI 数据中心需要验证电力、机房改造、客户合约和融资能力，不应只因有电就归入算力芯片赛道。", "液冷/UPS/配电公司受益于高密机柜，但并不直接决定模型能力。"],
+        process: [
+          ["E1", "负荷和选址", "先估算未来 MW、单柜功率、上架节奏、网络接入和水资源。"],
+          ["E2", "锁定电力", "通过 PPA、并网申请、核电/风光/燃气/水电或现场发电锁定可用电。"],
+          ["E3", "变电和备用", "电力进入园区前要经过输电、变电、开关柜，并配置储能和备用电源。"],
+          ["E4", "UPS 和配电", "UPS、PDU、母线槽和配电系统把电稳定送到每个高密机柜。"],
+          ["E5", "机柜和冷却", "GPU 服务器、交换机和存储上架后，风冷、冷板液冷或浸没式液冷把热带走。"],
+          ["E6", "运营和 PUE", "DCIM/EMS 联动电价、负荷、温度、储能和碳管理，决定长期运营效率。"]
+        ],
+        branches: [
+          ["稳定电源", "核电、水电、燃气和电网基荷，适合 24/7 高利用率负载。"],
+          ["风光储", "低碳属性强，但需要 BESS、调度和基荷兜底。"],
+          ["现场发电/微电网", "应对并网慢和局部电力不足，但要验证燃料、许可和经济性。"],
+          ["液冷升级", "高密 GPU 机柜推动冷板液冷、CDU、浸没式和热排出系统。"]
+        ]
+      }
+    ];
+
+    const roleMatrix = [
+      ["Microsoft", { application: "Copilot、GitHub Copilot 和企业应用入口", model: "Azure AI、模型托管和企业数据平台", compute: "Azure 是训练/推理承载和 GPU/ASIC 采购方" }, "不是晶圆代工或光模块公司。"],
+      ["Google / Alphabet", { application: "搜索、Workspace、Android 和 Gemini 应用入口", model: "Gemini 和 Vertex AI", compute: "TPU、Google Cloud 和 AI Hypercomputer", semi: "自研 TPU 设计需求方" }, "TPU 是自研加速器，制造仍依赖半导体供应链。"],
+      ["Amazon / AWS", { application: "Bedrock、企业 AI 服务和电商/广告场景", model: "模型平台和托管服务", compute: "Trainium/Inferentia、AWS GPU/ASIC 云" }, "不是光模块或晶圆代工公司。"],
+      ["NVIDIA", { application: "汽车、机器人和工业 AI 软件栈", compute: "GPU、NVLink、Networking、CUDA", semi: "Fabless 芯片设计方，依赖代工和封装" }, "不是数据中心地产商或晶圆代工厂。"],
+      ["Broadcom / Marvell", { compute: "定制 AI ASIC、交换芯片、DSP/硅光互联", semi: "Fabless 芯片和互联硅设计" }, "不是云厂商；客户多为 hyperscaler 和设备厂。"],
+      ["SK hynix / Micron / Samsung", { compute: "HBM、DRAM 和部分企业 SSD/NAND", semi: "内存晶圆、HBM 堆叠和存储制造" }, "Samsung 还可出现在 foundry，但 HBM 和 SSD 不能混为一类。"],
+      ["TSMC", { semi: "先进制程、CoWoS 和先进封装" }, "不是 GPU 品牌，也不直接运营 GPU 云。"],
+      ["Dell / Supermicro / 工业富联 / Quanta", { compute: "AI 服务器、整柜、ODM/OEM 和系统集成" }, "不是 GPU/HBM 制造商，更多看订单、交付和毛利。"],
+      ["Arista / Cisco / 新华三 / 锐捷", { compute: "AI 数据中心交换机和网络设备" }, "与 Broadcom/Marvell 的网络芯片、光模块公司要分开看。"],
+      ["Coherent / Lumentum / 中际旭创 / 新易盛 / 天孚通信", { compute: "高速光模块、激光器、光器件和光引擎" }, "主链路在跨机柜通信，不是 GPU 或晶圆代工。"],
+      ["Equinix / Digital Realty / GDS / Applied Digital / IREN", { compute: "部分公司提供 GPU 云或高密 colocation", energy: "数据中心园区、电力、机柜和上架资源" }, "要拆分 GPU 云与地产/电力资源角色。"],
+      ["Vertiv / Schneider / Eaton / 英维克", { energy: "UPS、配电、液冷、温控和电力基础设施" }, "受益于高密机柜，但不直接生产 AI 芯片。"],
+      ["SanDisk / Western Digital", { compute: "企业 SSD、NAND 和训练数据存储" }, "不是 HBM；跟踪 eSSD 和数据管道需求。"],
+      ["Cerebras", { compute: "WSE-3、CS-3、MemoryX、SwarmX 的晶圆级算力系统", semi: "需要先进制程和制造供应链" }, "不是光模块/CPO 公司，属于差异化算力路线。"]
+    ];
+
+    const sources = [
+      ["本地底稿", "AI产业链公司梳理_上游重点.md；AI上游公司清单.csv"],
+      ["NVIDIA FY2026 财报", "https://investor.nvidia.com/news/press-release-details/2026/NVIDIA-Announces-Financial-Results-for-Fourth-Quarter-and-Fiscal-2026/"],
+      ["AMD Instinct MI350", "https://www.amd.com/en/products/accelerators/instinct/mi350.html"],
+      ["Google Ironwood TPU", "https://blog.google/innovation-and-ai/infrastructure-and-cloud/google-cloud/ironwood-tpu-age-of-inference/"],
+      ["Cerebras WSE-3", "https://www.cerebras.ai/press-release/cerebras-announces-third-generation-wafer-scale-engine"],
+      ["TSMC 2025 Annual Report", "https://investor.tsmc.com/static/annualReports/2025/english/index.html"],
+      ["SK hynix HBM4", "https://news.skhynix.com/sk-hynix-completes-worlds-first-hbm4-development-and-readies-mass-production/"],
+      ["Dell FY2026 AI server orders", "https://www.dell.com/en-us/dt/corporate/newsroom/announcements/detailpage.press-releases~usa~2025~11~dell-technologies-delivers-third-quarter-fiscal-2026-financial-results.htm"],
+      ["Broadcom + OpenAI custom accelerators", "https://investors.broadcom.com/news-releases/news-release-details/openai-and-broadcom-announce-strategic-collaboration-deploy-10"],
+      ["Marvell CPO for custom AI accelerators", "https://www.marvell.com/company/newsroom/marvell-co-packaged-optics-architecture-custom-ai-accelerators.html"],
+      ["IEA data centre electricity 2025", "https://www.iea.org/news/data-centre-electricity-use-surged-in-2025-even-with-tightening-bottlenecks-driving-a-scramble-for-solutions"],
+      ["Vertiv data center trends 2025", "https://www.vertiv.com/en-asia/about/news-and-insights/news-releases/data-center-trends-2025-vertiv-predicts-industry-efforts-to-support-enable--leverage-and-regulate-ai/"],
+      ["北方华创 2025 年报", "https://static.cninfo.com.cn/finalpage/2026-04-18/1225122918.PDF"],
+      ["寒武纪 2025 半年度报告", "https://pdf.dfcfw.com/pdf/H2_AN202508261734917805_1.pdf"]
+    ];
+
+    const uiText = {
+      zh: {
+        documentTitle: "AI 全产业链闭环交互信息图",
+        headerEyebrow: "AI value chain loop",
+        headerTitle: "AI 全产业链闭环交互信息图",
+        headerLead: "从“谁为 AI 付费”开始，沿着应用需求、模型服务、算力基础设施、半导体制造、能源和数据中心资源逐层下钻。每一层都不是公司名单，而是解释业务流程、瓶颈、公司角色和可跟踪的投研观察指标。",
+        readTitle: "读图顺序",
+        readStepOne: "先看传导链：应用付费变成模型调用，模型调用变成算力采购，算力采购继续传导到芯片、封装、设备、材料、电力和液冷。",
+        readStepTwo: "再点击任意层级：右侧会切换该层的子赛道、流程、瓶颈、公司角色和观察指标。",
+        flowAria: "AI 产业链传导层级",
+        layerStackTitle: "五层产业链",
+        layerStackHint: "越往下越接近物理瓶颈和资本开支；公司可跨层出现，但角色必须重新定义。",
+        auditTitle: "本次审计先修正的误区",
+        auditItems: [
+          "云厂商是应用、平台和算力采购方，不等于芯片制造商。",
+          "光模块属于算力基础设施里的物理互联，不应被简单塞进半导体制造层。",
+          "IDC、矿场转型和能源公司主要看 MW、电力接入、上架率和客户信用，不看 GPU 制造份额。",
+          "HBM 是高带宽 DRAM，企业 SSD/NAND 是存储链，两者都重要但解决的问题不同。"
+        ],
+        layerOverview: "总览",
+        input: "输入",
+        output: "输出",
+        pressure: "压力传导",
+        sectors: "主要行业 / 子赛道",
+        bottlenecks: "关键瓶颈",
+        watch: "投资观察指标",
+        companies: "代表公司和具体角色",
+        companyHint: "同一家公司跨层出现时，下面只写它在当前层的职责和要跟踪的证据。",
+        observation: "观察",
+        guardrails: "避免错放",
+        workflowKicker: "Current layer workflow",
+        workflowSuffix: "：业务流程",
+        workflowHint: "先看主流程，再看路线分叉；这能避免把并行环节误读成严格前后顺序。",
+        overviewVisualKicker: "Visual map",
+        overviewVisualTitle: "AI 产业链总览图",
+        overviewVisualHint: "先用一张图建立全局方向：需求先发生在应用端，再逐层传导到模型、算力、制造和物理资源。",
+        layerVisualKicker: "Visual explainer",
+        layerVisualTitle: "当前层级图解",
+        layerVisualHint: "这些图只解释结构关系；具体公司角色、瓶颈和观察指标仍以上下文卡片为准。",
+        indicatorVisualKicker: "Research indicators",
+        indicatorVisualTitle: "投研观察指标总览",
+        indicatorVisualHint: "不是买卖建议，而是把产业链传导拆成可跟踪的验证指标。",
+        branch: "分叉",
+        roleKicker: "Cross-layer role check",
+        roleTitle: "跨层公司角色辨析",
+        roleHint: "高亮表示该公司在当前层有明确角色；未高亮不代表不重要，只是不要错归类。",
+        glossaryKicker: "Bilingual terminology",
+        glossaryTitle: "专有名词中英对照",
+        glossaryHint: "无论当前选择中文还是英文，术语表都保持中英并排，方便初学者对照阅读。",
+        glossaryIntro: "这里收纳页面中反复出现的技术、商业和投研术语。术语表不是投资建议，只帮助统一口径。"
+      },
+      en: {
+        documentTitle: "Interactive AI Value Chain Loop",
+        headerEyebrow: "AI value chain loop",
+        headerTitle: "Interactive AI Value Chain Loop",
+        headerLead: "Start from who pays for AI, then trace the demand signal through applications, models, compute infrastructure, semiconductor manufacturing, and finally power and data-center resources. Each layer explains workflows, bottlenecks, company roles, and trackable investment indicators rather than becoming a plain company list.",
+        readTitle: "How to read this map",
+        readStepOne: "Follow the transmission chain first: application monetization becomes model calls, model calls become compute procurement, and compute procurement flows into chips, packaging, equipment, materials, power, and cooling.",
+        readStepTwo: "Then click any layer. The right side switches to that layer's sub-sectors, workflow, bottlenecks, company roles, and monitoring indicators.",
+        flowAria: "AI value chain transmission layers",
+        layerStackTitle: "Five-Layer Value Chain",
+        layerStackHint: "Lower layers are closer to physical constraints and capital spending. Companies may appear across layers, but their roles must be redefined each time.",
+        auditTitle: "Misclassifications fixed first",
+        auditItems: [
+          "Cloud providers are application platforms, model platforms, and compute buyers; they are not automatically chip manufacturers.",
+          "Optical modules belong to the physical interconnect part of compute infrastructure, not the core semiconductor manufacturing layer.",
+          "IDC, mining-to-AI, and power companies should be tracked by MW, grid access, utilization, and customer credit, not GPU manufacturing share.",
+          "HBM is high-bandwidth DRAM. Enterprise SSD/NAND is the storage chain. Both matter, but they solve different problems."
+        ],
+        layerOverview: "Overview",
+        input: "Input",
+        output: "Output",
+        pressure: "Pressure Transmission",
+        sectors: "Major Industries / Sub-Sectors",
+        bottlenecks: "Key Bottlenecks",
+        watch: "Investment Monitoring Indicators",
+        companies: "Representative Companies and Roles",
+        companyHint: "When a company appears across layers, this section only describes its role and evidence to track in the selected layer.",
+        observation: "Track",
+        guardrails: "Avoid Misclassification",
+        workflowKicker: "Current layer workflow",
+        workflowSuffix: ": Business Workflow",
+        workflowHint: "Read the main workflow first, then the route branches. This prevents parallel links from being mistaken as a strict linear sequence.",
+        overviewVisualKicker: "Visual map",
+        overviewVisualTitle: "AI Value Chain Overview",
+        overviewVisualHint: "Use the picture first to establish the full direction: demand starts in applications and transmits into models, compute, manufacturing, and physical resources.",
+        layerVisualKicker: "Visual explainer",
+        layerVisualTitle: "Selected Layer Visuals",
+        layerVisualHint: "These diagrams explain structure. Company roles, bottlenecks, and monitoring indicators remain in the surrounding cards.",
+        indicatorVisualKicker: "Research indicators",
+        indicatorVisualTitle: "Investment Monitoring Indicator Map",
+        indicatorVisualHint: "This is not a buy/sell recommendation; it translates the value-chain signal into trackable verification indicators.",
+        branch: "branch",
+        roleKicker: "Cross-layer role check",
+        roleTitle: "Cross-Layer Company Role Check",
+        roleHint: "Highlighted cards have a clear role in the selected layer. Non-highlighted cards may still matter, but should not be misclassified.",
+        glossaryKicker: "Bilingual terminology",
+        glossaryTitle: "Technical Term Glossary",
+        glossaryHint: "The glossary stays bilingual no matter which language is selected, so beginners can cross-check terms while reading.",
+        glossaryIntro: "This glossary covers the technical, business, and investment terms used throughout the page. It is for consistent terminology, not investment advice."
+      }
+    };
+
+    const overviewVisual = {
+      image: "image2_diagrams/01-ai-value-chain-loop.png",
+      title: { zh: "AI 全产业链传导总览", en: "AI Value Chain Transmission Overview" },
+      caption: {
+        zh: "先用一张图建立方向：应用付费驱动模型调用，模型调用驱动算力采购，再继续传导到半导体制造、数据中心和电力资源。",
+        en: "Start with the full chain: application monetization drives model calls, model calls drive compute procurement, and that demand flows into semiconductors, data centers, and power resources."
+      }
+    };
+
+    const workflowVisuals = {
+      application: {
+        image: "image2_diagrams/11-application-demand-workflow.png",
+        title: { zh: "应用需求业务流程：从业务痛点到付费回流", en: "Application Demand Workflow: From Pain Point to Paid Feedback" },
+        caption: {
+          zh: "应用层先找到高频任务，再接入模型和数据，最后嵌入工作流并用付费、留存和数据回流验证 ROI。",
+          en: "The application layer starts with recurring tasks, connects models and data, embeds into workflows, and validates ROI through payment, retention, and feedback data."
+        }
+      },
+      model: {
+        image: "image2_diagrams/12-model-platform-workflow.png",
+        title: { zh: "模型与平台业务流程：训练、对齐、API/RAG/Agent", en: "Model and Platform Workflow: Training, Alignment, API/RAG/Agent" },
+        caption: {
+          zh: "数据清洗、预训练、评测、SFT/RLHF/DPO 和推理部署并不是一条简单直线；训练路径和部署路径会持续反馈。",
+          en: "Data cleaning, pretraining, evaluation, alignment, and inference deployment are not a simple line; training and deployment paths feed back into each other."
+        }
+      },
+      compute: {
+        image: "image2_diagrams/20-compute-infrastructure-business-flow.png",
+        title: { zh: "算力基础设施业务流程：从需求定义到可租用算力", en: "Compute Infrastructure Business Flow: From Demand to Rentable Capacity" },
+        caption: {
+          zh: "这张图把算力层画成业务交付主线：需求定义、方案设计、核心部件采购、整柜集成、IDC 部署、云平台调度计量，最后形成可租用算力；技术路线只作为分叉决策点。",
+          en: "This diagram frames compute infrastructure as a business delivery flow: demand definition, architecture design, component procurement, rack integration, IDC deployment, cloud orchestration and metering, and finally rentable capacity. Technology paths appear only as decision branches."
+        }
+      },
+      semi: {
+        image: "image2_diagrams/14-semiconductor-manufacturing-workflow.png",
+        title: { zh: "半导体制造业务流程：多条路径并行汇入先进封装", en: "Semiconductor Manufacturing Workflow: Parallel Paths Converge in Advanced Packaging" },
+        caption: {
+          zh: "GPU/ASIC die、HBM stack、ABF/interposer 和材料路径并行推进，最后在先进封装和测试交付处汇合。",
+          en: "GPU/ASIC die, HBM stacks, ABF/interposers, and materials move in parallel, then converge in advanced packaging and testing."
+        }
+      },
+      energy: {
+        image: "image2_diagrams/15-data-center-resource-workflow.png",
+        title: { zh: "能源与数据中心业务流程：从负荷预测到 PUE 运营", en: "Energy and Data Center Workflow: From Load Forecast to PUE Operations" },
+        caption: {
+          zh: "AI 机房落地要先确定负荷和站点，再锁电、配电、上架、散热，并持续用 PUE、MW 和租约质量验证。",
+          en: "AI data centers move from load forecast and site selection to power contracting, distribution, rack deployment, cooling, and PUE/MW/lease validation."
+        }
+      }
+    };
+
+    const layerVisuals = {
+      model: [
+        {
+          image: "image2_diagrams/23-stored-vs-running-model.png",
+          wide: true,
+          title: { zh: "模型保存与调用：Storage 是仓库，HBM 是工作台", en: "Stored vs Running Model: Storage Is the Warehouse, HBM Is the Workbench" },
+          caption: {
+            zh: "训练完成后，模型不会长期留在 GPU 里，而是保存成权重、checkpoint、config、tokenizer、adapter、runtime code 和 metadata；用户调用时，serving 系统再把对应权重加载进 GPU/TPU 的 HBM，逐 token 生成回答。",
+            en: "After training, a model does not permanently live inside GPUs. It is saved as weights, checkpoints, config, tokenizer files, adapters, runtime code, and metadata; when users call it, the serving system loads the relevant weights into GPU/TPU HBM and generates the response token by token."
+          },
+          points: [
+            {
+              label: { zh: "保存态", en: "Stored state" },
+              text: {
+                zh: "训练/微调输出模型资产文件；大文件通常在 object storage 或 distributed file system 中长期保存。",
+                en: "Training or fine-tuning outputs model artifact files; large files usually persist in object storage or a distributed file system."
+              }
+            },
+            {
+              label: { zh: "管理态", en: "Managed state" },
+              text: {
+                zh: "Model registry 记录版本、权限、评测结果和部署指针，不等于每次都把大权重文件放在注册表本体里。",
+                en: "A model registry tracks versions, permissions, evaluation records, and deployment pointers; it does not necessarily hold every large weight file itself."
+              }
+            },
+            {
+              label: { zh: "运行态", en: "Running state" },
+              text: {
+                zh: "用户请求进入 API/serving/scheduler 后，权重被加载到 HBM；GPU 使用权重和 KV cache 执行推理并返回 response。",
+                en: "After a request enters API, serving, and scheduling layers, weights are loaded into HBM; GPUs use weights and KV cache for inference and return the response."
+              }
+            }
+          ]
+        },
+        {
+          image: "image2_diagrams/16-training-vs-inference-paths.png",
+          title: { zh: "训练 vs 推理：负载路径和瓶颈不同", en: "Training vs Inference: Different Workload Paths and Bottlenecks" },
+          caption: {
+            zh: "训练更看 GPU 小时、HBM 和网络带宽；推理更看延迟、吞吐、KV cache 和每 token 成本。",
+            en: "Training is more exposed to GPU hours, HBM, and network bandwidth; inference is more exposed to latency, throughput, KV cache, and cost per token."
+          }
+        },
+        {
+          image: "image2_diagrams/17-dense-vs-moe-model-paths.png",
+          title: { zh: "Dense vs MoE：模型结构改变通信和调度压力", en: "Dense vs MoE: Architecture Changes Communication and Scheduling Pressure" },
+          caption: {
+            zh: "Dense 模型通常稳定消耗计算和内存带宽；MoE 通过路由选择专家，节省计算但增加负载均衡和网络通信复杂度。",
+            en: "Dense models consume compute and memory bandwidth more steadily; MoE routes tokens to selected experts, saving compute while adding load-balancing and network complexity."
+          }
+        }
+      ],
+      compute: [
+        {
+          image: "image2_diagrams/02-gpu-server-cutaway.png",
+          title: { zh: "AI 服务器内部：GPU 不是孤立工作", en: "Inside an AI Server: GPUs Do Not Work Alone" },
+          caption: {
+            zh: "CPU、GPU、HBM、SSD、NIC/DPU、电源和液冷共同决定训练与推理系统的可交付能力。",
+            en: "CPU, GPU, HBM, SSD, NIC/DPU, power delivery, and cooling jointly determine deliverable training and inference capacity."
+          }
+        },
+        {
+          image: "image2_diagrams/25-ai-chip-package-to-accelerator-board.png",
+          wide: true,
+          title: { zh: "从 AI 芯片封装到加速卡：ABF、PCB、MLCC 如何接上", en: "From AI Chip Package to Accelerator Board: How ABF, PCB, and MLCC Connect" },
+          caption: {
+            zh: "这张图把层级拆开：GPU/ASIC die 和 HBM 先通过 silicon interposer 与 ABF substrate 做成封装，再通过 solder balls/BGA 焊到 accelerator PCB；PCB 上的 MLCC、VRM/PMIC、电感、连接器和 retimer/SerDes 负责供电稳定、信号完整性和系统 I/O。",
+            en: "This diagram separates the layers: GPU/ASIC die and HBM are packaged through a silicon interposer and ABF substrate, then attached to the accelerator PCB through solder balls/BGA. MLCCs, VRM/PMIC stages, inductors, connectors, and retimer/SerDes devices on the PCB support power stability, signal integrity, and system I/O."
+          },
+          points: [
+            {
+              label: { zh: "ABF 不是普通 PCB", en: "ABF is not normal PCB" },
+              text: {
+                zh: "ABF substrate 在芯片封装里面，负责把芯片封装的信号和电源扇出到外部板卡；PCB 是更大的主板/加速卡承载平台。",
+                en: "The ABF substrate sits inside the chip package and fans out signals and power to the board. The PCB is the larger motherboard or accelerator-card platform."
+              }
+            },
+            {
+              label: { zh: "MLCC/VRM 是供电完整性", en: "MLCC/VRM support power integrity" },
+              text: {
+                zh: "MLCC 像局部稳压水库，VRM/PMIC 像电压转换站；它们不做 AI 计算，但影响高功率 GPU 板卡能否稳定运行。",
+                en: "MLCCs act like local voltage reservoirs, while VRM/PMIC stages convert and regulate voltage. They do not compute, but they help high-power GPU boards run reliably."
+              }
+            },
+            {
+              label: { zh: "连接器/retimer 是高速 I/O", en: "Connectors/retimers support high-speed I/O" },
+              text: {
+                zh: "高速连接器、SerDes 和 retimer 解决板卡到主板、网卡或交换系统之间的高速信号传输，不应和光模块或交换芯片混为一类。",
+                en: "High-speed connectors, SerDes, and retimers support signal transmission between boards, motherboards, NICs, or switching systems. They should not be conflated with optical modules or switch ASICs."
+              }
+            }
+          ]
+        },
+        {
+          image: "image2_diagrams/26-ai-server-board-level-supply-chain.png",
+          wide: true,
+          title: { zh: "AI 服务器板级供应链：先进封装之后还要板卡和被动元件", en: "AI Server Board-Level Supply Chain: After Packaging Come Boards and Passives" },
+          caption: {
+            zh: "投研上可以按四段看：先进封装提供 GPU/HBM package；PCB/CCL、MLCC、VRM、连接器和 retimer 支撑板级供电与高速信号；ODM/OEM 做系统集成；最终才交付 AI 服务器和整柜。",
+            en: "For research, read the chain in four blocks: advanced packaging delivers the GPU/HBM package; PCB/CCL, MLCC, VRM, connectors, and retimers support board-level power and high-speed signals; ODM/OEMs integrate the system; AI servers and racks are the final deliverable."
+          },
+          points: [
+            {
+              label: { zh: "产业链位置", en: "Value-chain position" },
+              text: {
+                zh: "ABF 偏半导体封装材料；PCB/CCL、MLCC、VRM、连接器偏服务器和交换机板级供应链；ODM/OEM 是系统集成。",
+                en: "ABF belongs closer to semiconductor packaging materials; PCB/CCL, MLCC, VRM, and connectors belong to server/switch board-level supply; ODM/OEMs integrate systems."
+              }
+            },
+            {
+              label: { zh: "观察指标", en: "Tracking metrics" },
+              text: {
+                zh: "跟踪 ABF 产能、高层数 PCB 需求、CCL 材料升级、MLCC 单机用量、VRM 功率密度和连接器/retimer 速率。",
+                en: "Track ABF capacity, high-layer PCB demand, CCL material upgrades, MLCC content per server, VRM power density, and connector/retimer speed."
+              }
+            },
+            {
+              label: { zh: "避免误读", en: "Avoid the category error" },
+              text: {
+                zh: "这些环节受益于 AI 服务器复杂度和功率密度提升，但它们不是模型公司、GPU 设计商或云厂商。",
+                en: "These links benefit from AI server complexity and power density, but they are not model companies, GPU designers, or cloud providers."
+              }
+            }
+          ]
+        },
+        {
+          image: "image2_diagrams/24-gpu-vs-tpu-parallel-vs-systolic.png",
+          title: { zh: "GPU vs TPU：并行计算工厂 vs 张量流水线", en: "GPU vs TPU: Parallel Compute Factory vs Tensor Pipeline" },
+          caption: {
+            zh: "GPU 把矩阵计算拆成很多 tile，通过可编程 kernel 分发给大量并行计算单元，并依赖 HBM 带宽和 Tensor Core 提升吞吐；TPU 更像专用张量计算流水线，把数据流入 systolic array，让 MAC 单元连续执行乘加并复用数据。前者灵活、生态广，后者更专用，适合被充分优化的 AI 张量负载。",
+            en: "A GPU splits matrix workloads into tiles, launches programmable kernels, and runs them across many parallel compute blocks with HBM and Tensor Cores. A TPU streams tensor data through a systolic array, where MAC cells perform repeated multiply-accumulate operations with high data reuse. GPUs offer broader flexibility and ecosystem support, while TPUs are more specialized for optimized AI tensor workloads."
+          },
+          points: [
+            {
+              label: { zh: "不要读成替代关系", en: "Not a simple replacement" },
+              text: {
+                zh: "GPU 仍是主流训练/推理加速器；TPU/ASIC 的逻辑是为长期、大规模、相对稳定的云端负载追求成本和能效。",
+                en: "GPUs remain mainstream AI accelerators. TPUs/custom ASICs are about improving cost and energy efficiency for large, long-running, relatively stable cloud workloads."
+              }
+            },
+            {
+              label: { zh: "核心原理差异", en: "Core principle" },
+              text: {
+                zh: "GPU 更像把任务拆块后交给大量可编程并行核心；TPU 更像让数据流过固定张量阵列，靠数据复用减少搬运。",
+                en: "A GPU distributes tiled work across many programmable parallel cores. A TPU pushes data through a fixed tensor array and relies on data reuse to reduce movement."
+              }
+            },
+            {
+              label: { zh: "投研观察口径", en: "Investment lens" },
+              text: {
+                zh: "GPU 看生态、HBM、集群网络和供给；TPU/ASIC 看云厂商自研能力、软件栈、负载适配、单位 token 成本和能效。",
+                en: "For GPUs, watch ecosystem, HBM, cluster networking, and supply. For TPUs/custom ASICs, watch hyperscaler design capability, software stack, workload fit, cost per token, and energy efficiency."
+              }
+            }
+          ]
+        },
+        {
+          image: "image2_diagrams/04-scale-up-vs-scale-out-network.png",
+          title: { zh: "Scale-up 与 Scale-out：不同层级的网络", en: "Scale-Up vs Scale-Out Networking" },
+          caption: {
+            zh: "NVLink/NVSwitch 解决服务器内或整柜内 GPU 通信；InfiniBand、Ethernet/RoCE 和光纤解决跨机柜扩展。",
+            en: "NVLink/NVSwitch handles GPU communication inside a server or rack-scale system; InfiniBand, Ethernet/RoCE, and fiber scale traffic across racks."
+          }
+        },
+        {
+          image: "image2_diagrams/05-optical-module-link.png",
+          title: { zh: "光模块链路：电信号如何变成光信号", en: "Optical Module Link: Electrical to Optical Signal" },
+          caption: {
+            zh: "光模块位于交换机或网卡前面板，把高速电信号转换成光信号，通过光纤和 patch panel 连接到其他机柜。",
+            en: "Pluggable optical modules sit at the switch or NIC faceplate, converting high-speed electrical signals into optical signals for fiber links across racks."
+          }
+        },
+        {
+          image: "image2_diagrams/06-cpo-vs-pluggable-optics.png",
+          title: { zh: "CPO 与可插拔光模块：核心差异是电连接长度", en: "CPO vs Pluggable Optics: The Electrical Path Is the Difference" },
+          caption: {
+            zh: "传统可插拔方案的电信号要走到前面板；CPO 把光引擎靠近交换芯片，缩短电连接以降低功耗。",
+            en: "Traditional pluggable optics route electrical signals to the front panel; CPO moves optical engines close to the switch ASIC to shorten electrical paths and reduce power."
+          }
+        },
+        {
+          image: "image2_diagrams/18-ai-compute-technology-paths.png",
+          title: { zh: "AI 算力技术路径：GPU、云 ASIC 与晶圆级系统", en: "AI Compute Technology Paths: GPU, Cloud ASIC, and Wafer-Scale Systems" },
+          caption: {
+            zh: "不同算力路线的硬件架构、软件生态和瓶颈不同，但都绕不开电力、散热、网络和客户工作负载验证。",
+            en: "Different compute routes have different hardware architectures, software ecosystems, and bottlenecks, but all depend on power, cooling, networking, and workload validation."
+          }
+        }
+      ],
+      semi: [
+        {
+          image: "image2_diagrams/03-gpu-hbm-cowos-package.png",
+          title: { zh: "GPU + HBM + CoWoS：AI 芯片封装的关键结构", en: "GPU + HBM + CoWoS: The Core AI Package Structure" },
+          caption: {
+            zh: "先看横向结构：GPU/ASIC die 负责计算，HBM stack 负责近距离高速喂数据，silicon interposer 做 GPU-HBM 超密互连，ABF substrate 把整个封装连接到外部系统。",
+            en: "Start with the package structure: the GPU/ASIC die computes, HBM stacks feed data at high bandwidth, the silicon interposer provides dense GPU-HBM links, and the ABF substrate connects the package to the system."
+          }
+        },
+        {
+          image: "image2_diagrams/21-hbm-stacking-bonding-roadmap.png",
+          title: { zh: "HBM 堆叠与 Die-to-Die Bonding：层数增加后的工艺压力", en: "HBM Stacking and Die-to-Die Bonding: Process Pressure from More Layers" },
+          caption: {
+            zh: "再看纵向结构：HBM 从 8-Hi、12-Hi 走向 16-Hi/20-Hi 时，总高度受限，DRAM die 必须更薄，TSV/bump pitch 更小，键合路线从 microbump 走向 Cu-Cu / hybrid bonding。",
+            en: "Then look vertically: as HBM moves from 8-Hi and 12-Hi toward 16-Hi/20-Hi, package height is constrained, DRAM dies must get thinner, TSV/bump pitch shrinks, and bonding shifts from microbumps toward Cu-Cu / hybrid bonding."
+          }
+        },
+        {
+          image: "image2_diagrams/22-hbm-generations-ai-servers.png",
+          wide: true,
+          title: { zh: "HBM 代际路线：容量、I/O 速率和带宽如何抬升", en: "HBM Generations: How Capacity, I/O Rate, and Bandwidth Rise" },
+          caption: {
+            zh: "最后看代际指标：HBM1 到 HBM4 的层数、单 die 密度、stack 容量、I/O 速率和带宽持续上升。投研上应跟踪 HBM3E/HBM4 客户认证、良率、die thinning、bonding 和供应商扩产节奏。",
+            en: "Finally, track the generation metrics: from HBM1 to HBM4, stack height, single-die density, stack capacity, I/O rate, and bandwidth rise. For research, monitor HBM3E/HBM4 qualifications, yield, die thinning, bonding, and supplier capacity expansion."
+          }
+        }
+      ],
+      energy: [
+        {
+          image: "image2_diagrams/07-ai-data-center-power-chain.png",
+          title: { zh: "AI 机房供电链：电如何到达 GPU 机柜", en: "AI Data Center Power Chain: How Electricity Reaches GPU Racks" },
+          caption: {
+            zh: "从 PPA/电网到变电、UPS/BESS、PDU、母线槽和机柜，核心瓶颈是可接入 MW、设备交期和供电稳定性。",
+            en: "From PPA/grid power to substations, UPS/BESS, PDUs, busways, and racks, the key constraints are available MW, equipment lead times, and power reliability."
+          }
+        },
+        {
+          image: "image2_diagrams/08-liquid-cooling-loop.png",
+          title: { zh: "液冷散热链：热量如何被带出机柜", en: "Liquid Cooling Loop: How Heat Leaves the Rack" },
+          caption: {
+            zh: "冷板、manifold、CDU 和设施侧水环路解决高密 GPU 机柜热管理，液冷公司不是 GPU 制造商。",
+            en: "Cold plates, manifolds, CDUs, and facility water loops solve high-density rack thermal management. Liquid-cooling vendors are not GPU manufacturers."
+          }
+        },
+        {
+          image: "image2_diagrams/09-mining-site-to-ai-hpc-data-center.png",
+          title: { zh: "矿场 / IDC 转 AI：从电力土地到 HPC 容量", en: "Mining / IDC to AI: From Power Sites to HPC Capacity" },
+          caption: {
+            zh: "KEEL、HIVE、CLSK 等相关公司应按电力、机房改造、客户合约和融资能力观察，而不是归为芯片制造商。",
+            en: "Names such as KEEL, HIVE, and CLSK should be evaluated by power access, facility upgrades, customer contracts, and financing, not classified as chip manufacturers."
+          }
+        },
+        {
+          image: "image2_diagrams/19-data-center-cooling-paths.png",
+          title: { zh: "数据中心冷却路径：风冷、冷板液冷、浸没式液冷", en: "Data Center Cooling Paths: Air, Direct Liquid, and Immersion" },
+          caption: {
+            zh: "风冷、冷板液冷和浸没式液冷对应不同功率密度和运维复杂度，核心都是把热量稳定带出机柜。",
+            en: "Air cooling, direct-to-chip liquid cooling, and immersion cooling serve different power-density and operational needs, all focused on removing heat from racks."
+          }
+        }
+      ]
+    };
+
+    const indicatorVisual = {
+      image: "image2_diagrams/10-investment-indicators-dashboard.png",
+      title: { zh: "从应用付费到 MW/PUE：把产业链传导翻译成可跟踪指标", en: "From Paid Users to MW/PUE: Translating the Chain into Trackable Indicators" },
+      caption: {
+        zh: "这张图把 ARR、token、GPU 订单、HBM/CoWoS、光模块、MW、PUE 和租约串成观察框架；它不是买卖建议。",
+        en: "This map links ARR, tokens, GPU orders, HBM/CoWoS, optical modules, MW, PUE, and leases into a monitoring framework. It is not a trading recommendation."
+      }
+    };
+
+    const translations = {
+      en: {
+        "应用需求层": "Application Demand Layer",
+        "应用付费": "Application Monetization",
+        "谁愿意为 AI 付费，为什么会产生模型调用？": "Who pays for AI, and why does that create model calls?",
+        "应用层的核心不是“哪个公司很 AI”，而是模型能力进入真实工作流后能否带来付费、留存和 ROI。应用越高频、越嵌入业务系统，向下游模型和算力传导越持续。": "The application layer is not about labeling a company as AI. It is about whether model capabilities can enter real workflows and generate payment, retention, and ROI. The more frequent and embedded the use case, the more durable the downstream demand for models and compute.",
+        "用户任务、行业数据、业务系统、传感器、端侧设备": "User tasks, industry data, business systems, sensors, and edge devices",
+        "SaaS 订阅、按量调用、企业 Agent、行业方案、端侧 AI 和物理世界 AI 产品": "SaaS subscriptions, usage-based calls, enterprise agents, vertical solutions, edge AI, and physical-world AI products",
+        "推理调用量、低延迟、数据权限、行业合规、端侧 NPU 和用户付费意愿": "Inference volume, low latency, data permissions, industry compliance, edge NPUs, and willingness to pay",
+        "业务痛点": "Business pain point",
+        "AI 功能/Agent": "AI feature / Agent",
+        "模型 API 或私有化": "Model API or private deployment",
+        "交付到工作流": "Workflow delivery",
+        "付费与数据回流": "Payment and data feedback",
+        "办公/代码/内容生成": "Office, coding, and content generation",
+        "企业 Agent 和客服销售": "Enterprise agents, customer service, and sales",
+        "金融/法律/医疗/工业垂直": "Financial, legal, healthcare, and industrial verticals",
+        "自动驾驶和机器人": "Autonomous driving and robotics",
+        "AI 手机/PC/终端": "AI phones, PCs, and devices",
+        "客户 ROI 是否可量化": "Whether customer ROI can be quantified",
+        "推理成本能否被定价覆盖": "Whether inference cost is covered by pricing",
+        "企业数据权限和合规": "Enterprise data permissions and compliance",
+        "与 CRM/ERP/ITSM 等系统集成": "Integration with CRM, ERP, ITSM, and other systems",
+        "端侧隐私、功耗和体验": "Edge privacy, power consumption, and user experience",
+        "AI 功能付费席位和 ARR": "Paid AI seats and ARR",
+        "使用频次、留存和续约": "Usage frequency, retention, and renewal",
+        "推理成本占收入比例": "Inference cost as a percentage of revenue",
+        "客户案例是否从试点走向规模化": "Whether pilots convert into scaled deployments",
+        "监管、版权和数据授权变化": "Regulation, copyright, and data-licensing changes",
+        "Copilot、GitHub Copilot 和企业工作流入口": "Copilot, GitHub Copilot, and enterprise workflow entry points",
+        "AI 订阅 attach rate、Azure AI 消耗、企业续约": "AI subscription attach rate, Azure AI consumption, and enterprise renewals",
+        "Firefly 嵌入创意软件": "Firefly embedded into creative software",
+        "生成式功能使用量、创意云 ARPU": "Generative feature usage and Creative Cloud ARPU",
+        "Agentforce、CRM 和客服销售流程": "Agentforce, CRM, customer-service and sales workflows",
+        "Agent 部署客户、CRM 数据闭环": "Agent deployments and CRM data loop",
+        "ITSM/企业流程 Agent": "ITSM and enterprise workflow agents",
+        "工作流自动化收入和大客户扩展": "Workflow automation revenue and large-account expansion",
+        "AI 编程 IDE": "AI coding IDE",
+        "开发者付费、代码生成留存": "Developer payment and code-generation retention",
+        "金融和法律专业工作流": "Financial and legal professional workflows",
+        "专业数据壁垒、合规客户扩展": "Professional data moats and regulated-customer expansion",
+        "医疗数据和 AI 药物发现": "Healthcare data and AI drug discovery",
+        "临床/药研合作、数据资产质量": "Clinical and pharma partnerships, data-asset quality",
+        "自动驾驶和物理世界 AI": "Autonomous driving and physical-world AI",
+        "行驶数据、仿真训练、监管许可": "Driving data, simulation training, and regulatory permits",
+        "端侧 AI 和 NPU 生态": "Edge AI and NPU ecosystem",
+        "端侧模型体验、换机周期、NPU 性能": "On-device model experience, replacement cycle, and NPU performance",
+        "中国办公、教育和语音应用": "Chinese office, education, and speech applications",
+        "AI 付费转化、政企客户渗透": "AI paid conversion and government/enterprise penetration",
+        "Microsoft、Google、Amazon 同时是应用入口和云平台，但在本层讨论的是产品需求，不是芯片制造。": "Microsoft, Google, and Amazon can be both application entry points and cloud platforms. In this layer, they are demand-side products, not chip manufacturers.",
+        "Tesla 在本层是自动驾驶/机器人应用和数据闭环，在算力层才讨论训练集群，在半导体层通常不是代工厂。": "In this layer Tesla is an autonomous-driving and robotics application/data loop. Its training clusters belong to compute; it is usually not a foundry in semiconductor manufacturing.",
+        "应用层机会必须用付费、留存和 ROI 验证，不能只看发布会和下载量。": "Application-layer opportunities must be validated by payment, retention, and ROI, not just launches or downloads.",
+        "找到高频任务": "Find high-frequency tasks",
+        "从办公、代码、客服、销售、金融、医疗、汽车等场景里找到可被 AI 改写的工作流。": "Identify workflows in office, coding, support, sales, finance, healthcare, automotive, and other settings that AI can reshape.",
+        "接入模型和数据": "Connect models and data",
+        "调用模型 API、私有化模型或端侧模型，并接入企业知识库、权限和行业数据。": "Call model APIs, private models, or edge models, and connect enterprise knowledge bases, permissions, and industry data.",
+        "嵌入业务系统": "Embed into business systems",
+        "把回答、生成、检索和操作能力放进 CRM、ERP、IDE、Office、车端或机器人控制系统。": "Put answering, generation, retrieval, and action capabilities into CRM, ERP, IDEs, Office, vehicles, or robot-control systems.",
+        "形成付费和反馈": "Create payment and feedback",
+        "通过订阅、按量、项目制或硬件溢价收费，并用使用数据继续优化产品。": "Monetize through subscriptions, usage-based pricing, projects, or hardware premiums, then use usage data to improve the product.",
+
+        "模型与平台层": "Model and Platform Layer",
+        "模型调用": "Model Calls",
+        "模型如何训练、对齐，并变成可调用的服务？": "How are models trained, aligned, and turned into callable services?",
+        "模型层把数据和算力变成可调用能力：先训练基础模型，再做指令微调、偏好对齐和评测，最后通过 API、RAG、Agent 平台或私有化部署进入应用。": "The model layer turns data and compute into callable capabilities: train a base model, perform instruction tuning, preference alignment and evaluation, then deliver it through APIs, RAG, agent platforms, or private deployments.",
+        "语料、标注和偏好数据、训练框架、GPU/TPU 集群、企业数据": "Corpora, labels, preference data, training frameworks, GPU/TPU clusters, and enterprise data",
+        "基础模型、对齐模型、模型 API、开放权重、企业 RAG 和 Agent 平台": "Base models, aligned models, model APIs, open weights, enterprise RAG, and agent platforms",
+        "高质量数据、训练 GPU 小时、MoE 通信、推理吞吐、模型安全和企业数据治理": "High-quality data, training GPU hours, MoE communication, inference throughput, model safety, and enterprise data governance",
+        "数据清洗": "Data cleaning",
+        "Tokenize": "Tokenization",
+        "预训练": "Pretraining",
+        "多卡并行": "Multi-card parallelism",
+        "评测/Checkpoint": "Evaluation / Checkpoint",
+        "SFT/RLHF/DPO": "SFT / RLHF / DPO",
+        "API/RAG/Agent": "API / RAG / Agent",
+        "基础模型": "Foundation models",
+        "开放权重生态": "Open-weight ecosystem",
+        "模型 API 和推理平台": "Model APIs and inference platforms",
+        "数据标注/评测/RLHF": "Data labeling, evaluation, and RLHF",
+        "企业数据平台和 MLOps": "Enterprise data platforms and MLOps",
+        "云模型服务": "Cloud model services",
+        "高质量数据和版权授权": "High-quality data and copyright licensing",
+        "推理成本和 token 价格下行": "Inference cost and token price compression",
+        "MoE 带来的通信和调度复杂度": "Communication and scheduling complexity from MoE",
+        "安全、幻觉和合规评测": "Safety, hallucination, and compliance evaluation",
+        "模型同质化和客户迁移成本": "Model commoditization and customer switching costs",
+        "API 调用量和 token 价格": "API call volume and token pricing",
+        "模型能力差距与成本/延迟": "Capability gap versus cost and latency",
+        "企业合同和私有化部署": "Enterprise contracts and private deployments",
+        "开源生态活跃度": "Open-source ecosystem activity",
+        "云厂商承载的训练/推理消耗": "Training and inference consumption hosted by cloud providers",
+        "GPT、ChatGPT、API 和企业平台": "GPT, ChatGPT, APIs, and enterprise platform",
+        "API 消耗、企业席位、推理成本": "API consumption, enterprise seats, and inference cost",
+        "Claude 和企业安全路线": "Claude and enterprise safety positioning",
+        "企业客户、模型效果和合规定位": "Enterprise customers, model quality, and compliance positioning",
+        "Gemini、TPU 协同和 Google Cloud": "Gemini, TPU integration, and Google Cloud",
+        "模型能力、云端承载、TPU 利用": "Model capability, cloud hosting, and TPU utilization",
+        "Llama 开放权重生态": "Llama open-weight ecosystem",
+        "开发者生态、企业私有化采用": "Developer ecosystem and enterprise private adoption",
+        "开放权重和中国企业私有化路线": "Open weights and China enterprise private-deployment route",
+        "生态适配、国产算力支持、商业化": "Ecosystem compatibility, domestic compute support, and commercialization",
+        "Model Hub、Transformers 和生态分发": "Model Hub, Transformers, and ecosystem distribution",
+        "模型下载、企业服务和社区活跃": "Model downloads, enterprise services, and community activity",
+        "标注、RLHF、评测数据": "Labeling, RLHF, and evaluation data",
+        "大客户集中度、数据质量": "Large-customer concentration and data quality",
+        "数据湖、企业数据云和模型开发平台": "Data lake, enterprise data cloud, and model-development platform",
+        "企业数据进入 AI 工作流的速度": "Speed of enterprise data entering AI workflows",
+        "训练、推理、模型托管和企业数据承载": "Training, inference, model hosting, and enterprise data hosting",
+        "云 AI 收入、GPU/ASIC 容量、客户长约": "Cloud AI revenue, GPU/ASIC capacity, and long-term customer contracts",
+        "模型公司不等于一定拥有芯片制造能力；多数是算力采购方或云资源使用方。": "Model companies do not necessarily own chip-manufacturing capability; most are compute buyers or cloud-resource users.",
+        "云平台出现在模型层时，是模型托管和企业数据平台角色；出现在算力层时，才讨论 GPU/TPU 集群和 CapEx。": "When a cloud platform appears in the model layer, it is a model-hosting and enterprise-data platform. In the compute layer, it is about GPU/TPU clusters and CapEx.",
+        "Dense、MoE、开放权重、闭源 API 是路线选择，不是简单的上下游顺序。": "Dense, MoE, open weights, and closed APIs are route choices, not a simple upstream-downstream sequence.",
+        "数据和评测集": "Data and evaluation sets",
+        "清洗语料、代码、多模态数据、偏好样本和行业数据，并建立评测口径。": "Clean corpora, code, multimodal data, preference samples, and industry data, while establishing evaluation criteria.",
+        "在大量 token 上做矩阵乘法训练，决定基础能力，也直接消耗 GPU/TPU 小时。": "Run matrix-multiplication training over massive token sets. This determines base capability and directly consumes GPU/TPU hours.",
+        "并行和通信": "Parallelism and communication",
+        "数据并行、张量并行、流水线并行和 MoE 路由把模型拆到多卡集群。": "Data, tensor, pipeline parallelism and MoE routing split the model across multi-card clusters.",
+        "对齐和安全": "Alignment and safety",
+        "通过 SFT、RLHF、DPO、GRPO/RLVR 等方法让模型可对话、可遵循指令并降低风险。": "Use SFT, RLHF, DPO, GRPO/RLVR and related methods to make models conversational, instruction-following, and lower risk.",
+        "部署成服务": "Deploy as a service",
+        "通过 API、推理引擎、RAG、Agent 框架和云平台进入应用，形成持续推理负载。": "Enter applications through APIs, inference engines, RAG, agent frameworks, and cloud platforms, creating persistent inference workloads.",
+
+        "算力基础设施层": "Compute Infrastructure Layer",
+        "算力采购": "Compute Procurement",
+        "为什么模型调用会拉动 GPU、HBM、服务器、PCB、MLCC、网络和光模块？": "Why do model calls pull demand for GPUs, HBM, servers, PCB, MLCC, networks, and optical modules?",
+        "算力层把模型任务变成可运行的集群。主流路径是 GPU/TPU/ASIC + HBM + AI 服务器 + 板级 BOM + Scale-up/Scale-out 网络 + 光模块 + 云资源；Cerebras 等晶圆级系统是差异化路线，但也需要电力、散热和数据中心承载。": "The compute layer turns model workloads into runnable clusters. The mainstream path is GPU/TPU/ASIC plus HBM, AI servers, board-level BOM, scale-up/scale-out networking, optical modules, and cloud resources. Wafer-scale systems such as Cerebras are differentiated routes, but still need power, cooling, and data-center hosting.",
+        "训练任务、推理请求、云厂商和模型公司的 CapEx、企业私有化需求": "Training jobs, inference requests, cloud and model-company CapEx, and enterprise private-deployment demand",
+        "可部署、可租用、可扩展的训练和推理算力": "Deployable, rentable, and scalable training and inference compute",
+        "GPU/ASIC 供给、HBM 分配、CoWoS/ABF 产能、高多层 PCB/CCL、MLCC/VRM 供电完整性、网络延迟、800G/1.6T 光模块、液冷和上架电力": "GPU/ASIC supply, HBM allocation, CoWoS/ABF capacity, high-layer PCB/CCL, MLCC/VRM power integrity, network latency, 800G/1.6T optical modules, liquid cooling, and rack power",
+        "调度任务": "Schedule workloads",
+        "GPU/TPU/ASIC": "GPU / TPU / ASIC",
+        "HBM/存储": "HBM / Storage",
+        "AI 服务器/整柜": "AI servers / rack-scale systems",
+        "网络和光互联": "Networking and optical interconnect",
+        "云算力/IDC": "Cloud compute / IDC",
+        "AI 加速器/GPU/TPU/ASIC": "AI accelerators: GPU / TPU / ASIC",
+        "HBM、DRAM 和企业 SSD": "HBM, DRAM, and enterprise SSD",
+        "AI 服务器、ODM 和整柜": "AI servers, ODMs, and rack-scale systems",
+        "PCB/CCL、MLCC、VRM/PMIC 和连接器": "PCB/CCL, MLCC, VRM/PMIC, and connectors",
+        "交换机、NIC/DPU 和网络芯片": "Switches, NIC/DPU, and networking chips",
+        "光模块、光器件和光纤": "Optical modules, optical components, and fiber",
+        "GPU 云和 AI 云": "GPU cloud and AI cloud",
+        "高端 GPU/ASIC 和软件生态": "High-end GPU/ASIC and software ecosystem",
+        "HBM3E/HBM4 供给和良率": "HBM3E/HBM4 supply and yield",
+        "先进封装、ABF 和整柜交付": "Advanced packaging, ABF, and rack-scale delivery",
+        "高多层 PCB、MLCC 和板级供电/信号完整性": "High-layer PCB, MLCC, and board-level power/signal integrity",
+        "网络拥塞、光模块良率和功耗": "Network congestion, optical-module yield, and power consumption",
+        "GPU 利用率、客户集中度和融资成本": "GPU utilization, customer concentration, and financing cost",
+        "AI 服务器订单、积压和出货": "AI server orders, backlog, and shipments",
+        "GPU/ASIC 代际切换和毛利率": "GPU/ASIC generation transition and gross margin",
+        "HBM bit supply、ASP 和客户认证": "HBM bit supply, ASP, and customer qualification",
+        "高层数 PCB、CCL 材料、MLCC 用量和 VRM 功率密度": "High-layer PCB, CCL material upgrades, MLCC content, and VRM power density",
+        "800G/1.6T 出货、硅光/CPO/LPO 进展": "800G/1.6T shipments and silicon photonics/CPO/LPO progress",
+        "GPU 云利用率、长约质量和电力成本": "GPU cloud utilization, contract quality, and power cost",
+        "GPU、NVLink、Networking、CUDA 生态": "GPU, NVLink, networking, and CUDA ecosystem",
+        "Blackwell/Rubin 供给、数据中心收入、对华限制": "Blackwell/Rubin supply, data-center revenue, and China restrictions",
+        "Instinct GPU、EPYC CPU、ROCm": "Instinct GPU, EPYC CPU, and ROCm",
+        "MI350/MI400 放量、云厂商导入、ROCm 生态": "MI350/MI400 ramp, cloud adoption, and ROCm ecosystem",
+        "云厂商自研加速器": "Cloud-provider custom accelerators",
+        "自用负载迁移、外部云客户采用": "Internal workload migration and external cloud-customer adoption",
+        "定制 AI XPU、交换芯片、DSP/光互联硅": "Custom AI XPU, switch chips, DSP, and optical-interconnect silicon",
+        "大客户 ASIC、以太网 AI 集群、光电集成": "Large-customer ASICs, Ethernet AI clusters, and optoelectronic integration",
+        "WSE-3、CS-3、MemoryX、SwarmX": "WSE-3, CS-3, MemoryX, and SwarmX",
+        "专用训练/推理吞吐、客户适配、系统扩展": "Dedicated training/inference throughput, customer fit, and system scaling",
+        "HBM、服务器 DRAM、部分 NAND/eSSD": "HBM, server DRAM, and selected NAND/eSSD",
+        "HBM 供给、认证、内存价格": "HBM supply, qualification, and memory pricing",
+        "AI 服务器、整柜、液冷系统集成": "AI servers, rack-scale systems, and liquid-cooling integration",
+        "订单、积压、交付和毛利": "Orders, backlog, delivery, and gross margin",
+        "服务器 ODM/OEM 和智算方案": "Server ODM/OEM and intelligent-computing solutions",
+        "云客户订单、国产芯片适配、液冷占比": "Cloud-customer orders, domestic-chip compatibility, and liquid-cooling mix",
+        "沪电股份 / 深南电路 / 胜宏科技 / 生益科技": "Wus Printed Circuit / Shennan Circuits / Victory Giant / Shengyi Technology",
+        "AI 服务器和交换机高多层 PCB、CCL 和封装基板相关能力": "High-layer PCB, CCL, and package-substrate capabilities for AI servers and switches",
+        "高速板占比、客户认证、层数和材料升级": "High-speed board mix, customer qualification, layer count, and material upgrades",
+        "Murata / TDK / Yageo / Amphenol / TE Connectivity": "Murata / TDK / Yageo / Amphenol / TE Connectivity",
+        "MLCC、板级被动元件、高速连接器和线缆互联": "MLCCs, board-level passives, high-speed connectors, and cable interconnects",
+        "单机用量、规格升级、连接速率和客户导入": "Content per server, specification upgrades, link speed, and customer adoption",
+        "AI 数据中心交换机和网络设备": "AI data-center switches and networking equipment",
+        "800G/1.6T 交换机、以太网/IB 部署": "800G/1.6T switches and Ethernet/IB deployment",
+        "高速光模块、激光器、光器件和光引擎": "High-speed optical modules, lasers, optical components, and optical engines",
+        "800G/1.6T 出货、客户结构、海外产能": "800G/1.6T shipments, customer mix, and overseas capacity",
+        "GPU/ASIC 云和 AI 基础设施服务": "GPU/ASIC cloud and AI infrastructure services",
+        "GPU 利用率、长约、云 AI 收入": "GPU utilization, long-term contracts, and cloud AI revenue",
+        "企业 SSD、NAND、训练数据和 checkpoint 存储": "Enterprise SSD, NAND, training data, and checkpoint storage",
+        "eSSD 价格、容量和数据管道需求": "eSSD pricing, capacity, and data-pipeline demand",
+        "SanDisk/企业 SSD 是存储链，不是 HBM；HBM 是贴近加速器的高带宽 DRAM。": "SanDisk/enterprise SSD belongs to the storage chain, not HBM. HBM is high-bandwidth DRAM placed close to accelerators.",
+        "ABF substrate 属于芯片封装基板；PCB/CCL、MLCC、VRM 和连接器属于板级/系统级供应链，不是 GPU 或 HBM。": "ABF substrate belongs to chip package substrates; PCB/CCL, MLCC, VRM, and connectors belong to the board/system-level supply chain, not GPU or HBM.",
+        "光模块公司解决跨服务器和跨机柜的物理连接，不是 GPU 制造商。": "Optical-module companies solve physical links across servers and racks; they are not GPU manufacturers.",
+        "Applied Digital、IREN、Core Scientific、Hut 8 等如果出现，应按 AI 云、colocation 或电力资源转型拆分，不要当成芯片公司。": "Applied Digital, IREN, Core Scientific, Hut 8 and similar names should be classified as AI cloud, colocation, or power-resource transition plays, not chip companies.",
+        "Cerebras 是算力芯片和系统路线，不是 CPO 或光模块公司。": "Cerebras is a compute-chip and system route, not a CPO or optical-module company.",
+        "训练/推理排队": "Training/inference queue",
+        "模型平台把任务交给调度系统，分配 GPU/TPU/ASIC、存储、网络和容器环境。": "The model platform hands jobs to schedulers that allocate GPU/TPU/ASIC, storage, networking, and container environments.",
+        "加速器执行矩阵乘法": "Accelerators execute matrix multiplication",
+        "GPU、TPU、Trainium 或定制 ASIC 负责 attention、MLP、推理和训练核心计算。": "GPUs, TPUs, Trainium, or custom ASICs handle attention, MLP, inference, and core training compute.",
+        "HBM 和存储喂数据": "HBM and storage feed data",
+        "HBM 提供权重、激活值、梯度和 KV cache 的高速读写；企业 SSD 承接数据集和 checkpoint。": "HBM provides high-speed reads/writes for weights, activations, gradients, and KV cache; enterprise SSDs hold datasets and checkpoints.",
+        "服务器和整柜集成": "Server and rack-scale integration",
+        "服务器厂把加速器、CPU、内存、网络、电源和液冷做成可交付整柜。": "Server vendors integrate accelerators, CPUs, memory, networking, power, and liquid cooling into deliverable rack-scale systems.",
+        "网络和光互联扩展": "Network and optical interconnect scaling",
+        "同机用 NVLink/PCIe/CXL，跨服务器用 IB/Ethernet/RoCE，远距离高带宽需要光模块和光纤。": "Within a server use NVLink/PCIe/CXL. Across servers use IB/Ethernet/RoCE. Longer-distance high-bandwidth links need optical modules and fiber.",
+        "云和 IDC 运营": "Cloud and IDC operations",
+        "云厂商、GPU 云和 IDC 把硬件、电力、调度和服务打包成可租用算力。": "Cloud providers, GPU clouds, and IDCs package hardware, power, scheduling, and services into rentable compute.",
+        "GPU/HBM 集群": "GPU/HBM clusters",
+        "成熟通用，生态强，主要看 GPU、HBM、服务器、网络、光模块和液冷。": "Mature and general-purpose, with a strong ecosystem. Track GPUs, HBM, servers, networking, optical modules, and liquid cooling.",
+        "云厂商 ASIC": "Cloud-provider ASICs",
+        "Google TPU、AWS Trainium/Inferentia、Broadcom/Marvell 定制硅，目标是降低长期推理成本。": "Google TPU, AWS Trainium/Inferentia, and Broadcom/Marvell custom silicon aim to reduce long-term inference cost.",
+        "Cerebras 晶圆级": "Cerebras wafer-scale route",
+        "WSE-3 把大量核心和 SRAM 放在一片晶圆上，减少部分芯片间通信，但仍需要系统、电力和散热。": "WSE-3 puts many cores and SRAM on one wafer, reducing some chip-to-chip communication, but still needs systems, power, and cooling.",
+        "国产算力": "Domestic compute",
+        "华为昇腾、寒武纪、海光、摩尔线程、沐曦等，需要软件生态、供给和客户验证共同突破。": "Huawei Ascend, Cambricon, Hygon, Moore Threads, MetaX and others need software ecosystem, supply, and customer validation to improve together.",
+        "需求定义": "Demand definition",
+        "集群方案": "Cluster plan",
+        "核心部件采购": "Core component procurement",
+        "服务器/整柜集成": "Server / rack-scale integration",
+        "IDC 部署": "IDC deployment",
+        "云平台调度计量": "Cloud scheduling and metering",
+        "可租用算力运营": "Rentable compute operations",
+        "模型平台、云客户或企业提出训练、推理、Agent、HPC 等负载需求，明确算力规模、延迟、显存、网络、数据安全和交付周期。": "Model platforms, cloud customers, or enterprises define training, inference, agent, and HPC workloads, including compute scale, latency, memory, networking, data security, and delivery timing.",
+        "集群方案设计": "Cluster architecture design",
+        "决定采用通用 GPU、云厂商 ASIC、国产算力或晶圆级系统，并同步设计网络、存储、散热、电力和软件栈。": "Choose among general GPU clusters, cloud-provider ASICs, domestic accelerators, or wafer-scale systems while designing networking, storage, cooling, power, and software stack.",
+        "核心部件采购": "Core component procurement",
+        "采购或分配 GPU/TPU/ASIC、HBM、CPU、DRAM、企业 SSD、NIC/DPU、交换机、光模块、电源、液冷组件，以及 PCB/CCL、MLCC、VRM/PMIC、连接器和 retimer 等板级 BOM。": "Procure or allocate GPUs/TPUs/ASICs, HBM, CPUs, DRAM, enterprise SSDs, NICs/DPUs, switches, optical modules, power equipment, liquid-cooling components, and board-level BOM such as PCB/CCL, MLCC, VRM/PMIC, connectors, and retimers.",
+        "OEM/ODM 和服务器厂把芯片封装装到加速卡或主板 PCB 上，再把加速器、CPU、内存、存储、网卡、电源和液冷做成 AI 服务器、整柜或 rack-scale system。": "OEMs/ODMs and server vendors mount chip packages onto accelerator cards or motherboard PCBs, then integrate accelerators, CPUs, memory, storage, NICs, power, and liquid cooling into AI servers, full racks, or rack-scale systems.",
+        "IDC 与集群部署": "IDC and cluster deployment",
+        "数据中心提供机房、电力、制冷、网络接入和运维环境，把服务器、交换机、光纤、PDU、UPS、液冷/CDU 部署成可运行集群。": "Data centers provide rooms, power, cooling, network access, and operations, then deploy servers, switches, fiber, PDUs, UPS, and liquid-cooling/CDU systems into runnable clusters.",
+        "云厂商或 GPU 云用 Kubernetes、Slurm、Ray、虚拟化、监控、安全和计费系统，把底层硬件抽象成可分配资源。": "Cloud providers or GPU clouds use Kubernetes, Slurm, Ray, virtualization, monitoring, security, and billing systems to abstract hardware into allocatable resources.",
+        "最终交付 GPU 小时、训练集群、推理 endpoint、裸金属、私有部署或长期租赁容量，并用利用率、故障率和续约反馈扩容。": "The final products are GPU-hours, training clusters, inference endpoints, bare metal, private deployments, or long-term leased capacity, with utilization, failure rates, and renewals feeding the next expansion cycle.",
+        "算力路线分叉": "Compute route branches",
+        "GPU/HBM 集群、云厂商 ASIC、Cerebras 晶圆级和国产算力是不同硬件路线；比较重点是生态、供给、成本和客户验证。": "GPU/HBM clusters, cloud-provider ASICs, Cerebras wafer-scale systems, and domestic accelerators are different hardware routes; compare ecosystem, supply, cost, and customer validation.",
+        "板级 BOM 分叉": "Board-level BOM branch",
+        "ABF/interposer 解决芯片封装内连接；PCB/CCL、MLCC、VRM、连接器和 retimer 解决板卡上的供电、信号和机械承载。": "ABF/interposer solve in-package chip connections; PCB/CCL, MLCC, VRM, connectors, and retimers solve board-level power, signal, and mechanical support.",
+        "网络路线分叉": "Network route branches",
+        "同服务器或整柜看 NVLink/NVSwitch、PCIe/CXL；跨服务器看 InfiniBand、Ethernet/RoCE，远距离高带宽再拉动光模块、光纤和 CPO/LPO。": "Within a server or rack, track NVLink/NVSwitch and PCIe/CXL; across servers, track InfiniBand and Ethernet/RoCE; long-distance high-bandwidth links pull optical modules, fiber, and CPO/LPO.",
+        "部署路线分叉": "Deployment route branches",
+        "Hyperscaler 自建、GPU 云、IDC 托管、矿场/旧 IDC 改造和企业私有集群，对应不同的电力、融资、客户和运维约束。": "Hyperscaler self-builds, GPU clouds, IDC colocation, mining/legacy IDC conversion, and enterprise private clusters each carry different power, financing, customer, and operations constraints.",
+        "散热路线分叉": "Cooling route branches",
+        "风冷、冷板液冷和浸没式液冷对应不同机柜功率密度；液冷公司解决热管理，不是生产 GPU。": "Air cooling, cold-plate liquid cooling, and immersion cooling map to different rack power densities; liquid-cooling vendors solve thermal management, not GPU manufacturing.",
+        "商业交付分叉": "Commercial delivery branches",
+        "收入形态可以是 GPU 小时、长约包量、推理 API、裸金属、私有化交付或 colocation，跟踪指标也应分别看利用率、价格、续约和客户集中度。": "Revenue can come from GPU-hours, committed long-term capacity, inference APIs, bare metal, private deployments, or colocation; metrics should separately track utilization, pricing, renewals, and customer concentration.",
+
+        "半导体制造层": "Semiconductor Manufacturing Layer",
+        "芯片制造": "Chip Manufacturing",
+        "AI 芯片需求如何传到代工、封装、设备和材料？": "How does AI chip demand flow into foundry, packaging, equipment, and materials?",
+        "半导体制造层不是单线装配。芯片设计、EDA/IP、GPU/ASIC 晶圆、HBM/DRAM、ABF 基板和封装材料并行推进，最后在 CoWoS/2.5D/3D 封装和测试环节汇合。": "Semiconductor manufacturing is not a single assembly line. Chip design, EDA/IP, GPU/ASIC wafers, HBM/DRAM, ABF substrates, and packaging materials progress in parallel and converge in CoWoS/2.5D/3D packaging and testing.",
+        "GPU/ASIC/交换芯片设计、HBM 需求、晶圆厂和封装厂 CapEx、设备材料订单": "GPU/ASIC/switch-chip designs, HBM demand, foundry and packaging CapEx, and equipment/material orders",
+        "可交付的加速器、HBM 堆叠、交换芯片、先进封装产能和良率": "Deliverable accelerators, HBM stacks, switch chips, advanced-packaging capacity, and yield",
+        "先进制程、CoWoS/先进封装、HBM、ABF 载板、EUV/DUV、刻蚀沉积清洗、出口管制和良率": "Advanced nodes, CoWoS/advanced packaging, HBM, ABF substrates, EUV/DUV, etch/deposition/cleaning, export controls, and yield",
+        "芯片定义": "Chip definition",
+        "EDA/IP": "EDA / IP",
+        "晶圆制造": "Wafer fabrication",
+        "HBM/基板并行": "HBM / substrate in parallel",
+        "先进封装": "Advanced packaging",
+        "测试交付": "Testing and delivery",
+        "Fabless 芯片设计": "Fabless chip design",
+        "晶圆代工": "Foundry",
+        "HBM/DRAM 制造": "HBM/DRAM manufacturing",
+        "先进封装/OSAT": "Advanced packaging / OSAT",
+        "半导体设备": "Semiconductor equipment",
+        "材料、ABF 和测试": "Materials, ABF, and testing",
+        "3nm/2nm 与先进节点产能": "3nm/2nm and advanced-node capacity",
+        "CoWoS/2.5D/混合键合产能": "CoWoS/2.5D/hybrid-bonding capacity",
+        "HBM4 认证和 TSV/堆叠良率": "HBM4 qualification and TSV/stacking yield",
+        "ABF 基板和关键材料": "ABF substrates and critical materials",
+        "出口管制和设备交期": "Export controls and equipment lead times",
+        "TSMC/三星/Intel Foundry 先进节点和 HPC 收入": "Advanced-node and HPC revenue at TSMC/Samsung/Intel Foundry",
+        "CoWoS/先进封装扩产节奏": "CoWoS/advanced-packaging expansion pace",
+        "HBM3E/HBM4 客户认证": "HBM3E/HBM4 customer qualification",
+        "设备订单、book-to-bill 和国产替代": "Equipment orders, book-to-bill, and domestic substitution",
+        "封测良率、ABF 供需和材料国产化": "Packaging/testing yield, ABF supply-demand, and material localization",
+        "GPU、AI ASIC、交换芯片的无晶圆设计方": "Fabless designers of GPUs, AI ASICs, and switch chips",
+        "产品路线、代工和封装排产": "Product roadmap, foundry allocation, and packaging schedule",
+        "EDA、验证工具和 IP": "EDA, verification tools, and IP",
+        "AI 芯片设计复杂度、授权收入": "AI chip design complexity and licensing revenue",
+        "先进制程、CoWoS、HPC/AI 代工": "Advanced nodes, CoWoS, and HPC/AI foundry services",
+        "3nm/2nm、CoWoS、HPC 占比": "3nm/2nm, CoWoS, and HPC mix",
+        "先进或特色晶圆代工": "Advanced or specialty foundry services",
+        "客户导入、产能、制程进展": "Customer adoption, capacity, and process progress",
+        "HBM、DRAM、NAND 制造": "HBM, DRAM, and NAND manufacturing",
+        "HBM 供货、价格、良率": "HBM supply, pricing, and yield",
+        "OSAT、先进封装和封测": "OSAT, advanced packaging, and assembly/test",
+        "高端封装订单、测试良率": "High-end packaging orders and test yield",
+        "光刻、沉积、刻蚀、量检测和前道设备": "Lithography, deposition, etch, metrology/inspection, and front-end tools",
+        "先进逻辑和存储 CapEx": "Advanced logic and memory CapEx",
+        "国产刻蚀、薄膜、清洗、CMP 等设备": "Domestic etch, thin-film, cleaning, CMP and related tools",
+        "国产验证、订单和客户覆盖": "Domestic qualification, orders, and customer coverage",
+        "ABF 载板、膜材和封装材料": "ABF substrates, films, and packaging materials",
+        "高端基板供需、材料迭代": "High-end substrate supply-demand and material upgrades",
+        "ATE 测试设备": "ATE test equipment",
+        "高端芯片测试需求和利用率": "High-end chip testing demand and utilization",
+        "NVIDIA、AMD、Broadcom 是芯片设计方，不是晶圆代工厂。": "NVIDIA, AMD, and Broadcom are chip designers, not foundries.",
+        "TSMC 是代工和先进封装核心，不是 GPU 品牌或云厂商。": "TSMC is a foundry and advanced-packaging core supplier, not a GPU brand or cloud provider.",
+        "光模块的主归属仍是算力基础设施；只有光芯片、硅光、光电集成等上游器件才进入半导体制造讨论。": "Optical modules mainly belong to compute infrastructure. Only upstream optical chips, silicon photonics, and optoelectronic integration belong in semiconductor-manufacturing discussion.",
+        "设备材料是横向支撑，贯穿晶圆、HBM、封装和测试，不是制造结束后的附属环节。": "Equipment and materials are horizontal enablers across wafers, HBM, packaging, and testing; they are not an afterthought after manufacturing.",
+        "芯片定义和设计": "Chip definition and design",
+        "芯片公司定义 GPU、AI ASIC、交换芯片，并用 EDA/IP 完成设计和验证。": "Chip companies define GPUs, AI ASICs, and switch chips, then use EDA/IP to complete design and verification.",
+        "代工厂用先进或特色制程制造 GPU/ASIC/交换芯片 die，设备和材料决定良率。": "Foundries use advanced or specialty processes to make GPU/ASIC/switch-chip die; equipment and materials determine yield.",
+        "HBM 与基板并行": "HBM and substrates in parallel",
+        "内存厂制造 HBM stack，基板材料厂准备 ABF、interposer 和封装材料。": "Memory makers manufacture HBM stacks while substrate/material vendors prepare ABF, interposers, and packaging materials.",
+        "先进封装汇合": "Converge in advanced packaging",
+        "GPU/ASIC die、HBM、interposer 和 ABF 在 CoWoS/2.5D/3D 封装处汇合。": "GPU/ASIC die, HBM, interposers, and ABF converge in CoWoS/2.5D/3D packaging.",
+        "测试与交付": "Testing and delivery",
+        "ATE、封测和老化筛选可交付芯片，再进入板卡、服务器和云厂商供应链。": "ATE, assembly/test, and burn-in screen deliverable chips before they enter board, server, and cloud supply chains.",
+        "GPU/ASIC die": "GPU/ASIC die",
+        "先进逻辑制程，关注 3nm/2nm、良率、掩膜和排产。": "Advanced logic process. Track 3nm/2nm, yield, masks, and allocation.",
+        "HBM stack": "HBM stack",
+        "DRAM 晶圆、TSV、堆叠和测试，关注 HBM3E/HBM4 认证。": "DRAM wafer, TSV, stacking, and testing. Track HBM3E/HBM4 qualification.",
+        "ABF/Interposer/材料": "ABF / Interposer / Materials",
+        "封装承载和连接材料，关注高端基板供需和材料升级。": "Packaging carrier and interconnect materials. Track high-end substrate supply-demand and material upgrades.",
+
+        "能源与数据中心资源层": "Power and Data-Center Resources Layer",
+        "资源约束": "Resource Constraints",
+        "算力最后受哪些物理资源约束？": "Which physical resources ultimately constrain compute?",
+        "能源和数据中心资源层回答“算力能不能落地”。AI 集群需要稳定电力、并网、变电、UPS/配电、高密机柜、冷却、水资源、土地、网络接入和长期客户合约。": "The power and data-center resources layer answers whether compute can actually be deployed. AI clusters need reliable power, grid connection, substations, UPS/distribution, high-density racks, cooling, water, land, network access, and long-term customer contracts.",
+        "AI 负荷预测、长期 PPA、并网容量、数据中心建设计划、机柜和液冷需求": "AI load forecasting, long-term PPAs, grid capacity, data-center build plans, rack and liquid-cooling demand",
+        "稳定、低成本、可持续的高密度数据中心承载能力": "Reliable, low-cost, sustainable high-density data-center hosting capacity",
+        "电源可得性、输配电容量、储能和备用电源、UPS/PDU、PUE、水资源、土地许可和融资": "Power availability, transmission/distribution capacity, storage and backup power, UPS/PDU, PUE, water, land permitting, and financing",
+        "负荷规划": "Load planning",
+        "购电/PPA": "Power purchase / PPA",
+        "电网和变电": "Grid and substations",
+        "储能/备用": "Storage / backup",
+        "UPS/配电": "UPS / distribution",
+        "机柜/液冷": "Racks / liquid cooling",
+        "PUE/碳管理": "PUE / carbon management",
+        "核电/燃气/风光和 PPA": "Nuclear, gas, renewables, and PPAs",
+        "电网、变压器和开关柜": "Grid, transformers, and switchgear",
+        "BESS、备用和现场发电": "BESS, backup, and onsite generation",
+        "UPS/PDU/母线槽": "UPS, PDU, and busway",
+        "IDC/Colocation/GPU 云园区": "IDC, colocation, and GPU-cloud campuses",
+        "液冷、温控和水系统": "Liquid cooling, thermal management, and water systems",
+        "DCIM/EMS/PUE": "DCIM / EMS / PUE",
+        "可接入 MW 和并网排队": "Available MW and grid-connection queues",
+        "变压器、燃气轮机和电力设备交期": "Lead times for transformers, gas turbines, and power equipment",
+        "高密机柜热管理": "Thermal management for high-density racks",
+        "水资源、噪音和社区许可": "Water, noise, and community permitting",
+        "客户长约、融资成本和上架率": "Long-term customer contracts, financing cost, and utilization",
+        "MW 已签约、在建和可交付": "MW contracted, under construction, and deliverable",
+        "PPA、电价和电网接入进度": "PPA, power pricing, and grid-connection progress",
+        "PUE、单柜功率和液冷渗透": "PUE, rack power density, and liquid-cooling penetration",
+        "IDC 上架率和客户信用": "IDC utilization and customer credit",
+        "地方审批、用水和社区反馈": "Local approvals, water use, and community feedback",
+        "核电、风光储和长期 PPA": "Nuclear, renewables-plus-storage, and long-term PPAs",
+        "签约容量、电价、核电/绿电供给": "Contracted capacity, power prices, nuclear/green-power supply",
+        "燃气轮机、电力设备和调峰电源": "Gas turbines, power equipment, and peaking power",
+        "设备交付周期、调峰需求": "Equipment delivery cycle and peaking demand",
+        "输配电、变电、开关柜和电网接入": "Transmission/distribution, substations, switchgear, and grid access",
+        "并网容量、变压器和电力设备订单": "Grid capacity, transformers, and power-equipment orders",
+        "BESS、PCS、EMS 和储能系统": "BESS, PCS, EMS, and storage systems",
+        "储能装机、毛利和项目交付": "Storage installations, gross margin, and project delivery",
+        "UPS、配电、PDU、冷却和数据中心基础设施": "UPS, distribution, PDU, cooling, and data-center infrastructure",
+        "订单、积压、液冷和电力系统需求": "Orders, backlog, liquid cooling, and power-system demand",
+        "零售/批发 IDC、互联和 AIDC 资源": "Retail/wholesale IDC, interconnection, and AIDC resources",
+        "上架率、MW、租约、客户结构": "Utilization, MW, leases, and customer mix",
+        "高密园区、colocation 或矿场/电力资源转 AI": "High-density campuses, colocation, or mining/power resources transitioning to AI",
+        "客户长约、融资、电力成本、转型兑现": "Long-term customer contracts, financing, power cost, and transition execution",
+        "温控、液冷、UPS、数据中心和国产方案": "Thermal management, liquid cooling, UPS, data centers, and domestic solutions",
+        "液冷订单、运营商和互联网客户": "Liquid-cooling orders and telecom/internet customers",
+        "浸没式液冷、热排出和精密温控": "Immersion cooling, heat rejection, and precision cooling",
+        "高密应用、维护生态、客户验证": "High-density use cases, maintenance ecosystem, and customer validation",
+        "IDC 和能源公司不是芯片公司，核心指标是 MW、上架率、PUE、电价和客户信用。": "IDC and power companies are not chip companies. Core metrics are MW, utilization, PUE, power price, and customer credit.",
+        "矿企转 AI 数据中心需要验证电力、机房改造、客户合约和融资能力，不应只因有电就归入算力芯片赛道。": "Mining-to-AI data centers must prove power, facility conversion, customer contracts, and financing. Having power alone does not make them compute-chip companies.",
+        "液冷/UPS/配电公司受益于高密机柜，但并不直接决定模型能力。": "Liquid-cooling, UPS, and distribution companies benefit from high-density racks but do not directly determine model capability.",
+        "负荷和选址": "Load and site selection",
+        "先估算未来 MW、单柜功率、上架节奏、网络接入和水资源。": "Estimate future MW, rack power density, deployment schedule, network access, and water resources.",
+        "锁定电力": "Secure power",
+        "通过 PPA、并网申请、核电/风光/燃气/水电或现场发电锁定可用电。": "Secure available power through PPAs, grid applications, nuclear/renewables/gas/hydro, or onsite generation.",
+        "变电和备用": "Substations and backup",
+        "电力进入园区前要经过输电、变电、开关柜，并配置储能和备用电源。": "Before power enters a campus, it passes through transmission, substations, and switchgear, with storage and backup power configured.",
+        "UPS 和配电": "UPS and distribution",
+        "UPS、PDU、母线槽和配电系统把电稳定送到每个高密机柜。": "UPS, PDU, busway, and distribution systems deliver stable power to each high-density rack.",
+        "机柜和冷却": "Racks and cooling",
+        "GPU 服务器、交换机和存储上架后，风冷、冷板液冷或浸没式液冷把热带走。": "Once GPU servers, switches, and storage are racked, air cooling, cold-plate liquid cooling, or immersion cooling removes heat.",
+        "运营和 PUE": "Operations and PUE",
+        "DCIM/EMS 联动电价、负荷、温度、储能和碳管理，决定长期运营效率。": "DCIM/EMS links power prices, load, temperature, storage, and carbon management, shaping long-term operating efficiency.",
+        "稳定电源": "Stable power",
+        "核电、水电、燃气和电网基荷，适合 24/7 高利用率负载。": "Nuclear, hydro, gas, and grid baseload suit 24/7 high-utilization workloads.",
+        "风光储": "Renewables plus storage",
+        "低碳属性强，但需要 BESS、调度和基荷兜底。": "Strong low-carbon attributes, but needs BESS, dispatch, and baseload backup.",
+        "现场发电/微电网": "Onsite generation / microgrid",
+        "应对并网慢和局部电力不足，但要验证燃料、许可和经济性。": "Addresses slow grid connection and local power shortages, but fuel, permitting, and economics must be validated.",
+        "液冷升级": "Liquid-cooling upgrade",
+        "高密 GPU 机柜推动冷板液冷、CDU、浸没式和热排出系统。": "High-density GPU racks drive cold-plate liquid cooling, CDUs, immersion cooling, and heat-rejection systems.",
+
+        "Microsoft": "Microsoft",
+        "Adobe": "Adobe",
+        "Salesforce": "Salesforce",
+        "ServiceNow": "ServiceNow",
+        "Cursor / Anysphere": "Cursor / Anysphere",
+        "Bloomberg / Harvey": "Bloomberg / Harvey",
+        "Tempus AI / Recursion": "Tempus AI / Recursion",
+        "Tesla / Waymo": "Tesla / Waymo",
+        "Apple / Qualcomm": "Apple / Qualcomm",
+        "金山办公 / 科大讯飞": "Kingsoft Office / iFLYTEK",
+        "DeepSeek / Qwen / 智谱": "DeepSeek / Qwen / Zhipu AI",
+        "工业富联 / Quanta / Wistron / 浪潮信息": "Foxconn Industrial Internet / Quanta / Wistron / Inspur",
+        "Dell / Supermicro / 工业富联 / Quanta": "Dell / Supermicro / Foxconn Industrial Internet / Quanta",
+        "Arista / Cisco / 新华三 / 锐捷": "Arista / Cisco / H3C / Ruijie",
+        "Coherent / Lumentum / 中际旭创 / 新易盛 / 天孚通信": "Coherent / Lumentum / Innolight / Eoptolink / TFC Communication",
+        "ASE 日月光 / Amkor / 长电科技 / 通富微电": "ASE / Amkor / JCET / Tongfu Microelectronics",
+        "北方华创 / 中微公司 / 拓荆科技 / 盛美上海 / 华海清科": "NAURA / AMEC / Piotech / ACM Research Shanghai / Hwatsing",
+        "Samsung Foundry / Intel Foundry / SMIC / 华虹": "Samsung Foundry / Intel Foundry / SMIC / Hua Hong",
+        "国家电网 / 南方电网 / ABB / Siemens": "State Grid / China Southern Power Grid / ABB / Siemens",
+        "Tesla / Fluence / 宁德时代 / 比亚迪 / 阳光电源": "Tesla / Fluence / CATL / BYD / Sungrow",
+        "Equinix / Digital Realty / GDS 万国数据 / 润泽科技": "Equinix / Digital Realty / GDS / Range Intelligent Computing",
+        "英维克 / 申菱环境 / 科华数据 / 科士达 / 曙光数创": "Envicool / Shenling / Kehua Data / KSTAR / Sugon DataEnergy",
+        "Vertiv / Schneider / Eaton / 英维克": "Vertiv / Schneider / Eaton / Envicool",
+        "Constellation / NextEra / 中国广核 / 中国核电": "Constellation / NextEra / CGN Power / China National Nuclear Power",
+        "Copilot、GitHub Copilot 和企业应用入口": "Copilot, GitHub Copilot, and enterprise application entry points",
+        "Azure AI、模型托管和企业数据平台": "Azure AI, model hosting, and enterprise data platform",
+        "Azure 是训练/推理承载和 GPU/ASIC 采购方": "Azure hosts training/inference and buys GPU/ASIC capacity",
+        "不是晶圆代工或光模块公司。": "Not a foundry or optical-module company.",
+        "搜索、Workspace、Android 和 Gemini 应用入口": "Search, Workspace, Android, and Gemini application entry points",
+        "Gemini 和 Vertex AI": "Gemini and Vertex AI",
+        "TPU、Google Cloud 和 AI Hypercomputer": "TPU, Google Cloud, and AI Hypercomputer",
+        "自研 TPU 设计需求方": "Internal TPU design demand owner",
+        "TPU 是自研加速器，制造仍依赖半导体供应链。": "TPU is a custom accelerator; manufacturing still depends on the semiconductor supply chain.",
+        "Bedrock、企业 AI 服务和电商/广告场景": "Bedrock, enterprise AI services, and commerce/advertising use cases",
+        "模型平台和托管服务": "Model platform and hosting services",
+        "Trainium/Inferentia、AWS GPU/ASIC 云": "Trainium/Inferentia and AWS GPU/ASIC cloud",
+        "不是光模块或晶圆代工公司。": "Not an optical-module or foundry company.",
+        "汽车、机器人和工业 AI 软件栈": "Automotive, robotics, and industrial AI software stack",
+        "GPU、NVLink、Networking、CUDA": "GPU, NVLink, networking, and CUDA",
+        "Fabless 芯片设计方，依赖代工和封装": "Fabless chip designer relying on foundry and packaging",
+        "不是数据中心地产商或晶圆代工厂。": "Not a data-center landlord or foundry.",
+        "定制 AI ASIC、交换芯片、DSP/硅光互联": "Custom AI ASIC, switch chips, DSP/silicon-photonics interconnect",
+        "Fabless 芯片和互联硅设计": "Fabless chip and interconnect-silicon design",
+        "不是云厂商；客户多为 hyperscaler 和设备厂。": "Not a cloud provider; customers are often hyperscalers and equipment vendors.",
+        "HBM、DRAM 和部分企业 SSD/NAND": "HBM, DRAM, and some enterprise SSD/NAND",
+        "内存晶圆、HBM 堆叠和存储制造": "Memory wafers, HBM stacking, and storage manufacturing",
+        "Samsung 还可出现在 foundry，但 HBM 和 SSD 不能混为一类。": "Samsung can also appear as a foundry, but HBM and SSD should not be conflated.",
+        "先进制程、CoWoS 和先进封装": "Advanced nodes, CoWoS, and advanced packaging",
+        "不是 GPU 品牌，也不直接运营 GPU 云。": "Not a GPU brand and does not directly operate a GPU cloud.",
+        "AI 服务器、整柜、ODM/OEM 和系统集成": "AI servers, rack-scale systems, ODM/OEM, and system integration",
+        "不是 GPU/HBM 制造商，更多看订单、交付和毛利。": "Not a GPU/HBM manufacturer; track orders, delivery, and margins.",
+        "与 Broadcom/Marvell 的网络芯片、光模块公司要分开看。": "Separate from Broadcom/Marvell networking chips and optical-module companies.",
+        "主链路在跨机柜通信，不是 GPU 或晶圆代工。": "Main role is cross-rack communication, not GPU or foundry.",
+        "部分公司提供 GPU 云或高密 colocation": "Some provide GPU cloud or high-density colocation",
+        "数据中心园区、电力、机柜和上架资源": "Data-center campuses, power, racks, and utilization resources",
+        "要拆分 GPU 云与地产/电力资源角色。": "Separate GPU cloud from real-estate/power-resource roles.",
+        "UPS、配电、液冷、温控和电力基础设施": "UPS, distribution, liquid cooling, thermal management, and power infrastructure",
+        "受益于高密机柜，但不直接生产 AI 芯片。": "Benefits from high-density racks but does not directly produce AI chips.",
+        "企业 SSD、NAND 和训练数据存储": "Enterprise SSD, NAND, and training-data storage",
+        "不是 HBM；跟踪 eSSD 和数据管道需求。": "Not HBM; track eSSD and data-pipeline demand.",
+        "WSE-3、CS-3、MemoryX、SwarmX 的晶圆级算力系统": "Wafer-scale compute system: WSE-3, CS-3, MemoryX, and SwarmX",
+        "需要先进制程和制造供应链": "Requires advanced process and manufacturing supply chain",
+        "不是光模块/CPO 公司，属于差异化算力路线。": "Not an optical-module/CPO company; it is a differentiated compute route."
+      }
+    };
+
+    const glossary = [
+      { term: "AI", href: "https://en.wikipedia.org/wiki/Artificial_intelligence", source: "Wikipedia", zh: "人工智能", zhExplain: "AI = Artificial Intelligence，人工智能。让机器执行感知、理解、推理、生成和决策等智能任务的技术集合。", enExplain: "AI means Artificial Intelligence, a field of computing focused on systems that can perceive, reason, generate, and make decisions." },
+      { term: "Application demand", href: "https://en.wikipedia.org/wiki/Applications_of_artificial_intelligence", source: "Wikipedia", zh: "应用需求", zhExplain: "具体业务场景对 AI 功能、模型调用和算力资源产生的真实需求。", enExplain: "Real business demand for AI features, model calls, and compute resources in specific use cases." },
+      { term: "Model API", href: "https://en.wikipedia.org/wiki/API", source: "Wikipedia", zh: "模型 API", zhExplain: "API = Application Programming Interface，应用编程接口。模型 API 让应用通过标准接口调用生成文本、检索、推理或多模态处理等模型能力。", enExplain: "API means Application Programming Interface. A model API is the standard interface through which applications call model capabilities such as generation, retrieval, reasoning, or multimodal processing." },
+      { term: "Private deployment", href: "https://en.wikipedia.org/wiki/On-premises_software", source: "Wikipedia", zh: "私有化部署", zhExplain: "把模型或软件部署在客户自有或受控环境中，以满足数据安全、合规和定制化要求。", enExplain: "Deploying models or software inside a customer-controlled environment for data security, compliance, and customization." },
+      { term: "Agent", href: "https://en.wikipedia.org/wiki/Intelligent_agent", source: "Wikipedia", zh: "智能体 / Agent", zhExplain: "能感知上下文、规划步骤、调用工具并执行任务的模型驱动系统。", enExplain: "A model-driven system that can understand context, plan steps, call tools, and execute tasks." },
+      { term: "RAG", href: "https://en.wikipedia.org/wiki/Retrieval-augmented_generation", source: "Wikipedia", zh: "检索增强生成", zhExplain: "RAG = Retrieval-Augmented Generation，检索增强生成。先从外部知识库检索相关材料，再让模型基于材料生成回答的方法。", enExplain: "RAG means Retrieval-Augmented Generation, a method that combines external retrieval with model generation to ground answers in relevant material." },
+      { term: "SaaS", href: "https://en.wikipedia.org/wiki/Software_as_a_service", source: "Wikipedia", zh: "软件即服务", zhExplain: "SaaS = Software as a Service，软件即服务。用户通过云端订阅使用软件，AI 功能常作为订阅升级或增值模块销售。", enExplain: "SaaS means Software as a Service, software delivered as a cloud subscription; AI features are often sold as upgrades or add-on modules." },
+      { term: "ARR", href: "https://en.wikipedia.org/wiki/Annual_recurring_revenue", source: "Wikipedia", zh: "年度经常性收入", zhExplain: "ARR = Annual Recurring Revenue，年度经常性收入。订阅业务一年内可重复获得的收入，用于衡量软件收入的可持续性。", enExplain: "ARR means Annual Recurring Revenue, a metric for the repeatable revenue base of subscription businesses." },
+      { term: "ROI", href: "https://en.wikipedia.org/wiki/Return_on_investment", source: "Wikipedia", zh: "投资回报率", zhExplain: "ROI = Return on Investment，投资回报率。衡量投入是否带来足够收益或降本效果，是企业 AI 应用能否续费的核心指标。", enExplain: "ROI means Return on Investment, a measure of whether spending generates enough benefits or cost savings." },
+      { term: "Token", href: "https://en.wikipedia.org/wiki/Lexical_analysis#Token", source: "Wikipedia", zh: "词元 / Token", zhExplain: "模型处理文本的基本单位，可以是单词、词片段、符号或字符组合。", enExplain: "The basic text unit processed by language models, such as a word, subword, symbol, or character sequence." },
+      { term: "Tokenization", href: "https://en.wikipedia.org/wiki/Lexical_analysis#Tokenization", source: "Wikipedia", zh: "分词 / Tokenize", zhExplain: "把原始文本切分并映射成 token ID，让模型可以进行训练或推理。", enExplain: "The process of splitting text and mapping it into token IDs for training or inference." },
+      { term: "Pretraining", href: "https://en.wikipedia.org/wiki/Pre-trained_language_model", source: "Wikipedia", zh: "预训练", zhExplain: "在大规模数据上训练基础模型，使其学习通用语言、代码或多模态能力。", enExplain: "Training a base model on massive data so it learns general language, code, or multimodal capabilities." },
+      { term: "SFT", href: "https://en.wikipedia.org/wiki/Fine-tuning_(deep_learning)", source: "Wikipedia", zh: "监督微调", zhExplain: "SFT = Supervised Fine-Tuning，监督微调。用人工构造或筛选的指令-回答样本继续训练模型，让它更会遵循任务。", enExplain: "SFT means Supervised Fine-Tuning, training a model further on curated instruction-response examples." },
+      { term: "RLHF", href: "https://en.wikipedia.org/wiki/Reinforcement_learning_from_human_feedback", source: "Wikipedia", zh: "人类反馈强化学习", zhExplain: "RLHF = Reinforcement Learning from Human Feedback，人类反馈强化学习。用人类偏好反馈训练奖励模型，再优化模型输出，使其更符合人类偏好。", enExplain: "RLHF means Reinforcement Learning from Human Feedback, using preference data and reward modeling to align model outputs." },
+      { term: "DPO", href: "https://arxiv.org/abs/2305.18290", source: "Research", zh: "直接偏好优化", zhExplain: "DPO = Direct Preference Optimization，直接偏好优化。一种基于偏好样本直接优化模型的对齐方法，常被视为 RLHF 的简化替代路线。", enExplain: "DPO means Direct Preference Optimization, a method that aligns models directly from preference data and is often used as a simpler alternative to RLHF-style pipelines." },
+      { term: "GRPO / RLVR", href: "https://arxiv.org/abs/2501.12948", source: "Research", zh: "推理强化学习相关方法", zhExplain: "GRPO = Group Relative Policy Optimization；RLVR = Reinforcement Learning with Verifiable Rewards。两者都常用于强化模型推理能力，依赖分组相对优化或可验证奖励。", enExplain: "GRPO means Group Relative Policy Optimization; RLVR means Reinforcement Learning with Verifiable Rewards. They are reinforcement-style methods used to improve reasoning with group-relative optimization or verifiable rewards." },
+      { term: "Dense model", href: "https://en.wikipedia.org/wiki/Artificial_neural_network", source: "Wikipedia", zh: "稠密模型", zhExplain: "推理时通常激活大部分参数的模型结构，部署相对直接但算力消耗较高。", enExplain: "A model architecture that generally activates most parameters each pass, making deployment simpler but compute-heavy." },
+      { term: "MoE", href: "https://en.wikipedia.org/wiki/Mixture_of_experts", source: "Wikipedia", zh: "混合专家模型", zhExplain: "MoE = Mixture of Experts，混合专家模型。只激活部分专家网络以节省计算，但会增加路由、通信和调度复杂度。", enExplain: "MoE means Mixture of Experts, a model architecture that activates selected expert blocks to save compute while adding routing, communication, and scheduling complexity." },
+      { term: "Inference", href: "https://en.wikipedia.org/wiki/Inference", source: "Wikipedia", zh: "推理", zhExplain: "用训练好的模型处理输入并生成输出，是 AI 应用持续消耗算力的主要来源。", enExplain: "Running a trained model on inputs to produce outputs; a major source of ongoing AI compute demand." },
+      { term: "MLOps", href: "https://en.wikipedia.org/wiki/MLOps", source: "Wikipedia", zh: "机器学习运维", zhExplain: "MLOps = Machine Learning Operations，机器学习运维。围绕模型开发、部署、监控、迭代和治理的一套工程流程与工具。", enExplain: "MLOps means Machine Learning Operations, engineering practices and tools for developing, deploying, monitoring, iterating, and governing ML models." },
+      { term: "GPU", href: "https://en.wikipedia.org/wiki/Graphics_processing_unit", source: "Wikipedia", zh: "图形处理器", zhExplain: "GPU = Graphics Processing Unit，图形处理器。擅长并行矩阵计算，是训练和推理集群的主流加速器。", enExplain: "GPU means Graphics Processing Unit, a parallel processor well suited to matrix operations and the dominant accelerator in AI training and inference clusters." },
+      { term: "HPC", href: "https://en.wikipedia.org/wiki/High-performance_computing", source: "Wikipedia", zh: "高性能计算", zhExplain: "HPC = High-Performance Computing，高性能计算。把高性能服务器、CPU/GPU、内存、网络和存储组成集群，用于处理普通计算机难以承担的大规模科学、工程、金融或 AI 计算任务。", enExplain: "HPC means High-Performance Computing, using clusters of powerful servers, CPUs/GPUs, memory, networking, and storage to solve large scientific, engineering, financial, or AI workloads." },
+      { term: "TPU", href: "https://en.wikipedia.org/wiki/Tensor_Processing_Unit", source: "Wikipedia", zh: "张量处理器", zhExplain: "TPU = Tensor Processing Unit，张量处理器。Google 为机器学习工作负载设计的专用加速器系列。", enExplain: "TPU means Tensor Processing Unit, Google's custom accelerator family designed for machine-learning workloads." },
+      { term: "ASIC", href: "https://en.wikipedia.org/wiki/Application-specific_integrated_circuit", source: "Wikipedia", zh: "专用集成电路", zhExplain: "ASIC = Application-Specific Integrated Circuit，专用集成电路。为特定任务设计的芯片，AI 场景中常用于定制训练或推理加速。", enExplain: "ASIC means Application-Specific Integrated Circuit, a chip designed for a specific task; in AI it is often used for customized training or inference acceleration." },
+      { term: "XPU", href: "https://en.wikipedia.org/wiki/AI_accelerator", source: "Wikipedia", zh: "异构/定制加速器统称", zhExplain: "XPU = X Processing Unit，常作为各类专用或异构处理器的泛称。它泛指 CPU/GPU 之外的各类 AI 加速器，不是单一标准架构。", enExplain: "XPU means X Processing Unit in broad usage, a label for specialized or heterogeneous processors beyond classic CPU/GPU architectures rather than one standard architecture." },
+      { term: "CPU", href: "https://en.wikipedia.org/wiki/Central_processing_unit", source: "Wikipedia", zh: "中央处理器", zhExplain: "CPU = Central Processing Unit，中央处理器。通用处理器，负责控制面、数据预处理、系统调度和非加速任务。", enExplain: "CPU means Central Processing Unit, a general-purpose processor used for control, preprocessing, system orchestration, and non-accelerated tasks." },
+      { term: "NPU", href: "https://en.wikipedia.org/wiki/AI_accelerator", source: "Wikipedia", zh: "神经网络处理器", zhExplain: "NPU = Neural Processing Unit，神经网络处理器。面向神经网络推理的专用处理器，常出现在手机、PC、汽车和边缘设备中。", enExplain: "NPU means Neural Processing Unit, a neural-network processor for inference commonly used in phones, PCs, cars, and edge devices." },
+      { term: "HBM", href: "https://en.wikipedia.org/wiki/High_Bandwidth_Memory", source: "Wikipedia", zh: "高带宽存储器", zhExplain: "HBM = High Bandwidth Memory，高带宽存储器。贴近加速器封装的堆叠式 DRAM，为模型权重、激活值和 KV cache 提供高带宽。", enExplain: "HBM means High Bandwidth Memory, stacked DRAM placed near accelerators to provide high bandwidth for weights, activations, and KV cache." },
+      { term: "DRAM", href: "https://en.wikipedia.org/wiki/Dynamic_random-access_memory", source: "Wikipedia", zh: "动态随机存取存储器", zhExplain: "DRAM = Dynamic Random-Access Memory，动态随机存取存储器。需要刷新供电的易失性内存，是服务器内存和 HBM 的基础。", enExplain: "DRAM means Dynamic Random-Access Memory, volatile memory that requires refresh and underpins server memory and HBM." },
+      { term: "NAND", href: "https://en.wikipedia.org/wiki/Flash_memory#NAND_flash", source: "Wikipedia", zh: "闪存", zhExplain: "NAND = NOT-AND，来自与非门逻辑结构。NAND flash 是非易失性闪存技术，是 SSD 和企业存储的基础。", enExplain: "NAND means NOT-AND, named after the logic-gate structure. NAND flash is a non-volatile memory technology that underpins SSDs and enterprise storage." },
+      { term: "SSD / eSSD", href: "https://en.wikipedia.org/wiki/Solid-state_drive", source: "Wikipedia", zh: "固态硬盘 / 企业级固态硬盘", zhExplain: "SSD = Solid-State Drive，固态硬盘；eSSD = enterprise Solid-State Drive，企业级固态硬盘。用于训练数据、checkpoint、缓存和数据管道，不等同于 HBM。", enExplain: "SSD means Solid-State Drive; eSSD means enterprise Solid-State Drive. They store datasets, checkpoints, caches, and data pipelines; they are not HBM." },
+      { term: "KV cache", href: "https://huggingface.co/docs/transformers/en/kv_cache", source: "Official", zh: "键值缓存", zhExplain: "KV cache = Key-Value cache，键值缓存。推理时保存 attention 的 key/value 状态，减少重复计算但会占用显存。", enExplain: "KV cache means Key-Value cache, a cache of attention key/value states during inference that reduces recomputation but consumes memory." },
+      { term: "CUDA", href: "https://developer.nvidia.com/cuda-zone", source: "Official", zh: "NVIDIA 并行计算生态", zhExplain: "CUDA = Compute Unified Device Architecture，是 NVIDIA 的 GPU 并行计算平台和编程生态，也是其 AI 算力壁垒之一。", enExplain: "CUDA means Compute Unified Device Architecture in its original expansion; it is NVIDIA's GPU parallel-computing platform and programming ecosystem, a key part of its AI compute moat." },
+      { term: "ROCm", href: "https://rocm.docs.amd.com/", source: "Official", zh: "AMD GPU 计算生态", zhExplain: "ROCm = Radeon Open Compute platform，AMD 面向 GPU 加速计算的开放软件栈，用于训练、推理和 HPC。", enExplain: "ROCm means Radeon Open Compute platform, AMD's open GPU compute software stack for training, inference, and HPC workloads." },
+      { term: "NVLink", href: "https://www.nvidia.com/en-us/data-center/nvlink/", source: "Official", zh: "NVIDIA 高速互联", zhExplain: "NVLink 是 NVIDIA 的高速互联产品名，不是通用英文缩写。它连接 GPU，用于提高同服务器或系统内 GPU 通信带宽。", enExplain: "NVLink is an NVIDIA high-speed interconnect product name rather than a generic acronym. It connects GPUs to improve GPU-to-GPU bandwidth within servers or systems." },
+      { term: "NVSwitch", href: "https://www.nvidia.com/en-us/data-center/nvlink/", source: "Official", zh: "NVIDIA 交换互联芯片", zhExplain: "NVSwitch 是 NVIDIA 基于 NVLink 的交换互联产品名，不是通用英文缩写。它让多颗 GPU 在系统内形成高带宽互联。", enExplain: "NVSwitch is NVIDIA's NVLink-based switching-fabric product name rather than a generic acronym. It connects multiple GPUs with high internal bandwidth." },
+      { term: "InfiniBand", href: "https://en.wikipedia.org/wiki/InfiniBand", source: "Wikipedia", zh: "高速网络协议", zhExplain: "InfiniBand 是高速网络技术名称，不是需要展开的英文缩写。它提供低延迟、高吞吐通信，常用于高性能计算和 AI 训练集群。", enExplain: "InfiniBand is the name of a high-speed networking technology rather than an acronym to expand. It provides low-latency, high-throughput communication for HPC and AI training clusters." },
+      { term: "Ethernet / RoCE", href: "https://en.wikipedia.org/wiki/RDMA_over_Converged_Ethernet", source: "Wikipedia", zh: "以太网 / 融合以太网上的远程直接内存访问", zhExplain: "RoCE = RDMA over Converged Ethernet，融合以太网上的 RDMA；RDMA = Remote Direct Memory Access，远程直接内存访问。以太网是通用网络基础，RoCE 让低延迟集群通信能在融合以太网上运行。", enExplain: "RoCE means RDMA over Converged Ethernet; RDMA means Remote Direct Memory Access. Ethernet is the broad networking base, while RoCE enables low-latency cluster communication over converged Ethernet." },
+      { term: "RDMA", href: "https://en.wikipedia.org/wiki/Remote_direct_memory_access", source: "Wikipedia", zh: "远程直接内存访问", zhExplain: "RDMA = Remote Direct Memory Access，远程直接内存访问。它让一台服务器的网卡直接读写另一台服务器内存，减少 CPU 参与和数据拷贝，常用于 AI/HPC 集群通信。", enExplain: "RDMA means Remote Direct Memory Access. It lets a network adapter access memory on another server with less CPU involvement and fewer data copies, which is useful for AI/HPC cluster communication." },
+      { term: "NIC / DPU", href: "https://en.wikipedia.org/wiki/Network_interface_controller", source: "Wikipedia", zh: "网卡 / 数据处理器", zhExplain: "NIC = Network Interface Card / Network Interface Controller，负责把服务器接入网络；DPU = Data Processing Unit，可卸载网络、存储、安全和虚拟化任务。它位于 GPU/CPU 系统和光模块/交换机网络之间，不是光模块，也不是 GPU。", enExplain: "NIC means Network Interface Card / Network Interface Controller and connects the server to the network; DPU means Data Processing Unit and can offload networking, storage, security, and virtualization tasks. It sits between the GPU/CPU system and the optical-module/switch network; it is neither an optical module nor a GPU." },
+      { term: "PCIe", href: "https://en.wikipedia.org/wiki/PCI_Express", source: "Wikipedia", zh: "高速外设互联", zhExplain: "PCIe = Peripheral Component Interconnect Express，高速外设互联。服务器中连接 CPU、GPU、网卡、SSD 等设备的高速总线标准。", enExplain: "PCIe means Peripheral Component Interconnect Express, a high-speed bus standard connecting CPUs, GPUs, NICs, SSDs, and other devices inside servers." },
+      { term: "CXL", href: "https://en.wikipedia.org/wiki/Compute_Express_Link", source: "Wikipedia", zh: "计算快速链路", zhExplain: "CXL = Compute Express Link，计算快速链路。基于 PCIe 的互联协议，面向内存扩展、缓存一致性和设备互联。", enExplain: "CXL means Compute Express Link, a PCIe-based interconnect protocol for memory expansion, cache coherency, and device connectivity." },
+      { term: "Board-level BOM", href: "https://en.wikipedia.org/wiki/Bill_of_materials", source: "Wikipedia", zh: "板级物料清单", zhExplain: "BOM = Bill of Materials，物料清单。板级 BOM 指服务器主板、GPU 加速卡或交换机板上的 PCB、芯片、电容、电感、连接器、retimer 和供电模块等全部物料。它属于系统/板卡供应链，不是单一芯片。", enExplain: "BOM means Bill of Materials. Board-level BOM refers to the PCB, chips, capacitors, inductors, connectors, retimers, power stages, and other parts on a server motherboard, accelerator card, or switch board. It is a system/board supply-chain concept, not a single chip." },
+      { term: "PCB", href: "https://en.wikipedia.org/wiki/Printed_circuit_board", source: "Wikipedia", zh: "印刷电路板", zhExplain: "PCB = Printed Circuit Board，印刷电路板。服务器、网卡、GPU 加速卡和交换机里的绿色/黑色板子，承载芯片、连接器、MLCC、VRM 和多层铜走线。它是板级系统承载平台，不等同于芯片封装里的 ABF substrate。", enExplain: "PCB means Printed Circuit Board, the green or black board inside servers, NICs, GPU accelerator cards, and switches. It carries chips, connectors, MLCCs, VRMs, and multilayer copper traces. It is the board-level platform, not the same as an in-package ABF substrate." },
+      { term: "CCL", href: "https://en.wikipedia.org/wiki/Copper-clad_laminate", source: "Wikipedia", zh: "覆铜板", zhExplain: "CCL = Copper-Clad Laminate，覆铜板。它是制作 PCB 的基础材料，由绝缘基材和铜箔组成。AI 服务器和高速交换机推动更高层数、更高速低损耗材料需求。", enExplain: "CCL means Copper-Clad Laminate, the base material used to make PCBs. It combines insulating laminate and copper foil. AI servers and high-speed switches push demand toward higher-layer, lower-loss materials." },
+      { term: "MLCC", href: "https://en.wikipedia.org/wiki/Ceramic_capacitor#Multi-layer_ceramic_capacitors", source: "Wikipedia", zh: "多层陶瓷电容", zhExplain: "MLCC = Multi-Layer Ceramic Capacitor，多层陶瓷电容。它常密集分布在 GPU、CPU、HBM 和电源模块周围，用于去耦、滤波和稳定电压，帮助高功率板卡可靠运行，但不负责 AI 计算。", enExplain: "MLCC means Multi-Layer Ceramic Capacitor. MLCCs are often placed around GPUs, CPUs, HBM, and power stages for decoupling, filtering, and voltage stabilization. They help high-power boards run reliably but do not perform AI compute." },
+      { term: "VRM", href: "https://en.wikipedia.org/wiki/Voltage_regulator_module", source: "Wikipedia", zh: "电压调节模块", zhExplain: "VRM = Voltage Regulator Module，电压调节模块。它把来自电源的电压转换成 GPU、CPU、内存或网卡需要的稳定低电压，是 AI 服务器板级供电链的一部分。", enExplain: "VRM means Voltage Regulator Module. It converts supply voltage into stable lower voltages required by GPUs, CPUs, memory, or NICs, making it part of board-level power delivery in AI servers." },
+      { term: "PMIC", href: "https://en.wikipedia.org/wiki/Power_management_integrated_circuit", source: "Wikipedia", zh: "电源管理芯片", zhExplain: "PMIC = Power Management Integrated Circuit，电源管理芯片。它管理电压转换、上电顺序、监控和保护，可出现在服务器板卡、加速器、存储或终端设备中。", enExplain: "PMIC means Power Management Integrated Circuit. It manages voltage conversion, power sequencing, monitoring, and protection, and can appear on server boards, accelerators, storage devices, or endpoints." },
+      { term: "Inductor", href: "https://en.wikipedia.org/wiki/Inductor", source: "Wikipedia", zh: "电感", zhExplain: "电感是板级电源电路里的被动元件，常与 VRM/PMIC 和电容一起平滑电流、储能和滤波。AI 加速卡功率上升会提高对高电流供电设计的要求。", enExplain: "An inductor is a passive component used in board-level power circuits. Together with VRMs/PMICs and capacitors, it smooths current, stores energy, and filters noise. Higher-power AI accelerator cards raise requirements for high-current power delivery." },
+      { term: "High-speed connector", href: "https://en.wikipedia.org/wiki/Electrical_connector", source: "Wikipedia", zh: "高速连接器", zhExplain: "连接器把板卡、主板、背板、线缆或外部模块接起来。AI 服务器和交换机里的高速连接器关注带宽、通道数、插损、散热和可靠性，不负责路由或计算。", enExplain: "A connector links boards, motherboards, backplanes, cables, or external modules. In AI servers and switches, high-speed connectors are judged by bandwidth, lane count, insertion loss, thermals, and reliability; they do not perform routing or compute." },
+      { term: "BGA / solder balls", href: "https://en.wikipedia.org/wiki/Ball_grid_array", source: "Wikipedia", zh: "球栅阵列 / 焊球", zhExplain: "BGA = Ball Grid Array，球栅阵列。芯片封装底部的焊球把封装焊接到 PCB 上，负责电气连接、机械固定和部分热路径。", enExplain: "BGA means Ball Grid Array. Solder balls on the underside of a package attach it to the PCB, providing electrical connection, mechanical attachment, and part of the thermal path." },
+      { term: "Signal integrity", href: "https://en.wikipedia.org/wiki/Signal_integrity", source: "Wikipedia", zh: "信号完整性", zhExplain: "信号完整性指高速电信号在 PCB 走线、连接器、封装和线缆中能否以足够低的噪声、损耗和串扰被正确接收。AI 网络和高速板卡会推高 SerDes、retimer、PCB 材料和连接器要求。", enExplain: "Signal integrity is about whether high-speed electrical signals can be received correctly through PCB traces, connectors, packages, and cables with acceptable noise, loss, and crosstalk. AI networking and high-speed boards raise requirements for SerDes, retimers, PCB materials, and connectors." },
+      { term: "Switch ASIC", href: "https://en.wikipedia.org/wiki/Network_switch", source: "Wikipedia", zh: "交换芯片", zhExplain: "ASIC = Application-Specific Integrated Circuit。Switch ASIC 是交换机里的专用交换芯片。光信号进交换机端口后先由光模块转回电信号，Switch ASIC 在电域里查表、排队并决定从哪个端口转发出去。", enExplain: "ASIC means Application-Specific Integrated Circuit. A Switch ASIC is the dedicated switching chip inside a switch; after an optical module converts incoming light back into electrical signals, it performs lookup, buffering, and forwarding in the electrical domain." },
+      { term: "SerDes", href: "https://en.wikipedia.org/wiki/SerDes", source: "Wikipedia", zh: "串并转换器", zhExplain: "SerDes = Serializer / Deserializer，串并转换器。芯片内部常用并行数据，端口和板级高速链路常用串行数据；SerDes 负责在两者之间转换，是 NIC、Switch ASIC、光模块接口能高速通信的基础。", enExplain: "SerDes means Serializer / Deserializer. Chips often process data internally in parallel, while high-speed ports and board links use serial lanes; SerDes converts between the two for NIC, Switch ASIC, and optical-module interfaces." },
+      { term: "DSP", href: "https://en.wikipedia.org/wiki/Digital_signal_processor", source: "Wikipedia", zh: "数字信号处理器", zhExplain: "DSP = Digital Signal Processor / Digital Signal Processing，数字信号处理器/数字信号处理。在高速光模块链路里，DSP 更像信号整理器：补偿高速电信号和光信号在传输中的失真、噪声和串扰，让接收端更容易还原数据。它不负责交换机分流，也不负责 GPU 计算。", enExplain: "DSP means Digital Signal Processor or Digital Signal Processing. In high-speed optical links, a DSP acts like a signal conditioner: it compensates distortion, noise, and crosstalk so the receiver can recover the data. It does not perform switch routing or GPU compute." },
+      { term: "Retimer", href: "https://ayarlabs.com/glossary/retimer/", source: "Industry", zh: "重定时器", zhExplain: "用于高速电连接的信号修复芯片。它从衰减的电信号中恢复时钟和数据，再重新发出一份更干净的电信号，常放在 ASIC、连接器或光模块前后以延长可用距离。", enExplain: "A signal-recovery chip for high-speed electrical links. It recovers clock and data from a degraded signal and retransmits a cleaner electrical signal, often around ASICs, connectors, or optical modules to extend reach." },
+      { term: "Optical module", href: "https://en.wikipedia.org/wiki/Optical_transceiver", source: "Wikipedia", zh: "光模块", zhExplain: "Optical transceiver，光收发模块。插在服务器网卡或交换机端口上，发送时把电信号转成光信号，接收时把光信号转回电信号；它负责 E/O 和 O/E 转换，不负责路由分流。", enExplain: "An optical module is an optical transceiver plugged into a server NIC or switch port. It converts electrical signals to optical signals on transmit and optical signals back to electrical on receive; it handles E/O and O/E conversion, not routing." },
+      { term: "E/O / O/E conversion", href: "https://en.wikipedia.org/wiki/Optical_transceiver", source: "Wikipedia", zh: "电光 / 光电转换", zhExplain: "E/O = Electrical-to-Optical，电到光转换；O/E = Optical-to-Electrical，光到电转换。光模块发送端做 E/O，接收端做 O/E；传统交换机每经过一个主动交换节点通常会发生一次 O/E/O。", enExplain: "E/O means Electrical-to-Optical conversion; O/E means Optical-to-Electrical conversion. Optical modules perform E/O on transmit and O/E on receive; traditional electronic switches usually perform O/E/O at each active switching hop." },
+      { term: "QSFP", href: "https://en.wikipedia.org/wiki/Small_form-factor_pluggable_transceiver#QSFP", source: "Wikipedia", zh: "四通道小型可插拔光模块外形", zhExplain: "QSFP = Quad Small Form-factor Pluggable，四通道小型可插拔。它是一类光模块/电缆模块的物理外形和端口规格，常见变体包括 QSFP28、QSFP56、QSFP-DD；它不是以太网或 InfiniBand 协议本身。", enExplain: "QSFP means Quad Small Form-factor Pluggable. It is a physical form factor and port family for pluggable optical or cable modules, with variants such as QSFP28, QSFP56, and QSFP-DD; it is not Ethernet or InfiniBand itself." },
+      { term: "OSFP", href: "https://www.osfpmsa.org/", source: "Standards", zh: "八通道小型可插拔光模块外形", zhExplain: "OSFP = Octal Small Form-factor Pluggable，八通道小型可插拔。它是面向高速数据中心链路的可插拔光模块外形，通常给 400G、800G、1.6T 等更高功率/更高带宽模块预留更好的散热和信号空间。", enExplain: "OSFP means Octal Small Form-factor Pluggable. It is a pluggable-module form factor for high-speed data-center links, designed with thermal and signal-integrity headroom for higher-power, higher-bandwidth modules such as 400G, 800G, and 1.6T." },
+      { term: "Optical patch panel", href: "https://en.wikipedia.org/wiki/Patch_panel", source: "Wikipedia", zh: "光纤配线架", zhExplain: "数据中心里用于光纤跳接、整理和维护的被动面板。它不做电光转换，不转发数据包，也不能替代交换机；真正分流发生在 Switch ASIC。", enExplain: "A passive panel for fiber cross-connection, cable management, and maintenance in data centers. It does not convert signals, forward packets, or replace a switch; forwarding happens in the Switch ASIC." },
+      { term: "EML", href: "https://en.wikipedia.org/wiki/Electro-absorption_modulator", source: "Wikipedia", zh: "电吸收调制激光器", zhExplain: "EML = Electro-absorption Modulated Laser，电吸收调制激光器。高速光模块中常用的调制器/激光器路线，适合高速长距离数据传输。", enExplain: "EML means Electro-absorption Modulated Laser, a modulator/laser route used in high-speed optical modules for data transmission." },
+      { term: "Silicon photonics", href: "https://en.wikipedia.org/wiki/Silicon_photonics", source: "Wikipedia", zh: "硅光", zhExplain: "用硅工艺集成光学器件，目标是提高带宽、降低功耗并提升集成度。", enExplain: "Integrating optical components with silicon processes to improve bandwidth, power efficiency, and integration density." },
+      { term: "CPO", href: "https://www.oiforum.com/technical-work/hot-topics/energy-efficient-interfaces/", source: "Standards", zh: "共封装光学", zhExplain: "CPO = Co-Packaged Optics，共封装光学。把光引擎放到交换芯片附近，缩短 Switch ASIC 到光引擎之间的高速电连接，以降低功耗和信号损耗。它主要改变交换机端口实现方式，不等于 GPU 直接变成光信号。", enExplain: "CPO means Co-Packaged Optics. It places optical engines close to the switch ASIC, shortening the high-speed electrical path to reduce power and signal loss. It mainly changes switch-port implementation; it does not mean the GPU directly becomes optical." },
+      { term: "LPO", href: "https://www.lpo-msa.org/files/live/sites/lpomsa/files/specs/LPO_MSA_Specification_v1p01.pdf", source: "Standards", zh: "线性直驱光学", zhExplain: "LPO = Linear Pluggable Optics，线性直驱光学。通过减少或取消光模块内部 DSP 来降低功耗和成本，但更依赖交换芯片、SerDes、PCB 和链路调校能力。", enExplain: "LPO means Linear Pluggable Optics. It reduces or removes the module-side DSP to lower power and cost, but depends more heavily on the switch ASIC, SerDes, PCB channel, and link tuning." },
+      { term: "AI server", href: "https://en.wikipedia.org/wiki/Server_(computing)", source: "Wikipedia", zh: "AI 服务器", zhExplain: "AI server = Artificial Intelligence server，AI 服务器。集成加速器、CPU、内存、网络、电源和散热的服务器，用于训练和推理。", enExplain: "AI server means Artificial Intelligence server, a server integrating accelerators, CPUs, memory, networking, power, and cooling for training and inference." },
+      { term: "ODM / OEM", href: "https://en.wikipedia.org/wiki/Original_design_manufacturer", source: "Wikipedia", zh: "原始设计制造 / 原始设备制造", zhExplain: "ODM = Original Design Manufacturer，原始设计制造商；OEM = Original Equipment Manufacturer，原始设备制造商。它们是服务器和硬件供应链中的设计制造与品牌制造模式。", enExplain: "ODM means Original Design Manufacturer; OEM means Original Equipment Manufacturer. They describe design-manufacturing and branded-manufacturing models used in server and hardware supply chains." },
+      { term: "Rack-scale system", href: "https://www.opencompute.org/projects/rack-and-power", source: "Industry", zh: "整柜系统", zhExplain: "以整柜为交付单位，把服务器、网络、电源和散热作为一体化系统设计。", enExplain: "A full-rack delivery model that designs servers, networking, power, and cooling as an integrated system." },
+      { term: "Liquid cooling", href: "https://en.wikipedia.org/wiki/Computer_cooling#Liquid_cooling", source: "Wikipedia", zh: "液冷", zhExplain: "用液体带走芯片和机柜热量，适合高功率密度 AI 服务器。", enExplain: "Cooling that uses liquid to remove heat from chips and racks, suitable for high-power-density AI servers." },
+      { term: "CDU", href: "https://www.eaton.com/us/en-us/markets/data-centers/data-center-cooling/cdus/coolant-distribution-unit-technical-paper.html", source: "Official", zh: "冷却液分配单元", zhExplain: "CDU = Coolant Distribution Unit，冷却液分配单元。液冷系统中连接设施侧冷源和 IT 侧回路的设备，负责流量、温度和压力控制。", enExplain: "CDU means Coolant Distribution Unit, a device that connects facility cooling to IT liquid loops and manages flow, temperature, and pressure." },
+      { term: "IDC", href: "https://en.wikipedia.org/wiki/Data_center", source: "Wikipedia", zh: "互联网数据中心", zhExplain: "IDC = Internet Data Center，互联网数据中心。承载服务器、网络、电力和冷却设施的数据中心资源，是 AI 算力落地的物理载体。", enExplain: "IDC means Internet Data Center, data-center infrastructure that hosts servers, networking, power, and cooling as the physical base for AI compute." },
+      { term: "Colocation", href: "https://en.wikipedia.org/wiki/Colocation_centre", source: "Wikipedia", zh: "托管型数据中心服务", zhExplain: "客户自有设备放在第三方数据中心内，由后者提供空间、电力、冷却和网络。", enExplain: "A service where customer-owned equipment is hosted in a third-party data center with space, power, cooling, and network access." },
+      { term: "GPU cloud", href: "https://en.wikipedia.org/wiki/Cloud_computing", source: "Wikipedia", zh: "GPU 云", zhExplain: "GPU cloud = Graphics Processing Unit cloud，GPU 云。按需租用 GPU 或 AI 加速器资源的云服务，常用于训练、微调和推理。", enExplain: "GPU cloud means Graphics Processing Unit cloud, a cloud service that rents GPU or AI accelerator capacity for training, fine-tuning, and inference." },
+      { term: "CapEx", href: "https://en.wikipedia.org/wiki/Capital_expenditure", source: "Wikipedia", zh: "资本开支", zhExplain: "CapEx = Capital Expenditure，资本开支。用于购买或建设长期资产的支出，如服务器、数据中心、电力设备和产线。", enExplain: "CapEx means Capital Expenditure, spending to acquire or build long-lived assets such as servers, data centers, power equipment, and production lines." },
+      { term: "Fabless", href: "https://en.wikipedia.org/wiki/Fabless_manufacturing", source: "Wikipedia", zh: "无晶圆设计", zhExplain: "公司负责芯片设计和销售，但将晶圆制造外包给代工厂。", enExplain: "A model in which a company designs and sells chips while outsourcing wafer fabrication to foundries." },
+      { term: "Foundry", href: "https://en.wikipedia.org/wiki/Semiconductor_foundry", source: "Wikipedia", zh: "晶圆代工厂", zhExplain: "为芯片设计公司制造晶圆的半导体制造企业。", enExplain: "A semiconductor manufacturer that fabricates wafers for chip-design customers." },
+      { term: "Wafer fabrication", href: "https://en.wikipedia.org/wiki/Semiconductor_device_fabrication", source: "Wikipedia", zh: "晶圆制造", zhExplain: "通过光刻、沉积、刻蚀、离子注入、清洗和量检测等步骤在晶圆上制造芯片。", enExplain: "Manufacturing chips on wafers through lithography, deposition, etch, implantation, cleaning, and metrology steps." },
+      { term: "Advanced node", href: "https://en.wikipedia.org/wiki/Semiconductor_device_fabrication#Technology_node", source: "Wikipedia", zh: "先进制程", zhExplain: "更高晶体管密度和能效的先进工艺节点，如 3nm、2nm 等。", enExplain: "Leading-edge process nodes with higher transistor density and energy efficiency, such as 3nm or 2nm." },
+      { term: "CoWoS", href: "https://en.wikipedia.org/wiki/Advanced_packaging_(semiconductors)", source: "Wikipedia", zh: "台积电先进封装技术", zhExplain: "CoWoS = Chip-on-Wafer-on-Substrate，是 TSMC 用于整合逻辑芯片和 HBM 的先进封装平台。", enExplain: "CoWoS means Chip-on-Wafer-on-Substrate, TSMC's advanced packaging platform for integrating logic die and HBM." },
+      { term: "2.5D / 3D packaging", href: "https://en.wikipedia.org/wiki/2.5D_integrated_circuit", source: "Wikipedia", zh: "2.5D / 3D 封装", zhExplain: "2.5D = two-and-a-half-dimensional packaging；3D = three-dimensional packaging。通过中介层、垂直堆叠或混合键合连接多个芯粒和存储器，提高带宽和集成度。", enExplain: "2.5D means two-and-a-half-dimensional packaging; 3D means three-dimensional packaging. These advanced packaging routes connect chiplets and memory through interposers, vertical stacking, or hybrid bonding for higher bandwidth and integration." },
+      { term: "Interposer", href: "https://en.wikipedia.org/wiki/Interposer", source: "Wikipedia", zh: "中介层", zhExplain: "位于芯片和封装基板之间的连接层，用于高密度互连 GPU、HBM 等芯粒。", enExplain: "An intermediate layer between die and package substrate used for dense interconnects among GPUs, HBM, and chiplets." },
+      { term: "ABF substrate", href: "https://www.ajinomoto.com/innovation/our_innovation/buildupfilm", source: "Official", zh: "ABF 载板", zhExplain: "ABF = Ajinomoto Build-up Film。ABF substrate 是使用 ABF 材料的高端芯片封装基板，位于 silicon interposer/芯片封装和外部 PCB 之间，负责扇出信号和电源。它属于先进封装材料，不是普通服务器 PCB。", enExplain: "ABF means Ajinomoto Build-up Film. An ABF substrate is a high-end chip package substrate between the silicon interposer/package and the external PCB, fanning out signals and power. It belongs to advanced packaging materials, not ordinary server PCB." },
+      { term: "TSV", href: "https://en.wikipedia.org/wiki/Through-silicon_via", source: "Wikipedia", zh: "硅通孔", zhExplain: "TSV = Through-Silicon Via，硅通孔。穿透硅片的垂直互连结构，是 HBM 堆叠和 3D 封装的重要技术。", enExplain: "TSV means Through-Silicon Via, a vertical interconnect through silicon that is important for HBM stacking and 3D packaging." },
+      { term: "OSAT", href: "https://semiengineering.com/knowledge_centers/packaging/outsourced-semiconductor-assembly-and-test/", source: "Industry", zh: "封装测试代工", zhExplain: "OSAT = Outsourced Semiconductor Assembly and Test，外包半导体封装测试。为芯片公司提供封装、组装和测试服务的半导体后道厂商。", enExplain: "OSAT means Outsourced Semiconductor Assembly and Test, providers that perform chip packaging, assembly, and testing for semiconductor companies." },
+      { term: "EDA / IP", href: "https://en.wikipedia.org/wiki/Electronic_design_automation", source: "Wikipedia", zh: "电子设计自动化 / 知识产权模块", zhExplain: "EDA = Electronic Design Automation，电子设计自动化；IP = Intellectual Property，知识产权模块。EDA 是芯片设计软件工具，IP 是可复用的设计模块或接口。", enExplain: "EDA means Electronic Design Automation; IP means Intellectual Property. EDA is chip-design software tooling, while IP refers to reusable design blocks or interfaces." },
+      { term: "EUV / DUV", href: "https://en.wikipedia.org/wiki/Extreme_ultraviolet_lithography", source: "Wikipedia", zh: "极紫外 / 深紫外光刻", zhExplain: "EUV = Extreme Ultraviolet，极紫外；DUV = Deep Ultraviolet，深紫外。二者都是半导体光刻技术路线，用于把电路图形转移到晶圆上，EUV 常用于先进节点。", enExplain: "EUV means Extreme Ultraviolet; DUV means Deep Ultraviolet. Both are lithography routes used to transfer circuit patterns onto wafers, with EUV used for leading-edge nodes." },
+      { term: "Etch", href: "https://en.wikipedia.org/wiki/Etching_(microfabrication)", source: "Wikipedia", zh: "刻蚀", zhExplain: "在晶圆制造中选择性去除材料，把图形转移到薄膜或硅基底中。", enExplain: "A microfabrication step that selectively removes material to transfer patterns into films or silicon." },
+      { term: "Deposition", href: "https://en.wikipedia.org/wiki/Thin-film_deposition", source: "Wikipedia", zh: "薄膜沉积", zhExplain: "在晶圆表面形成薄膜材料的工艺，包括 CVD = Chemical Vapor Deposition，PVD = Physical Vapor Deposition，ALD = Atomic Layer Deposition 等路线。", enExplain: "Thin-film processes that form materials on wafer surfaces, including CVD = Chemical Vapor Deposition, PVD = Physical Vapor Deposition, and ALD = Atomic Layer Deposition." },
+      { term: "CMP", href: "https://en.wikipedia.org/wiki/Chemical-mechanical_polishing", source: "Wikipedia", zh: "化学机械抛光", zhExplain: "CMP = Chemical Mechanical Planarization / Chemical Mechanical Polishing，化学机械平坦化/抛光。通过化学和机械作用平坦化晶圆表面，是多层互连制造的重要步骤。", enExplain: "CMP means Chemical Mechanical Planarization or Chemical Mechanical Polishing, a process that planarizes wafer surfaces and is critical for multilayer interconnect fabrication." },
+      { term: "Metrology / inspection", href: "https://en.wikipedia.org/wiki/Semiconductor_metrology", source: "Wikipedia", zh: "量测 / 检测", zhExplain: "测量和检查晶圆图形、缺陷、膜厚和关键尺寸，以控制良率。", enExplain: "Measurement and inspection of wafer patterns, defects, film thickness, and critical dimensions for yield control." },
+      { term: "ATE", href: "https://en.wikipedia.org/wiki/Automatic_test_equipment", source: "Wikipedia", zh: "自动测试设备", zhExplain: "ATE = Automatic Test Equipment，自动测试设备。用于自动测试芯片、电路板或系统性能与缺陷的设备。", enExplain: "ATE means Automatic Test Equipment, automated equipment used to test chips, boards, or systems for performance and defects." },
+      { term: "PPA", href: "https://en.wikipedia.org/wiki/Power_purchase_agreement", source: "Wikipedia", zh: "购电协议", zhExplain: "PPA = Power Purchase Agreement，购电协议。长期购电合同，用于锁定电力来源、价格和供给期限。", enExplain: "PPA means Power Purchase Agreement, a long-term power contract used to secure electricity supply, price, and duration." },
+      { term: "BESS", href: "https://en.wikipedia.org/wiki/Battery_energy_storage_system", source: "Wikipedia", zh: "电池储能系统", zhExplain: "BESS = Battery Energy Storage System，电池储能系统。用电池储存电能并在需要时释放，用于削峰填谷、备电和可再生能源平滑。", enExplain: "BESS means Battery Energy Storage System, a battery system that stores electricity and releases it for peak shaving, backup, and renewable smoothing." },
+      { term: "UPS", href: "https://en.wikipedia.org/wiki/Uninterruptible_power_supply", source: "Wikipedia", zh: "不间断电源", zhExplain: "UPS = Uninterruptible Power Supply，不间断电源。在电网故障或电压波动时提供短时持续电力，保护服务器和数据中心设备。", enExplain: "UPS means Uninterruptible Power Supply, a power system that provides short-term backup power during outages or voltage disturbances." },
+      { term: "PDU", href: "https://en.wikipedia.org/wiki/Power_distribution_unit", source: "Wikipedia", zh: "配电单元", zhExplain: "PDU = Power Distribution Unit，配电单元。把电力分配到机柜和设备的装置，是数据中心供电链的一环。", enExplain: "PDU means Power Distribution Unit, a device that distributes power to racks and equipment as part of the data-center power chain." },
+      { term: "DCIM", href: "https://en.wikipedia.org/wiki/Data_center_infrastructure_management", source: "Wikipedia", zh: "数据中心基础设施管理", zhExplain: "DCIM = Data Center Infrastructure Management，数据中心基础设施管理。用于监控和管理数据中心电力、冷却、空间、资产和容量的软件系统。", enExplain: "DCIM means Data Center Infrastructure Management, software for monitoring and managing data-center power, cooling, space, assets, and capacity." },
+      { term: "EMS", href: "https://en.wikipedia.org/wiki/Energy_management_system", source: "Wikipedia", zh: "能源管理系统", zhExplain: "EMS = Energy Management System，能源管理系统。监控和调度能源使用、电价、储能、负荷和效率的系统。", enExplain: "EMS means Energy Management System, a system for monitoring and optimizing energy use, pricing, storage, load, and efficiency." },
+      { term: "PUE", href: "https://en.wikipedia.org/wiki/Power_usage_effectiveness", source: "Wikipedia", zh: "电能使用效率", zhExplain: "PUE = Power Usage Effectiveness，电能使用效率。数据中心总耗电与 IT 设备耗电的比值，越接近 1 表示越高效。", enExplain: "PUE means Power Usage Effectiveness, the ratio of total data-center energy to IT-equipment energy; closer to 1 is better." },
+      { term: "MW", href: "https://en.wikipedia.org/wiki/Watt#Megawatt", source: "Wikipedia", zh: "兆瓦", zhExplain: "MW = Megawatt，兆瓦。功率单位，数据中心常用 MW 表示可接入或已签约电力容量。", enExplain: "MW means Megawatt, a unit of power commonly used to describe data-center contracted or available power capacity." }
+    ];
+
+    let activeLayer = "compute";
+    let lang = "zh";
+
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>"']/g, char => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;"
+      }[char]));
+    }
+
+    function ui(key) {
+      return uiText[lang][key] || uiText.zh[key] || key;
+    }
+
+    function tr(value) {
+      if (lang === "zh") return value;
+      return translations.en[value] || value;
+    }
+
+    function copy(value) {
+      if (value && typeof value === "object") return value[lang] || value.zh || value.en || "";
+      return tr(value);
+    }
+
+    function renderStaticText() {
+      document.documentElement.lang = lang === "zh" ? "zh-CN" : "en";
+      document.title = ui("documentTitle");
+      document.getElementById("headerEyebrow").textContent = ui("headerEyebrow");
+      document.getElementById("headerTitle").textContent = ui("headerTitle");
+      document.getElementById("headerLead").textContent = ui("headerLead");
+      document.getElementById("readTitle").textContent = ui("readTitle");
+      document.getElementById("readStepOne").textContent = ui("readStepOne");
+      document.getElementById("readStepTwo").textContent = ui("readStepTwo");
+      document.getElementById("flowStrip").setAttribute("aria-label", ui("flowAria"));
+      document.getElementById("layerStackTitle").textContent = ui("layerStackTitle");
+      document.getElementById("layerStackHint").textContent = ui("layerStackHint");
+      document.querySelectorAll("[data-lang]").forEach(button => {
+        button.classList.toggle("active", button.dataset.lang === lang);
+      });
+    }
+
+    function renderAudit() {
+      document.getElementById("auditList").innerHTML = `
+        <h3>${escapeHtml(ui("auditTitle"))}</h3>
+        ${ui("auditItems").map(item => `<p>${escapeHtml(item)}</p>`).join("")}
+      `;
+    }
+
+    function currentLayer() {
+      return layers.find(layer => layer.id === activeLayer) || layers[2];
+    }
+
+    function setActiveLayer(id) {
+      activeLayer = id;
+      renderAll();
+    }
+
+    function renderFlowStrip() {
+      document.getElementById("flowStrip").innerHTML = layers.map(layer => `
+        <button class="flow-step ${escapeHtml(layer.tone)} ${layer.id === activeLayer ? "active" : ""}" data-layer="${escapeHtml(layer.id)}">
+          <em>${escapeHtml(layer.no)} / ${escapeHtml(tr(layer.short))}</em>
+          <strong>${escapeHtml(tr(layer.title))}</strong>
+          <span>${escapeHtml(tr(layer.question))}</span>
+        </button>
+      `).join("");
+      document.querySelectorAll(".flow-step").forEach(button => {
+        button.addEventListener("click", () => setActiveLayer(button.dataset.layer));
+      });
+    }
+
+    function renderLayerStack() {
+      document.getElementById("layerStack").innerHTML = layers.map(layer => `
+        <button class="layer-button ${escapeHtml(layer.tone)} ${layer.id === activeLayer ? "active" : ""}" data-layer="${escapeHtml(layer.id)}">
+          <span class="layer-no">${escapeHtml(layer.no)}</span>
+          <span>
+            <h3>${escapeHtml(tr(layer.title))}</h3>
+            <p>${escapeHtml(tr(layer.summary))}</p>
+          </span>
+        </button>
+      `).join("");
+      document.querySelectorAll(".layer-button").forEach(button => {
+        button.addEventListener("click", () => setActiveLayer(button.dataset.layer));
+      });
+    }
+
+    function renderPills(items) {
+      return `<div class="pill-list">${items.map(item => `<span class="pill">${escapeHtml(tr(item))}</span>`).join("")}</div>`;
+    }
+
+    function renderVisualCards(items) {
+      return `
+        <div class="visual-grid ${items.length === 1 ? "single" : ""}">
+          ${items.map(item => `
+            <article class="visual-card ${item.wide ? "wide" : ""}">
+              <img src="${escapeHtml(item.image)}" alt="${escapeHtml(copy(item.title))}" loading="lazy">
+              <div class="visual-copy">
+                <h3>${escapeHtml(copy(item.title))}</h3>
+                <p>${escapeHtml(copy(item.caption))}</p>
+                ${item.points ? `
+                  <div class="visual-points">
+                    ${item.points.map(point => `
+                      <div class="visual-point">
+                        <strong>${escapeHtml(copy(point.label))}</strong>
+                        <span>${escapeHtml(copy(point.text))}</span>
+                      </div>
+                    `).join("")}
+                  </div>
+                ` : ""}
+              </div>
+            </article>
+          `).join("")}
+        </div>
+      `;
+    }
+
+    function renderOverviewVisual() {
+      document.getElementById("overviewVisualPanel").innerHTML = `
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">${escapeHtml(ui("overviewVisualKicker"))}</p>
+            <h2>${escapeHtml(ui("overviewVisualTitle"))}</h2>
+          </div>
+          <span class="hint">${escapeHtml(ui("overviewVisualHint"))}</span>
+        </div>
+        ${renderVisualCards([overviewVisual])}
+      `;
+    }
+
+    function renderLayerVisuals() {
+      const visuals = layerVisuals[activeLayer] || [];
+      const panel = document.getElementById("visualPanel");
+      panel.hidden = visuals.length === 0;
+      panel.innerHTML = visuals.length ? `
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">${escapeHtml(ui("layerVisualKicker"))}</p>
+            <h2>${escapeHtml(ui("layerVisualTitle"))}</h2>
+          </div>
+          <span class="hint">${escapeHtml(ui("layerVisualHint"))}</span>
+        </div>
+        ${renderVisualCards(visuals)}
+      ` : "";
+    }
+
+    function renderIndicatorVisual() {
+      document.getElementById("indicatorVisualPanel").innerHTML = `
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">${escapeHtml(ui("indicatorVisualKicker"))}</p>
+            <h2>${escapeHtml(ui("indicatorVisualTitle"))}</h2>
+          </div>
+          <span class="hint">${escapeHtml(ui("indicatorVisualHint"))}</span>
+        </div>
+        ${renderVisualCards([indicatorVisual])}
+      `;
+    }
+
+    function renderDetail() {
+      const layer = currentLayer();
+      const companyCards = layer.companies.map(([name, role, signal]) => `
+        <article class="company-card">
+          <h4>${escapeHtml(tr(name))}</h4>
+          <p>${escapeHtml(tr(role))}</p>
+          <small>${escapeHtml(ui("observation"))}：${escapeHtml(tr(signal))}</small>
+        </article>
+      `).join("");
+      document.getElementById("detailPanel").innerHTML = `
+        <div class="detail-head ${escapeHtml(layer.tone)}">
+          <p class="eyebrow">Layer ${escapeHtml(layer.no)} ${escapeHtml(ui("layerOverview"))}</p>
+          <h2>${escapeHtml(tr(layer.title))}</h2>
+          <p class="summary">${escapeHtml(tr(layer.summary))}</p>
+        </div>
+        <div class="detail-body">
+          <div class="meta-grid">
+            <div class="meta-box"><strong>${escapeHtml(ui("input"))}</strong><span>${escapeHtml(tr(layer.input))}</span></div>
+            <div class="meta-box"><strong>${escapeHtml(ui("output"))}</strong><span>${escapeHtml(tr(layer.output))}</span></div>
+            <div class="meta-box"><strong>${escapeHtml(ui("pressure"))}</strong><span>${escapeHtml(tr(layer.pressure))}</span></div>
+          </div>
+          <div class="chain">
+            ${layer.flow.map((step, index) => `${index > 0 ? "<i>→</i>" : ""}<b>${escapeHtml(tr(step))}</b>`).join("")}
+          </div>
+          <div class="info-grid">
+            <div class="info-card"><strong>${escapeHtml(ui("sectors"))}</strong>${renderPills(layer.sectors)}</div>
+            <div class="info-card"><strong>${escapeHtml(ui("bottlenecks"))}</strong>${renderPills(layer.bottlenecks)}</div>
+            <div class="info-card"><strong>${escapeHtml(ui("watch"))}</strong>${renderPills(layer.watch)}</div>
+          </div>
+          <div>
+            <div class="panel-head">
+              <h2>${escapeHtml(ui("companies"))}</h2>
+              <span class="hint">${escapeHtml(ui("companyHint"))}</span>
+            </div>
+            <div class="company-grid">${companyCards}</div>
+          </div>
+          <div class="info-card">
+            <strong>${escapeHtml(ui("guardrails"))}</strong>
+            ${renderPills(layer.guardrails)}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderProcess() {
+      const layer = currentLayer();
+      const workflowVisual = workflowVisuals[activeLayer];
+      const cols = layer.process.length > 6 ? 4 : Math.min(Math.max(layer.process.length, 3), 6);
+      const branches = layer.branches ? `
+        <div class="branch-grid">
+          ${layer.branches.map(([title, text]) => `
+            <article class="process-card">
+              <em>${escapeHtml(ui("branch"))}</em>
+              <h3>${escapeHtml(tr(title))}</h3>
+              <p>${escapeHtml(tr(text))}</p>
+            </article>
+          `).join("")}
+        </div>
+      ` : "";
+      document.getElementById("processPanel").innerHTML = `
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">${escapeHtml(ui("workflowKicker"))}</p>
+            <h2>${escapeHtml(tr(layer.title))}${escapeHtml(ui("workflowSuffix"))}</h2>
+          </div>
+          <span class="hint">${escapeHtml(ui("workflowHint"))}</span>
+        </div>
+        ${workflowVisual ? renderVisualCards([workflowVisual]) : ""}
+        <div class="process-grid" style="--cols:${cols}">
+          ${layer.process.map(([label, title, text]) => `
+            <article class="process-card">
+              <em>${escapeHtml(label)}</em>
+              <h3>${escapeHtml(tr(title))}</h3>
+              <p>${escapeHtml(tr(text))}</p>
+            </article>
+          `).join("")}
+        </div>
+        ${branches}
+      `;
+    }
+
+    function renderRoleMatrix() {
+      document.getElementById("rolePanel").innerHTML = `
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">${escapeHtml(ui("roleKicker"))}</p>
+            <h2>${escapeHtml(ui("roleTitle"))}</h2>
+          </div>
+          <span class="hint">${escapeHtml(ui("roleHint"))}</span>
+        </div>
+        <div class="role-grid">
+          ${roleMatrix.map(([name, roles, caution]) => {
+            const isActive = Boolean(roles[activeLayer]);
+            const chips = Object.entries(roles).map(([layerId, role]) => {
+              const layer = layers.find(item => item.id === layerId);
+              return `<span class="role-chip ${layerId === activeLayer ? "current" : ""}">${escapeHtml(layer ? tr(layer.short) : layerId)}：${escapeHtml(tr(role))}</span>`;
+            }).join("");
+            return `
+              <article class="role-card ${isActive ? "active" : ""}">
+                <h3>${escapeHtml(tr(name))}</h3>
+                <div class="role-chip-row">${chips}</div>
+                <p>${escapeHtml(tr(caution))}</p>
+              </article>
+            `;
+          }).join("")}
+        </div>
+      `;
+    }
+
+    function renderGlossary() {
+      document.getElementById("glossaryPanel").innerHTML = `
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">${escapeHtml(ui("glossaryKicker"))}</p>
+            <h2>${escapeHtml(ui("glossaryTitle"))}</h2>
+          </div>
+          <span class="hint">${escapeHtml(ui("glossaryHint"))}</span>
+        </div>
+        <p class="disclaimer">${escapeHtml(ui("glossaryIntro"))}</p>
+        <div class="glossary-grid">
+          ${glossary.map(item => `
+            <article class="term-card">
+              <a href="${escapeHtml(item.href)}" target="_blank" rel="noopener">${escapeHtml(item.term)}</a>
+              <span>${escapeHtml(item.zh)}</span>
+              <p><b>中文解释：</b> ${escapeHtml(item.zhExplain)}</p>
+              <p><b>English explanation:</b> ${escapeHtml(item.enExplain)}</p>
+              <em>${escapeHtml(item.source)}</em>
+            </article>
+          `).join("")}
+        </div>
+      `;
+    }
+
+    function renderAll() {
+      renderStaticText();
+      renderAudit();
+      renderFlowStrip();
+      renderOverviewVisual();
+      renderLayerStack();
+      renderDetail();
+      renderLayerVisuals();
+      renderProcess();
+      renderRoleMatrix();
+      renderIndicatorVisual();
+      renderGlossary();
+    }
+
+    document.querySelectorAll("[data-lang]").forEach(button => {
+      button.addEventListener("click", () => {
+        lang = button.dataset.lang === "en" ? "en" : "zh";
+        renderAll();
+      });
+    });
+
+    renderAll();
+  </script>
+</body>
+</html>

@@ -1,0 +1,803 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI 公司 GTM 策略研究 | GTM Strategy Research</title>
+<style>
+:root{
+  --blue:#4472C4; --blue-dark:#2F5496; --bg:#F7F9FC; --card:#FFFFFF; --ink:#1c2b45;
+  --muted:#5d6b84; --line:#DDE5F0; --soft:#EDF2FA; --chip:#DCE6F5; --good:#2e7d32; --warn:#b26a00;
+}
+*{box-sizing:border-box}
+html[lang="zh-CN"] .en{display:none!important}
+html[lang="en"] .zh{display:none!important}
+body{margin:0;padding:18px 12px 56px;background:var(--bg);color:var(--ink);
+  font:14px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;}
+.wrap{max-width:1400px;margin:0 auto}
+h1{font-size:22px;margin:0 0 6px;color:var(--blue-dark)}
+h2{font-size:17px;margin:0 0 4px;color:var(--blue-dark)}
+h3{font-size:14px;margin:0 0 6px;color:var(--blue)}
+.topbar{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.lang-btn{border:1px solid var(--blue);background:#fff;color:var(--blue);border-radius:999px;
+  padding:7px 18px;font-size:13.5px;font-weight:600;cursor:pointer;white-space:nowrap}
+.lang-btn:hover{background:var(--soft)}
+.sub{color:var(--muted);font-size:13px;margin-bottom:16px}
+.lede{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--blue);
+  border-radius:10px;padding:13px 16px;margin-bottom:16px}
+.tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+.tabs button{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;
+  padding:8px 16px;font-size:13.5px;cursor:pointer}
+.tabs button[aria-pressed="true"]{background:var(--blue);color:#fff;border-color:var(--blue)}
+section[data-panel]{display:grid;gap:14px}
+section[data-panel][hidden]{display:none}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:15px 18px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:760px){.grid2{grid-template-columns:1fr}}
+table{width:100%;border-collapse:collapse;font-size:13px;background:#fff}
+th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+th{background:var(--blue);color:#fff;font-weight:600;white-space:nowrap}
+tbody tr:nth-child(even){background:var(--soft)}
+.steps{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:4px 0}
+.steps .s{background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:4px 10px;font-size:12.5px}
+.steps .arr{color:var(--blue)}
+.kv{display:grid;grid-template-columns:130px 1fr;gap:6px 14px;font-size:13.5px}
+@media(max-width:600px){.kv{grid-template-columns:1fr}}
+.kv dt{color:var(--blue-dark);font-weight:600}
+.kv dd{margin:0}
+.select-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:4px}
+select{background:#fff;color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:7px 10px;font-size:14px}
+.badge{font-size:12px;color:var(--muted)}
+.src a{color:var(--blue);text-decoration:none;font-size:12.5px;margin-right:12px}
+.src a:hover{text-decoration:underline}
+.note{color:var(--muted);font-size:12.5px}
+svg text{fill:var(--ink)}
+.dot{fill:var(--blue);cursor:pointer}
+.dot.active{fill:var(--warn)}
+.dot-label{font-size:11px;fill:var(--muted);pointer-events:none}
+.grid-line{stroke:var(--line);stroke-width:1}
+.axis{font-size:11.5px;fill:var(--muted)}
+.flow{display:flex;flex-wrap:wrap;gap:8px;align-items:stretch}
+.flow .box{flex:1;min-width:160px;background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:13px}
+.flow .box b{display:block;margin-bottom:3px;color:var(--blue-dark)}
+ul{margin:6px 0;padding-left:20px}
+li{margin-bottom:4px}
+.tag-good{color:var(--good);font-weight:600}
+.tag-warn{color:var(--warn);font-weight:600}
+a{color:var(--blue)}
+abbr[title]{text-decoration:none;border-bottom:1px dotted var(--blue);cursor:pointer}
+abbr[title]:hover{background:var(--soft)}
+@keyframes gloss-flash{0%{background:#FFE9A8}100%{background:transparent}}
+tr.gloss-hit td{animation:gloss-flash 2s ease-out}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <div>
+      <h1><span class="zh">14 家 AI 公司 GTM 策略研究（合并版）</span><span class="en">GTM Strategy Research: 14 AI Companies</span></h1>
+      <div class="sub">
+        <span class="zh">Claude Excel 研究 × GPT 报告合并 · 研究截至 2026-07-10 · 收入/估值均为媒体及研究机构报道口径</span>
+        <span class="en">Merged from Claude's spreadsheet research and a GPT report · As of Jul 10, 2026 · Revenue and valuation figures are press-reported estimates</span>
+      </div>
+    </div>
+    <button class="lang-btn" id="lang-toggle"><span class="zh">EN — English</span><span class="en">中文 — Chinese</span></button>
+  </div>
+
+  <div class="lede">
+    <span class="zh">结论先行：AI 公司的 GTM 不是"要不要销售"，而是<b>让获客与交付的摩擦匹配客单价</b>。个人工具靠产品自传播；API 平台用开发者试用筛选生产需求；法律、政府与训练数据则依赖领域专家、可信度和高触达交付。</span>
+    <span class="en">The takeaway up front: GTM for AI companies isn't a question of whether to hire salespeople — it's about <b>matching acquisition and delivery friction to deal size</b>. Personal tools spread themselves; API platforms use developer trials to surface production demand; legal, government, and training-data businesses run on domain expertise, credibility, and high-touch delivery.</span>
+  </div>
+
+  <div class="tabs" id="tabs">
+    <button data-tab="motions" aria-pressed="true"><span class="zh">销售动作拆解</span><span class="en">Sales Motions</span></button>
+    <button data-tab="overview" aria-pressed="false"><span class="zh">公司全景</span><span class="en">Company Landscape</span></button>
+    <button data-tab="cro" aria-pressed="false"><span class="zh">CRO 做什么</span><span class="en">What a CRO Does</span></button>
+    <button data-tab="harvey" aria-pressed="false"><span class="zh">Harvey 交付之谜</span><span class="en">The Harvey Delivery Question</span></button>
+    <button data-tab="glossary" aria-pressed="false"><span class="zh">术语表</span><span class="en">Glossary</span></button>
+  </div>
+
+  <!-- ============ overview ============ -->
+  <section data-panel="overview" hidden>
+    <div class="card">
+      <h2><span class="zh">销售触达 × 交付强度</span><span class="en">Sales Touch × Delivery Intensity</span></h2>
+      <div class="note">
+        <span class="zh">横轴：越向右越依赖企业销售；纵轴：越向上交付越定制、越高触达。坐标为研究编码（1–5），用于相对比较，非公司披露评分。点选圆点或用下拉框查看公司详情。</span>
+        <span class="en">X-axis: further right = more reliant on enterprise sales. Y-axis: higher = more customized, higher-touch delivery. Coordinates are research codings (1–5) for relative comparison, not company-disclosed scores. Click a dot or use the dropdown for details.</span>
+      </div>
+      <div style="overflow-x:auto"><svg id="plot" viewBox="0 0 1000 560" width="100%" style="max-width:1100px;display:block;margin:0 auto"></svg></div>
+    </div>
+
+    <div class="card">
+      <div class="select-row">
+        <label for="company-select"><b><span class="zh">选择公司</span><span class="en">Company</span></b></label>
+        <select id="company-select"></select>
+        <span class="badge" id="confidence"></span>
+      </div>
+      <div id="detail"></div>
+    </div>
+
+    <div class="card">
+      <h2><span class="zh">速览表</span><span class="en">Quick Reference</span></h2>
+      <div style="overflow-x:auto"><table>
+        <thead><tr>
+          <th><span class="zh">公司</span><span class="en">Company</span></th>
+          <th><span class="zh">赛道</span><span class="en">Category</span></th>
+          <th><span class="zh">GTM 原型</span><span class="en">GTM Archetype</span></th>
+          <th><span class="zh">销售触达</span><span class="en">Sales Touch</span></th>
+          <th><span class="zh">交付强度</span><span class="en">Delivery</span></th>
+          <th><span class="zh">规模数据（报道口径）</span><span class="en">Scale Metrics (as reported)</span></th>
+        </tr></thead>
+        <tbody id="quick-table"></tbody>
+      </table></div>
+    </div>
+  </section>
+
+  <!-- ============ motions ============ -->
+  <section data-panel="motions">
+    <div class="card">
+      <h2><span class="zh">五种销售动作，不是一条万能漏斗</span><span class="en">Five Sales Motions, Not One Universal Funnel</span></h2>
+      <div class="note">
+        <span class="zh">真正的分界线：价值能否由单人立即验证；上线是否需要安全、集成、专业判断与组织变革。</span>
+        <span class="en">The real dividing lines: can a single person verify the value immediately, and does going live require security, integration, expert judgment, and organizational change?</span>
+      </div>
+      <div id="motions-list" style="display:grid;gap:12px;margin-top:12px"></div>
+    </div>
+    <div class="card">
+      <h2><span class="zh">共同的企业成交骨架（8 步）</span><span class="en">The Shared Enterprise Deal Skeleton (8 Steps)</span></h2>
+      <div class="steps" id="skeleton"></div>
+      <p style="margin:10px 0 0">
+        <span class="zh">不同 GTM 原型只是把这 8 步交给不同的角色：<b>PLG 公司</b>把 1–3 步放进产品；<b>基础设施公司</b>把 3–5 步变成 benchmark；<b>Harvey / Legora</b> 把 2–7 步交给 AE、领域专家和客户成功；<b>Scale / Surge / Mercor</b> 从一开始就把"交付方案"当作销售本身。</span>
+        <span class="en">The archetypes differ only in who owns each step: <b>PLG companies</b> build steps 1–3 into the product; <b>infrastructure companies</b> turn steps 3–5 into a benchmark; <b>Harvey / Legora</b> hand steps 2–7 to AEs, domain experts, and customer success; <b>Scale / Surge / Mercor</b> treat the delivery proposal itself as the sale from day one.</span>
+      </p>
+    </div>
+    <div class="card">
+      <h2><span class="zh">原型对比：适用条件与风险</span><span class="en">Archetype Comparison: When It Works, What Breaks</span></h2>
+      <div style="overflow-x:auto"><table>
+        <thead><tr>
+          <th><span class="zh">GTM 原型</span><span class="en">Archetype</span></th>
+          <th><span class="zh">代表公司</span><span class="en">Companies</span></th>
+          <th><span class="zh">核心逻辑</span><span class="en">Core Logic</span></th>
+          <th><span class="zh">适用条件</span><span class="en">When It Works</span></th>
+          <th><span class="zh">主要风险</span><span class="en">Key Risks</span></th>
+        </tr></thead>
+        <tbody id="archetype-table"></tbody>
+      </table></div>
+    </div>
+  </section>
+
+  <!-- ============ CRO ============ -->
+  <section data-panel="cro" hidden>
+    <div class="card">
+      <h2><span class="zh">CRO 不是"销售老大"，而是收入系统的总设计师</span><span class="en">A CRO Isn't the "Head of Sales" — They're the Architect of the Revenue System</span></h2>
+      <p class="zh">Chief Revenue Officer 的核心责任：把<b>市场、销售、渠道、定价、客户成功与收入运营（RevOps）</b>整合成一个可预测、可扩张的系统。VP Sales 管"这个季度签多少单"；CRO 管从需求产生到续约扩张的整条收入链——包括决定<b>哪些客户根本不该由销售碰</b>（自助）、哪些交给伙伴、定价怎么配合销售动作。</p>
+      <p class="en">A Chief Revenue Officer's job is to fuse <b>marketing, sales, channels, pricing, customer success, and revenue operations</b> into one predictable, scalable system. A VP of Sales owns "how many deals close this quarter"; a CRO owns the entire revenue chain from demand creation to renewal and expansion — including deciding <b>which customers sales should never touch</b> (self-serve), which go to partners, and how pricing supports the motion.</p>
+      <div class="flow" style="margin-top:8px">
+        <div class="box"><b><span class="zh">市场 / 品牌</span><span class="en">Marketing / Brand</span></b><span class="zh">创造与捕捉需求</span><span class="en">Create and capture demand</span></div>
+        <div class="box"><b><span class="zh">销售 / 渠道</span><span class="en">Sales / Channels</span></b><span class="zh">分层、成交、预测</span><span class="en">Segment, close, forecast</span></div>
+        <div class="box"><b><span class="zh">交付 / CS</span><span class="en">Delivery / CS</span></b><span class="zh">激活、留存、扩张</span><span class="en">Activate, retain, expand</span></div>
+        <div class="box"><b>RevOps</b><span class="zh">数据、容量、机制（反馈回前三环）</span><span class="en">Data, capacity, mechanics — feeding back into all three</span></div>
+      </div>
+    </div>
+    <div class="grid2">
+      <div class="card">
+        <h3><span class="zh">每周真正做的事</span><span class="en">What They Actually Do Every Week</span></h3>
+        <ul class="zh">
+          <li><b>选择 ICP 与分层</b>：哪些客户自助，哪些交给销售，哪些需要伙伴。</li>
+          <li><b>决定组织容量</b>：AE、SE、CS、伙伴经理在哪些地区和行业配置。</li>
+          <li><b>管理漏斗与预测</b>：pipeline coverage、转化率、销售周期、赢单/输单原因。</li>
+          <li><b>把定价、包装、采购门槛和产品路线连起来</b>。</li>
+          <li><b>把成交后的采用率、续约、扩张和 NRR 当作同一条收入链管理</b>。</li>
+        </ul>
+        <ul class="en">
+          <li><b>Pick the ICP and segment it</b>: which customers self-serve, which get a rep, which need a partner.</li>
+          <li><b>Set org capacity</b>: where to place AEs, SEs, CS, and partner managers by region and industry.</li>
+          <li><b>Run pipeline and forecast</b>: coverage, conversion rates, cycle length, win/loss reasons.</li>
+          <li><b>Wire pricing, packaging, procurement thresholds, and the product roadmap together.</b></li>
+          <li><b>Treat post-sale adoption, renewals, expansion, and NRR as the same revenue chain</b> — not someone else's problem.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3><span class="zh">Genspark：一个正在发生的案例</span><span class="en">Genspark: A Case Study in Progress</span></h3>
+        <p class="zh">Genspark 是典型的"PLG 长出企业需求后才请 CRO"。其首任 CRO（Jamison Powell，2026.6 上任）的公开动作包括：搭建 RevOps、GTM Engineering、Scaled Revenue、CX/CS 领导层；补 B2B Marketing 与 Partnerships；建立客户分层、经销结构和全球覆盖；<b>把 PLG 注册到企业扩张统一为一条漏斗</b>。</p>
+        <p class="en">Genspark is the classic pattern: PLG generates enterprise demand first, <i>then</i> the company hires a CRO. Its first CRO (Jamison Powell, June 2026) has publicly focused on standing up RevOps, GTM engineering, scaled revenue, and CX/CS leadership; adding B2B marketing and partnerships; building account segmentation, reseller structures, and global coverage — <b>unifying everything from PLG signup to enterprise expansion into a single funnel</b>.</p>
+        <p class="note">
+          <span class="zh">这说明 CRO 的价值不是"亲自多签几单"，而是把已经出现的产品需求转成可重复、可预测的企业收入。</span>
+          <span class="en">The point: a CRO's value isn't closing a few more deals personally — it's converting product demand that already exists into repeatable, forecastable enterprise revenue.</span>
+        </p>
+        <div class="src"><a href="https://www.businesswire.com/news/home/20260617758937/en/" target="_blank"><span class="zh">Genspark CRO 任命公告</span><span class="en">Genspark CRO announcement</span></a></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3><span class="zh">CRO 的仪表盘：每个阶段的主指标与错误信号</span><span class="en">The CRO Dashboard: Core Metrics and Warning Signs by Stage</span></h3>
+      <table>
+        <thead><tr>
+          <th><span class="zh">阶段</span><span class="en">Stage</span></th>
+          <th><span class="zh">主指标</span><span class="en">Core Metrics</span></th>
+          <th><span class="zh">错误信号</span><span class="en">Warning Sign</span></th>
+        </tr></thead>
+        <tbody>
+          <tr><td><span class="zh">获客</span><span class="en">Acquisition</span></td><td><span class="zh">合格 pipeline、产品激活、渠道贡献</span><span class="en">Qualified pipeline, product activation, channel contribution</span></td><td class="tag-warn"><span class="zh">只追 MQL 或下载量</span><span class="en">Chasing MQLs or download counts</span></td></tr>
+          <tr><td><span class="zh">成交</span><span class="en">Closing</span></td><td><span class="zh">win rate、销售周期、ACV、预测准确率</span><span class="en">Win rate, cycle length, ACV, forecast accuracy</span></td><td class="tag-warn"><span class="zh">用折扣掩盖价值不清</span><span class="en">Papering over unclear value with discounts</span></td></tr>
+          <tr><td><span class="zh">交付</span><span class="en">Delivery</span></td><td><span class="zh">time-to-value、采用率、上线率</span><span class="en">Time-to-value, adoption, go-live rate</span></td><td class="tag-warn"><span class="zh">签约后无人真正使用</span><span class="en">Signed contracts nobody actually uses</span></td></tr>
+          <tr><td><span class="zh">扩张</span><span class="en">Expansion</span></td><td><span class="zh">GRR / NRR、席位与用量扩张、续约</span><span class="en">GRR/NRR, seat and usage expansion, renewals</span></td><td class="tag-warn"><span class="zh">把新签 ARR 当成唯一目标</span><span class="en">Treating new ARR as the only goal</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============ Harvey ============ -->
+  <section data-panel="harvey" hidden>
+    <div class="card">
+      <h2><span class="zh">"一个工程师 + 一个律师"为什么可能够用</span><span class="en">Why "One Engineer + One Lawyer" Can Actually Be Enough</span></h2>
+      <p class="zh">公开资料不支持把它理解为"整个客户交付只有两个人"。更准确的理解是：<b>面向单个客户的小型 pod</b>（一名 Legal Engineer + 产品/工程支持），背后是共享的产品、模型、安全、集成和客户成功平台。人少不是省钱，而是<b>产品标准化 + 角色合并 + 客户自己出人</b>三件事叠加的结果。</p>
+      <p class="en">The public record doesn't support reading this as "two people run the entire account." The accurate picture: a <b>small per-customer pod</b> (one Legal Engineer plus product/engineering support) sitting on top of a shared product, model, security, integration, and customer-success platform. The small headcount isn't cost-cutting — it's what you get when <b>product standardization, role consolidation, and customer-supplied staffing</b> stack on top of each other.</p>
+      <div class="flow" style="margin-top:8px">
+        <div class="box"><b><span class="zh">客户侧</span><span class="en">Customer Side</span></b><span class="zh">创新 / IT / 业务负责人：选用例、权限、安全、内部培训与变革管理</span><span class="en">Innovation / IT / practice leads: pick use cases, own permissions, security, internal training, change management</span></div>
+        <div class="box"><b>Legal Engineer</b><span class="zh">前律师：把真实法律工作转成用例、提示词、工作流与验收标准——一人完成 discovery、可信演示、方案设计和质量判断</span><span class="en">An ex-lawyer who turns real legal work into use cases, prompts, workflows, and acceptance criteria — one person covering discovery, credible demos, solution design, and quality judgment</span></div>
+        <div class="box"><b><span class="zh">产品 / 工程支持</span><span class="en">Product / Engineering</span></b><span class="zh">集成、复杂工作流、边界问题与产品反馈</span><span class="en">Integrations, complex workflows, edge cases, product feedback</span></div>
+        <div class="box"><b><span class="zh">共享平台</span><span class="en">Shared Platform</span></b><span class="zh">模型、产品、安全、CS、支持：一次能力升级服务全部账户</span><span class="en">Models, product, security, CS, support: one capability upgrade serves every account</span></div>
+      </div>
+    </div>
+    <div class="grid2">
+      <div class="card">
+        <h3><span class="zh">人数少的四个根本原因</span><span class="en">The Four Reasons the Pod Stays Small</span></h3>
+        <ul class="zh">
+          <li>卖的是<b>标准化 SaaS 平台</b>——主要工作是配置与推动采用，不是为每家律所重写一套系统。</li>
+          <li><b>律师身份合并了多个角色</b>：discovery、可信演示、提示/工作流设计、质量判断，减少交接损耗。对律所来说，"对面坐着一个懂行的前律师"本身就是信任来源。</li>
+          <li><b>模板、Playbook、Office/知识库集成和最佳实践跨客户复用</b>——第 50 家律所的交付成本远低于第 5 家。</li>
+          <li><b>客户自己的创新、IT 和业务 champion 承担大量内部推广</b>。Harvey 的高价筛选出了愿意配人配资源的客户。</li>
+        </ul>
+        <ul class="en">
+          <li>It's a <b>standardized SaaS platform</b> — the work is configuration and driving adoption, not rebuilding a system for every firm.</li>
+          <li><b>The lawyer collapses several roles into one</b>: discovery, credible demos, prompt/workflow design, and quality judgment, with no handoff loss. And for a law firm, having a knowledgeable ex-lawyer across the table <i>is</i> the trust.</li>
+          <li><b>Templates, playbooks, Office/DMS integrations, and best practices are reused across customers</b> — the 50th firm costs far less to deliver than the 5th.</li>
+          <li><b>The customer's own innovation, IT, and practice champions do much of the internal rollout.</b> Harvey's premium pricing filters for customers willing to staff it.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3><span class="zh">什么时候两个人不够</span><span class="en">When Two People Stop Being Enough</span></h3>
+        <ul class="zh">
+          <li>大量定制集成、数据迁移、复杂权限或跨国数据驻留。</li>
+          <li>多个业务线同时上线，且客户内部缺少 champion。</li>
+          <li>产品准确率仍需大量人工补偿，或每个用例都要重新开发。</li>
+          <li>目标从"工具采用"升级成"重构法律服务交付模式"。</li>
+        </ul>
+        <ul class="en">
+          <li>Heavy custom integrations, data migration, complex permissions, or cross-border data residency.</li>
+          <li>Multiple practice groups launching at once with no internal champion.</li>
+          <li>Model accuracy still needs heavy human compensation, or every use case requires fresh development.</li>
+          <li>The goal shifts from "adopt a tool" to "restructure how legal services are delivered."</li>
+        </ul>
+        <p class="note">
+          <span class="zh">此时 pod 会扩编，或引入合作伙伴——这也是 Anthropic 建 Claude Partner Network 的同一逻辑：企业交付需求超过厂商自身产能时，伙伴生态就是产能模型。</span>
+          <span class="en">At that point the pod grows, or partners come in — the same logic behind Anthropic's Claude Partner Network: when enterprise delivery demand outstrips the vendor's own capacity, the partner ecosystem becomes the capacity model.</span>
+        </p>
+      </div>
+    </div>
+    <div class="card">
+      <h3><span class="zh">更现实的交付时间表</span><span class="en">A More Realistic Delivery Timeline</span></h3>
+      <table>
+        <thead><tr>
+          <th><span class="zh">阶段</span><span class="en">Phase</span></th>
+          <th><span class="zh">时长</span><span class="en">Duration</span></th>
+          <th><span class="zh">内容</span><span class="en">What Happens</span></th>
+        </tr></thead>
+        <tbody>
+          <tr><td><span class="zh">技术开通</span><span class="en">Technical setup</span></td><td><span class="zh">1–2 周</span><span class="en">1–2 weeks</span></td><td><span class="zh">账户、权限、管理员、基础培训；前提是采购与安全审查已完成</span><span class="en">Accounts, permissions, admins, basic training — assuming procurement and security review are done</span></td></tr>
+          <tr><td>Pilot</td><td><span class="zh">4–12 周（行业估算）</span><span class="en">4–12 weeks (industry est.)</span></td><td><span class="zh">小范围试点：真实文档、重点业务组、工作流、质量与采用指标</span><span class="en">Scoped pilot: real documents, a focus practice group, workflows, quality and adoption metrics</span></td></tr>
+          <tr><td><span class="zh">全所推广</span><span class="en">Firmwide rollout</span></td><td><span class="zh">3–12 个月</span><span class="en">3–12 months</span></td><td><span class="zh">大型律所的安全、采购、试点与分阶段推广；CMS 公开案例包含 300 名律师、12 个月的 pilot</span><span class="en">Security, procurement, pilots, and phased rollout at large firms; CMS's public case involved 300 lawyers and a 12-month pilot</span></td></tr>
+          <tr><td><span class="zh">持续运营</span><span class="en">Ongoing</span></td><td>—</td><td><span class="zh">培训、office hours、采用追踪、定制工作流与跨部门扩张</span><span class="en">Training, office hours, adoption tracking, custom workflows, cross-department expansion</span></td></tr>
+        </tbody>
+      </table>
+      <p class="note">
+        <span class="zh">Harvey 未公开统一 SLA。以上区分"技术开通"和"组织采用"——后者通常才是瓶颈，也是 6 个月以上销售周期的真正原因。</span>
+        <span class="en">Harvey publishes no uniform SLA. The key distinction is technical setup versus organizational adoption — the latter is usually the bottleneck, and the real reason sales cycles run 6+ months.</span>
+      </p>
+      <div class="src" style="margin-top:6px">
+        <a href="https://www.harvey.ai/blog/day-in-the-life-legal-engineer" target="_blank"><span class="zh">Legal Engineer 职责</span><span class="en">Legal Engineer role</span></a>
+        <a href="https://www.harvey.ai/customers/cms" target="_blank"><span class="zh">CMS 12 个月 pilot 案例</span><span class="en">CMS 12-month pilot case</span></a>
+        <a href="https://www.harvey.ai/customers" target="_blank"><span class="zh">客户与采用数据</span><span class="en">Customers &amp; adoption data</span></a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ glossary ============ -->
+  <section data-panel="glossary" hidden>
+    <div class="card">
+      <h2><span class="zh">术语表</span><span class="en">Glossary</span></h2>
+      <div class="note">
+        <span class="zh">正文中所有带蓝色虚线下划线的缩写：鼠标悬停查看全称，点击可跳转到下表对应行。</span>
+        <span class="en">Every abbreviation with a dotted blue underline shows its full form on hover — click one to jump to its row below.</span>
+      </div>
+      <div style="overflow-x:auto;margin-top:10px"><table>
+        <thead><tr>
+          <th><span class="zh">缩写</span><span class="en">Abbreviation</span></th>
+          <th><span class="zh">英文全称</span><span class="en">Full Form</span></th>
+          <th><span class="zh">中文含义</span><span class="en">Meaning (Chinese)</span></th>
+        </tr></thead>
+        <tbody id="glossary-table"></tbody>
+      </table></div>
+    </div>
+  </section>
+</div>
+
+<script>
+// field format: [zh, en]
+const companies = [
+{name:'Genspark',sales:2.7,del:2.4,
+ track:['AI 超级智能体 / AI 工作空间','AI super agent / AI workspace'],
+ arch:['PLG → 企业化','PLG → enterprise'],
+ conf:['高置信度｜官方定价、公司披露与 CRO 公开信息','High confidence | official pricing, company disclosures, CRO announcement'],
+ scale:['ARR 约 $250M；2M+ MAU、约 10 万付费席位；6,000+ 企业客户；估值 $2.6B（2026.6）','~$250M ARR; 2M+ MAU, ~100K paid seats; 6,000+ business customers; $2.6B valuation (Jun 2026)'],
+ thesis:['先靠个人和小团队自助使用形成产品拉力，再用新建企业 GTM、云市场与伙伴渠道收割组织级需求。','Build product pull through self-serve individual and small-team usage, then harvest organizational demand with a newly built enterprise GTM, cloud marketplaces, and partner channels.'],
+ icp:['做研究、演示、文档、数据与内部工具的知识工作者；买方从团队负责人延伸到 CIO/IT、职能负责人和采购。Team 计划覆盖 2–150 人，企业版面向更大组织。','Knowledge workers producing research, decks, documents, data work, and internal tools; buyers range from team leads up to CIO/IT, functional heads, and procurement. The Team plan covers 2–150 seats; Enterprise targets larger orgs.'],
+ mkt:['高频产品发布与用户案例制造可分享成果；免费/个人体验带来 bottom-up 扩散；Microsoft、Google Cloud、Gemini Enterprise 等云市场与模型/云伙伴提供可信度和分发。','Rapid-fire product launches and user showcases create shareable output; free and personal usage drives bottom-up spread; Microsoft, Google Cloud, and Gemini Enterprise marketplaces plus model/cloud partners add credibility and distribution.'],
+ sell:['自助订阅为主 + 新建企业销售团队（2026.6 聘任 CRO Jamison Powell，搭建 RevOps/Scaled Revenue/伙伴体系）；云市场渠道。','Mostly self-serve subscriptions plus a newly built enterprise sales org (CRO Jamison Powell hired Jun 2026 to stand up RevOps, scaled revenue, and partnerships); cloud marketplace channels.'],
+ steps:[['个人/团队自助体验并重复使用','升级 Team，形成席位与使用数据','识别高潜组织，Scaled Revenue/企业销售介入','完成 SSO、连接器、账单、安全与采购','以部门采用、工作流和席位扩张'],
+        ['Individuals and teams self-serve and build a habit','Upgrade to Team, generating seat and usage data','High-potential orgs flagged for scaled revenue / enterprise sales','SSO, connectors, billing, security, procurement','Expand via departmental adoption, workflows, and seats']],
+ delivery:['Team 当天开通；企业版通常 2–8 周完成管理员、安全、连接器与采购（估算）。瓶颈是企业准备度和采用，不是定制开发。','Team activates same-day; Enterprise typically takes 2–8 weeks for admin, security, connectors, and procurement (est.). The bottleneck is enterprise readiness and adoption, not custom development.'],
+ comm:['Team $30/席位/月（按席位非 credits）；Enterprise 定制。','Team at $30/seat/month (seat-based, not credit-based); Enterprise custom.'],
+ lesson:['PLG 不是永远不要销售，而是让销售只处理企业复杂度。关键风险是企业 GTM 建设速度落后于产品需求。',"PLG doesn't mean never hiring sales — it means sales only handles enterprise complexity. The key risk is the enterprise GTM build-out lagging product demand."],
+ src:[[['Team 定价','Team pricing'],'https://www.genspark.ai/team_pricing'],[['企业扩张与 CRO','Enterprise expansion & CRO'],'https://www.businesswire.com/news/home/20260617758937/en/'],[['产品与案例','Product & showcases'],'https://www.genspark.ai/blog']]},
+{name:'Manus',sales:2.3,del:2.2,
+ track:['通用 AI Agent','General-purpose AI agent'],
+ arch:['病毒式 PLG → Team','Viral PLG → Team'],
+ conf:['高置信度｜官方 Team、伙伴与交易进展','High confidence | official Team plan, partnerships, deal developments'],
+ scale:['年化收入 $450M（2026.6，2025.8 为 $90M）；Meta $2B 收购被中国监管否决，已完成运营隔离','$450M annualized revenue (Jun 2026, vs $90M in Aug 2025); Meta\'s $2B acquisition blocked by Chinese regulators, operations since separated'],
+ thesis:['以演示视频、邀请码稀缺和可分享的执行结果完成爆发式获客，再用 Team、连接器和平台合作进入企业工作流。','Explosive acquisition through demo videos, invite-code scarcity, and shareable task results; then a move into enterprise workflows via Team plans, connectors, and platform partnerships.'],
+ icp:['个人专业用户、创作者、分析/研究/运营/产品团队与中小企业；买方通常是想自动化复杂数字工作、但不想先组建工程团队的业务负责人。vendor-neutral 定位吸引怕锁定的企业买家。','Individual professionals, creators, and analytics/research/ops/product teams at SMBs; the buyer is usually a business lead who wants complex digital work automated without hiring engineers first. Vendor-neutral positioning appeals to lock-in-wary buyers.'],
+ mkt:['早期邀请码和社交演示形成稀缺传播；现在依靠场景教程、客户故事、连接器与 Microsoft Agent 365 分发。','Early invite codes and social demos created scarcity-driven virality; growth now runs on use-case tutorials, customer stories, connectors, and Microsoft Agent 365 distribution.'],
+ sell:['自助订阅为主；企业侧走 Microsoft Agent 365 渠道 + Enterprise SDK（让企业把 Manus 工作流嵌入自有应用）；无传统大规模销售团队。','Primarily self-serve subscriptions; enterprise via the Microsoft Agent 365 channel plus an Enterprise SDK (embed Manus workflows in your own apps); no large traditional sales force.'],
+ steps:[['个人自助试用并完成高可见度任务','分享结果或模板带来新用户','升级 Team：共享 credits、项目与管理','大团队联系销售：安全、SSO、审计、连接器','进入 Microsoft/业务软件工作流并扩张'],
+        ['Individuals self-serve and complete a high-visibility task','Shared results and templates bring in new users','Upgrade to Team: shared credits, projects, admin','Larger teams contact sales: security, SSO, audit, connectors','Land inside Microsoft/business-software workflows and expand']],
+ delivery:['个人/Team 当天开通；企业连接器和 IT 配置约 2–8 周（估算）。多数交付是权限、工作流模板和采用，不是逐客户开发。','Personal and Team activate same-day; enterprise connectors and IT setup take ~2–8 weeks (est.). Most delivery is permissions, workflow templates, and adoption — not per-customer engineering.'],
+ comm:['订阅 $19–$199/月；Team 按席位 + 共享 credits；企业 SDK 按用量。','Subscriptions from $19–$199/month; Team per-seat with shared credits; Enterprise SDK usage-based.'],
+ lesson:['最强获客资产是"任务完成的可见结果"。风险：能力太广导致首个用例选择困难；Meta 交易拆分带来战略不确定性。','The strongest acquisition asset is the visible result of a completed task. Risks: breadth makes the first use case hard to choose, and the unwound Meta deal adds strategic uncertainty.'],
+ src:[[['Team 计划','Team plan'],'https://manus.im/team'],[['Microsoft 分发','Microsoft distribution'],'https://manus.im/blog/manus-microsoft-agent365'],[['Meta 交易拆分','Meta deal unwinding'],'https://news.bloomberglaw.com/tech-and-telecom-law/meta-starts-unwinding-manus-deal-by-splitting-operations-data']]},
+{name:'Perplexity',sales:2.6,del:2.3,
+ track:['AI 搜索/答案引擎 → 企业 Agent（Computer）','AI search / answer engine → enterprise agent (Computer)'],
+ arch:['搜索 PLG → 企业订阅','Search PLG → enterprise subscriptions'],
+ conf:['高置信度｜官方定价与客户案例','High confidence | official pricing and customer cases'],
+ scale:['ARR $450M+（2026.3）；100M+ MAU；20,000+ 企业组织、7,000+ Enterprise Pro（NVIDIA/Databricks/Stripe）；企业 GTM 团队仅约 6 人','$450M+ ARR (Mar 2026); 100M+ MAU; 20,000+ organizations, 7,000+ Enterprise Pro customers (NVIDIA, Databricks, Stripe); enterprise GTM team of ~6'],
+ thesis:['免费搜索建立日常习惯与品牌信任，按席位的 Enterprise 允许小团队自助购买，大型组织再进入 demo、采购与连接器部署。','Free search builds a daily habit and brand trust; per-seat Enterprise lets small teams buy self-serve, while larger orgs go through demos, procurement, and connector deployment.'],
+ icp:['高强度研究、尽调、技术排障、销售情报、咨询、投资、法律和管理层用户；买方是职能负责人、知识管理、IT 与安全团队。','Heavy research users — diligence, technical troubleshooting, sales intelligence, consulting, investing, legal, executives; buyers are functional heads, knowledge management, IT, and security teams.'],
+ mkt:['引用可验证的答案驱动口碑；免费产品和 Pro 承担获客；重金买分发：Snap $400M 成为 Snapchat 默认答案引擎、印度 Airtel 捆绑（用户 +640%）、Computer 集成 Microsoft 365。','Cited, verifiable answers drive word of mouth; the free and Pro tiers do the acquisition; pays big for distribution: a $400M Snap deal (default answer engine in Snapchat), Airtel bundling in India (+640% users), Computer integrated into Microsoft 365.'],
+ sell:['极致 product-led sales：小团队自助购买 Enterprise Pro/Max；约 250 席以上联系销售定制报价；分发合作是主要获客杠杆；2026 转向 usage-based 定价。','Product-led sales in its purest form: small teams buy Enterprise Pro/Max self-serve; ~250+ seats talk to sales for custom quotes; distribution partnerships are the main acquisition lever; moved to usage-based pricing in 2026.'],
+ steps:[['个人免费/Pro 形成搜索习惯','团队自助购买 Enterprise Pro/Max','>约 250 席联系销售定制报价','接入组织文件（Drive/SharePoint）并过安全审查','以采用率和研究时间节省扩到更多部门'],
+        ['Individuals build a search habit on Free/Pro','Teams self-serve Enterprise Pro/Max','~250+ seats: contact sales for custom pricing','Connect org files (Drive/SharePoint), pass security review','Expand across departments on adoption and time saved']],
+ delivery:['小团队当天；连接器、SSO/SCIM、数据保留与权限约 2–8 周（估算）。复杂度主要来自企业知识源和治理。','Small teams same-day; connectors, SSO/SCIM, retention, and permissions ~2–8 weeks (est.). The complexity comes from enterprise knowledge sources and governance.'],
+ comm:['免费 + Pro 订阅 + Enterprise Pro/Max 按席位 + Agent 用量计费。','Free + Pro subscriptions + per-seat Enterprise Pro/Max + usage-based agent pricing.'],
+ lesson:['搜索产品的分发比传统销售更重要；但进入企业后，可信来源、数据边界与连接器决定扩张。','For a search product, distribution beats traditional selling; but once inside the enterprise, trusted sources, data boundaries, and connectors decide expansion.'],
+ src:[[['企业定价','Enterprise pricing'],'https://www.perplexity.ai/enterprise/pricing'],[['客户案例','Customer cases'],'https://www.perplexity.ai/enterprise/customers'],[['Airtel 分发','Airtel distribution'],'https://www.perplexity.ai/help-center/en/articles/11842322-perplexity-pro-airtel-promo']]},
+{name:'OpenAI',sales:3.2,del:2.8,
+ track:['基础模型 + ChatGPT','Frontier models + ChatGPT'],
+ arch:['品牌 + 自助 + 大客户直销','Brand + self-serve + enterprise direct'],
+ conf:['高置信度｜官方企业与销售流程','High confidence | official enterprise and sales-process docs'],
+ scale:['年化收入约 $25B（2026.2）；企业占比 >40%，向与消费持平演进','~$25B annualized revenue (Feb 2026); enterprise >40% of the mix and heading toward parity with consumer'],
+ thesis:['用 ChatGPT 的消费级品牌和 API 开发者入口覆盖长尾，再把高席位、高用量、发票与治理需求升级为企业合同。','Cover the long tail with ChatGPT\'s consumer brand and the developer API, then convert high-seat, high-usage, invoicing, and governance needs into enterprise contracts.'],
+ icp:['横跨消费者、知识工作者和开发者；买方包括 CIO/CTO、AI 平台负责人、职能领导和采购，从 SMB 到大型企业。消费者心智占有率第一。','Spans consumers, knowledge workers, and developers; buyers include CIO/CTO, AI platform leads, functional leaders, and procurement, from SMB to large enterprise. #1 consumer mindshare.'],
+ mkt:['旗舰模型与产品发布自带媒体和口碑；开发者文档/生态、客户案例和伙伴共同教育市场。"员工先用、组织再采购"的 bottom-up 路径很强。','Flagship model and product launches generate their own press and word of mouth; developer docs, the ecosystem, customer stories, and partners educate the market. The "employees use it first, the org buys later" bottom-up path is powerful.'],
+ sell:['消费者自助订阅；API 自助开发者；企业由直销团队做 ChatGPT Enterprise/定制合同；Microsoft Azure 渠道。','Consumer self-serve; self-serve developer API; a direct sales team for ChatGPT Enterprise and custom contracts; the Microsoft Azure channel.'],
+ steps:[['个人 ChatGPT 或开发者 API 自助采用','团队选 Business 或按量 API','席位/账单/用量/合规达到阈值后联系销售','明确用例、容量、治理、数据与合同','部署指导、采用与跨团队扩张'],
+        ['Individuals adopt ChatGPT or the API self-serve','Teams pick Business or pay-as-you-go API','Seats/billing/usage/compliance hit a threshold → talk to sales','Scope use cases, capacity, governance, data, contract','Deployment guidance, adoption, cross-team expansion']],
+ delivery:['自助当天；标准企业工作区数周；大规模治理、集成或 API 生产系统约 1–3 个月以上（估算）。','Self-serve same-day; standard enterprise workspaces within weeks; large-scale governance, integration, or production API systems ~1–3+ months (est.).'],
+ comm:['个人/Business 订阅、API 按 token、Enterprise 定制；官方建议月 API 支出约 $10,000+ 联系销售。','Individual/Business subscriptions, per-token API, custom Enterprise; officially suggests contacting sales at ~$10,000+/month in API spend.'],
+ lesson:['最宽的入口组合降低获客成本，但企业价值来自部署指导、治理和实际采用，而不只是模型访问。','The widest funnel lowers acquisition cost, but enterprise value comes from deployment guidance, governance, and real adoption — not just model access.'],
+ src:[[['企业方案','Enterprise offering'],'https://openai.com/business/why-openai/enterprises/'],[['联系销售的门槛','When to contact sales'],'https://help.openai.com/en/articles/9047878-how-can-i-contact-sales'],[['ChatGPT Enterprise','ChatGPT Enterprise'],'https://help.openai.com/en/articles/8265053-what-is-chatgpt-enterprise']]},
+{name:'Anthropic',sales:3.6,del:3.3,
+ track:['基础模型 Claude','Frontier models (Claude)'],
+ arch:['开发者 + 企业伙伴','Developers + enterprise partners'],
+ conf:['高置信度｜官方企业与伙伴网络','High confidence | official enterprise and partner-network docs'],
+ scale:['年化收入报道口径 $30B–47B（2026.4–5，口径差异大）；300,000+ 企业客户；>$1M/年客户 1,000+（两个月翻倍）；约 80–85% 收入来自企业','Annualized revenue reported at $30B–47B (Apr–May 2026, sources vary widely); 300,000+ business customers; 1,000+ customers spending >$1M/yr (doubled in two months); ~80–85% of revenue from business'],
+ thesis:['Claude API/Code 先抓开发者与技术团队，再通过企业直销、三大云和咨询/SI 伙伴把试点推向生产。与 OpenAI 互为镜像。','Claude API and Claude Code capture developers and technical teams first; enterprise direct sales, the three hyperscalers, and consulting/SI partners then push pilots into production. The mirror image of OpenAI.'],
+ icp:['软件工程、AI 原生产品团队（如 Cursor）、技术密集和受监管企业；用户是开发者与知识工作者，买方多为 CTO/CIO、平台工程、安全与业务转型负责人。','Software engineering, AI-native product teams (e.g., Cursor), and technology-dense or regulated enterprises; users are developers and knowledge workers, buyers are mostly CTO/CIO, platform engineering, security, and transformation leads.'],
+ mkt:['模型与 Claude Code 的开发者口碑（编码能力）是最强获客渠道；技术内容和基准建立拉力；AWS/GCP/Microsoft 与全球咨询公司提供共销、认证、交付和本地覆盖。','Developer word of mouth around the models and Claude Code (coding strength) is the strongest channel; technical content and benchmarks build pull; AWS/GCP/Microsoft and global consultancies add co-sell, certification, delivery, and local coverage.'],
+ sell:['API 自助 + 企业直销 + Claude Partner Network（2026.3 推出，首期 $100M：伙伴培训、联合市场开发、deal protection）。','Self-serve API + enterprise direct sales + the Claude Partner Network (launched Mar 2026 with an initial $100M for partner training, joint market development, and deal protection).'],
+ steps:[['开发者自助使用 API/Claude Code','在真实代码或业务流程中形成生产候选','销售或伙伴完成用例和架构 scoping','安全、合规、云与容量设计','生产部署、commit、伙伴交付与扩张'],
+        ['Developers self-serve on the API / Claude Code','Production candidates emerge in real code or workflows','Sales or partners scope the use case and architecture','Security, compliance, cloud, and capacity design','Production deployment, commits, partner delivery, expansion']],
+ delivery:['API 原型数天；企业工作区约 2–8 周；复杂生产系统经伙伴通常 4–12 周或更久（估算）。','API prototypes in days; enterprise workspaces in ~2–8 weeks; complex production systems via partners typically 4–12+ weeks (est.).'],
+ comm:['API 按 token 分层、Team 按席位、Enterprise 定制；伙伴计划提供联合营销与认证。','Tiered per-token API, per-seat Team, custom Enterprise; the partner program adds co-marketing and certification.'],
+ lesson:['当企业交付需求大于厂商自身产能时，伙伴生态不是辅助渠道，而是产能模型。',"When enterprise delivery demand exceeds the vendor's own capacity, the partner ecosystem isn't a side channel — it's the capacity model."],
+ src:[[['Enterprise 计划','Enterprise plan'],'https://support.anthropic.com/en/articles/9797531-what-is-the-claude-enterprise-plan'],[['Claude Partner Network','Claude Partner Network'],'https://www.anthropic.com/news/claude-partner-network'],[['伙伴交付分层','Partner services track'],'https://www.anthropic.com/news/services-track-partner-hub']]},
+{name:'Corgi',sales:2.1,del:1.5,
+ track:['AI 原生保险（全栈承保）','AI-native insurance (full-stack underwriting)'],
+ arch:['嵌入式渠道 + 数字直销','Embedded channels + digital direct'],
+ conf:['高置信度｜官方自助与伙伴流程','High confidence | official self-serve and partner flows'],
+ scale:['40,000+ 活跃初创客户、覆盖美国 49 州、流失率 <1%；估值数周内 $1.3B → $2.6B（2026.5）；累计融资 $378M','40,000+ active startup customers across 49 US states, churn <1%; valuation doubled from $1.3B to $2.6B within weeks (May 2026); $378M raised'],
+ thesis:['把保险购买压缩成分钟级自助，同时让 VC、银行、加速器、平台和服务商用联合品牌页面把创业公司送进漏斗。','Compress insurance buying into a minutes-long self-serve flow, while VCs, banks, accelerators, platforms, and service providers funnel startups in through co-branded pages.'],
+ icp:['美国科技初创公司的创始人、运营与财务负责人（客户如 Deel、Artisan）；渠道 ICP 是 VC、加速器、银行、创业者社区和服务平台。正扩展到货运等传统垂直。','Founders, ops, and finance leads at US tech startups (customers include Deel and Artisan); the channel ICP is VCs, accelerators, banks, founder communities, and service platforms. Expanding into trucking and other traditional verticals.'],
+ mkt:['创投与创业生态口碑（YC 背景）、伙伴专属折扣/联合品牌页面和客户推荐；"当天拿到保单"本身就是最强转化信息。','Startup-ecosystem word of mouth (YC roots), partner-exclusive discounts and co-branded pages, customer referrals; "covered the same day" is itself the strongest conversion message.'],
+ sell:['线上自助投保为主（速度即卖点）+ 嵌入式分销：与律所、cap table 平台、云市场 API 集成；还让客户（如 Deel）向其终端用户转售保险。无传统保险经纪式人海销售。','Mostly online self-serve (speed is the pitch) plus embedded distribution: API integrations with law firms, cap-table platforms, and cloud marketplaces; customers like Deel resell insurance to their own users. No broker-style salesforce.'],
+ steps:[['从伙伴链接或官网进入','在线填写公司与风险信息','即时报价并自助绑定，或预约专家','完成支付与保单文件','续保、追加险种和理赔支持'],
+        ['Arrive via a partner link or the website','Enter company and risk details online','Instant quote — bind self-serve or book an expert','Payment and policy documents','Renewals, added lines, claims support']],
+ delivery:['官方称报价数分钟、多数团队同日获得保障；伙伴页面在介绍后数日上线；复杂险种转人工。','Quotes in minutes per the company, with most teams covered the same day; partner pages go live within days of an intro; complex lines route to a human.'],
+ comm:['保险保费与承保利润（全栈承保），不是 SaaS 席位；伙伴项目免费，靠分发与承保转化变现。','Premiums and underwriting profit (full-stack carrier), not SaaS seats; the partner program is free and monetizes through distribution and conversion.'],
+ lesson:['嵌入式 GTM 的本质是借用"最接近购买触发点"的渠道，而不是单纯买流量。','Embedded GTM is about borrowing the channel closest to the purchase trigger — not just buying traffic.'],
+ src:[[['自助投保','Self-serve quoting'],'https://www.corgi.insure/'],[['伙伴流程','Partner program'],'https://www.corgi.insure/partnerships']]},
+{name:'Harvey',sales:4.8,del:4.7,
+ track:['法律 AI','Legal AI'],
+ arch:['垂直高触达企业直销','Vertical high-touch enterprise'],
+ conf:['高置信度｜官方客户、角色与实施案例','High confidence | official customers, roles, implementation cases'],
+ scale:['ARR 约 $300M（2026.5）；1,500+ 客户、142,000+ 律师、60+ 国家；Am Law 100 的 50%；估值 $11B（2026.3）','~$300M ARR (May 2026); 1,500+ customers, 142,000+ lawyers, 60+ countries; 50% of the Am Law 100; $11B valuation (Mar 2026)'],
+ thesis:['用头部律所与企业法务建立行业信任，由 AE + 前律师组成的 Legal Engineering 完成发现、pilot、工作流和采用扩张。','Build industry trust through top law firms and corporate legal, with AE + ex-lawyer Legal Engineering pods running discovery, pilots, workflows, and adoption expansion.'],
+ icp:['大型律所、企业法务和专业服务团队（含 50 家资管机构）；买方包括管理合伙人、GC、CIO/创新、知识管理、安全与采购，用户是律师和专业人员。','Large law firms, in-house legal, and professional-services teams (plus 50 asset managers); buyers include managing partners, GCs, CIO/innovation, knowledge management, security, and procurement; users are lawyers and professionals.'],
+ mkt:['灯塔客户策略（早期精英律所 + OpenAI 背书）、行业口碑、案例结果和法律专业可信度；没有面向个人的自助入口，客户证言承担关键的风险消除。','A lighthouse-customer strategy (early elite firms plus the OpenAI association), industry word of mouth, case results, and legal-domain credibility; no individual self-serve tier — customer testimony does the de-risking.'],
+ sell:['纯 enterprise sales：定制合同、席位最低承诺、高触达 POC；销售周期 6 个月+；从律所延伸到企业法务和资管。','Pure enterprise sales: custom contracts, seat minimums, high-touch POCs; 6+ month cycles; expanding from firms into in-house legal and asset managers.'],
+ steps:[['高管与业务 discovery','按业务组识别高价值用例','安全、隐私、法律与采购','Legal Engineer 用真实材料做 pilot','以质量、采用和时间节省形成商业论证','合同、培训、工作流与全所扩张'],
+        ['Executive and practice-level discovery','Identify high-value use cases per practice group','Security, privacy, legal, procurement','A Legal Engineer pilots on real matters','Build the business case on quality, adoption, time saved','Contract, training, workflows, firmwide rollout']],
+ delivery:['小 pilot 约 4–12 周、完整企业流程 3–12 个月（行业估算）；CMS 公开案例：300 名律师、12 个月 pilot 后全所推广。详见"Harvey 交付之谜"标签页。','Small pilots ~4–12 weeks; full enterprise cycles 3–12 months (industry est.); CMS\'s public case: 300 lawyers and a 12-month pilot before firmwide rollout. See the "Harvey Delivery Question" tab.'],
+ comm:['企业定制合同与席位/使用安排；公开统一价格有限（二手估算 $1,000–2,000/席位/月，不作结论）。','Custom enterprise contracts with seat/usage terms; little public pricing (secondhand estimates of $1,000–2,000/seat/month, not treated as conclusive).'],
+ lesson:['Harvey 卖的不是"一个聊天框"，而是可信的法律工作方式改变；规模瓶颈是领域交付和客户变革，而非获客。',"Harvey isn't selling a chat box — it's selling a credible change in how legal work gets done. The scaling bottleneck is domain delivery and client change management, not acquisition."],
+ src:[[['Legal Engineer 职责','Legal Engineer role'],'https://www.harvey.ai/blog/day-in-the-life-legal-engineer'],[['CMS 实施','CMS implementation'],'https://www.harvey.ai/customers/cms'],[['客户与采用数据','Customers & adoption'],'https://www.harvey.ai/customers']]},
+{name:'Legora',sales:4.7,del:4.8,
+ track:['法律 AI（欧洲起家，挑战 Harvey）','Legal AI (European challenger to Harvey)'],
+ arch:['共创式垂直企业销售','Co-creation vertical enterprise'],
+ conf:['高置信度｜官方部署与客户案例','High confidence | official deployments and customer cases'],
+ scale:['ARR $100M+（GA 后 18 个月）；1,000+ 客户（White & Case、Linklaters、Barclays 法务）；Series D $550M、估值 $5.55B（2026.4）','$100M+ ARR within 18 months of GA; 1,000+ customers (White & Case, Linklaters, Barclays legal); $550M Series D at $5.55B (Apr 2026)'],
+ thesis:['与律所业务组进行结构化、hands-on pilot，把"共同实施与响应速度"本身做成差异化，再从业务组扩到全所。','Run structured, hands-on pilots with practice groups and make co-implementation and responsiveness the differentiator, then expand from practice group to firmwide.'],
+ icp:['全球律所与企业法务；买方为律所管理层、创新/Legal Tech、IT/安全和业务组负责人，用户是律师。','Global law firms and corporate legal; buyers are firm management, innovation/legal-tech, IT/security, and practice-group leads; users are lawyers.'],
+ mkt:['客户故事、行业品牌和本地市场团队（纽约/丹佛/休斯顿/芝加哥办公室）；头部客户背书消除保守行业的风险感知；罕见的大众品牌营销（Jude Law 广告）。','Customer stories, industry brand, and local market teams (NY/Denver/Houston/Chicago offices); top-client endorsements defuse risk perception in a conservative industry; unusually, consumer-style brand marketing (the Jude Law campaign).'],
+ sell:['企业直销 + 客户成功深度陪跑；挑战者定位：价格低于 Harvey、条款更灵活；本地办公室驱动区域扩张。','Enterprise direct sales plus deep customer-success partnership; challenger positioning — priced below Harvey with more flexible terms; local offices drive regional expansion.'],
+ steps:[['业务与管理层发现','结构化评估多个平台','业务组用真实事项 hands-on pilot','直接培训、识别工作流与建立信任','安全/采购后企业部署','跨办公室和业务组扩张'],
+        ['Practice and management discovery','Structured evaluation against competing platforms','Hands-on pilot with real matters in a practice group','Direct training, workflow discovery, trust building','Security and procurement, then enterprise deployment','Expand across offices and practice groups']],
+ delivery:['公开案例未给统一周期；小 pilot 约 4–12 周、全所部署 3–12 个月（估算）。关键是直接培训和实践区内工作流。','No uniform public timeline; small pilots ~4–12 weeks and firmwide deployment 3–12 months is a reasonable estimate. The crux is direct training and in-practice workflows.'],
+ comm:['企业席位/定制合同，公开统一价格有限。','Enterprise seats and custom contracts; little public pricing.'],
+ lesson:['挑战者不必只靠低价；在专业服务市场，"实施体验"可以直接决定选型。',"A challenger doesn't have to win on price alone; in professional services, the implementation experience itself can decide the selection."],
+ src:[[['Dua pilot→部署','Dua pilot → rollout'],'https://legora.com/newsroom/dua-associates-rolls-out-legora-across-its-offices-and-practice-areas-in-india'],[['客户案例','Customer cases'],'https://legora.com/customers'],[['BCLP 选型因素','BCLP selection factors'],'https://legora.com/newsroom/legora-selected-by-bclp-as-firmwide-ai-platform-provider']]},
+{name:'Fireworks AI',sales:2.9,del:3.2,
+ track:['AI 推理平台（开源模型 serving）','AI inference platform (open-model serving)'],
+ arch:['开发者自助 → 生产销售','Developer self-serve → production sales'],
+ conf:['高置信度｜官方定价、文档与案例','High confidence | official pricing, docs, and cases'],
+ scale:['ARR 约 $800M（2026.5）；10,000+ 客户；日处理 10T+ tokens；洽谈 $15B 估值新融资','~$800M ARR (May 2026); 10,000+ customers; 10T+ tokens/day; in talks at a $15B valuation'],
+ thesis:['让开发者几秒钟开始按 token 试用，用速度/成本/模型能力 benchmark 形成拉力；生产流量再升级到专用部署和企业支持。','Let developers start paying per token in seconds; speed, cost, and capability benchmarks create the pull, and production traffic upgrades into dedicated deployments and enterprise support.'],
+ icp:['AI 原生公司、开发者工具、消费应用与大型科技产品的 ML/AI 平台团队（Cursor、Perplexity、Notion、Uber、DoorDash、Shopify）；买方是工程负责人、AI 平台、基础设施和采购。','ML/AI platform teams at AI-native companies, dev tools, consumer apps, and big-tech products (Cursor, Perplexity, Notion, Uber, DoorDash, Shopify); buyers are engineering leads, AI platform, infrastructure, and procurement.'],
+ mkt:['模型发布、性能/成本内容、文档和免费 credits；头部客户案例为生产可信度背书；上架 Microsoft Foundry/Azure 云市场。','Model releases, performance and cost content, docs, and free credits; marquee customer cases vouch for production credibility; listed on the Microsoft Foundry/Azure marketplace.'],
+ sell:['自助 API 为主 + 随规模扩建企业 GTM 团队；云市场渠道。','Self-serve API first, with an enterprise GTM team building out as scale grows; cloud marketplace channels.'],
+ steps:[['自助 API 与免费额度','用真实 workload benchmark 质量/延迟/成本','进入生产并提升速率/稳定性要求','升级 On-demand 或联系企业销售','专用容量、微调、支持与长期扩张'],
+        ['Self-serve API and free credits','Benchmark quality/latency/cost on a real workload','Go to production; rate and reliability needs rise','Upgrade to On-demand or contact enterprise sales','Dedicated capacity, fine-tuning, support, long-term expansion']],
+ delivery:['Serverless 数分钟；专用部署数小时到数天；复杂迁移和企业生产优化约 1–6 周（估算）。','Serverless in minutes; dedicated deployments in hours to days; complex migrations and production tuning ~1–6 weeks (est.).'],
+ comm:['Serverless 按 token；On-demand 按 GPU 时长（H100 约 $6.5/hr）；Enterprise 定制安全、可靠性与容量。','Serverless per-token; On-demand per GPU-hour (H100 ~$6.5/hr); Enterprise custom for security, reliability, and capacity.'],
+ lesson:['开发者销售的"demo"是 benchmark；销售介入的时点是生产风险和容量，而不是第一次 API 调用。','In developer sales the demo is the benchmark; sales enters at production risk and capacity, not at the first API call.'],
+ src:[[['定价与自助入口','Pricing & self-serve'],'https://fireworks.ai/pricing'],[['客户案例','Customer cases'],'https://fireworks.ai/customers'],[['Serverless→专用','Serverless → dedicated'],'https://docs.fireworks.ai/serverless/overview']]},
+{name:'Together AI',sales:3.3,del:3.6,
+ track:['开源模型云（推理+训练+GPU 集群）','Open-source model cloud (inference + training + GPU clusters)'],
+ arch:['开发者云 → 算力承诺','Developer cloud → compute commitments'],
+ conf:['高置信度｜官方文档与企业平台','High confidence | official docs and enterprise platform'],
+ scale:['年 bookings $1.15B+；Series C $800M、估值 $8.3B（2026.7）；锁定 500MW+ 算力承诺','$1.15B+ annual bookings; $800M Series C at $8.3B (Jul 2026); 500MW+ of committed compute'],
+ thesis:['用开源模型、研究声誉和低门槛 serverless 获取开发者，再把高利用率客户升级到单租户端点、预留 GPU、VPC 或本地部署。','Acquire developers with open models, research reputation, and low-friction serverless; upgrade high-utilization customers to single-tenant endpoints, reserved GPUs, VPC, or on-prem.'],
+ icp:['使用开放权重或自有模型的 AI 初创与企业 ML 团队；买方是 AI 平台、基础设施、CTO 与采购，关注成本（比闭源 API 省 6–60 倍）、性能、隐私和容量。','AI startups and enterprise ML teams running open-weight or custom models; buyers are AI platform, infrastructure, CTO, and procurement — focused on cost (6–60x cheaper than closed APIs), performance, privacy, and capacity.'],
+ mkt:['研究/开源贡献、开发者文档、性能和成本对比、生产客户案例；OpenAI 兼容 API 降低迁移成本。','Research and open-source contributions, developer docs, performance and cost comparisons, production customer cases; the OpenAI-compatible API lowers switching costs.'],
+ sell:['自助 API + 大客户直销签月度/长期算力承诺合同；开源社区营销。','Self-serve API plus direct sales for monthly and long-term capacity commitments; open-source community marketing.'],
+ steps:[['Serverless 自助验证','观察 token 规模和单位经济','迁移 On-demand Dedicated','高规模客户联系销售锁定容量','VPC/on-prem、SLA 和持续优化'],
+        ['Validate on self-serve serverless','Watch token scale and unit economics','Move to On-demand Dedicated','At high scale, contact sales to lock in capacity','VPC/on-prem, SLAs, continuous optimization']],
+ delivery:['Serverless 数分钟；专用端点自助；VPC/on-prem 或大额预留通常 2–8 周以上（估算）。','Serverless in minutes; dedicated endpoints self-serve; VPC/on-prem or large reservations typically 2–8+ weeks (est.).'],
+ comm:['Serverless 按 token；Dedicated 按时间/硬件；预留、集群与企业部署通过销售。','Serverless per-token; Dedicated by time and hardware; reservations, clusters, and enterprise deployments via sales.'],
+ lesson:['云基础设施的 land-and-expand 由利用率触发：共享资源的成本或稳定性不再合适时，销售才真正介入。','Infrastructure land-and-expand is triggered by utilization: sales only truly enters when shared-resource cost or stability stops working.'],
+ src:[[['推理计费','Inference pricing'],'https://docs.together.ai/docs/inference/pricing'],[['Dedicated 升级路径','Dedicated upgrade path'],'https://www.together.ai/blog/on-demand-dedicated-endpoints'],[['企业部署模式','Enterprise platform'],'https://www.together.ai/blog/introducing-the-together-enterprise-platform']]},
+{name:'Baseten',sales:3.6,del:4.0,
+ track:['关键任务推理（mission-critical inference）','Mission-critical inference'],
+ arch:['PLG + 工程辅助销售','PLG + engineer-assisted sales'],
+ conf:['高置信度｜官方产品、定价与客户','High confidence | official product, pricing, and customers'],
+ scale:['ARR $600M（2026.3，同比 +1,900%）；约 1,000 付费客户（Writer、Descript、Patreon）；日 10 亿+ 推理调用；融资 $1.5B、估值 $11–13B','$600M ARR (Mar 2026, +1,900% YoY); ~1,000 paying customers (Writer, Descript, Patreon); 1B+ inference calls/day; raised $1.5B at $11–13B'],
+ thesis:['以 Model API 和 Basic 自助切入，用 Forward Deployed Engineers 帮生产客户优化模型、SLA、跨云与 BYOC——卖的是关键任务可靠性，不拼价格。','Land with the Model API and self-serve Basic, then have Forward Deployed Engineers help production customers with optimization, SLAs, multi-cloud, and BYOC — selling mission-critical reliability, not price.'],
+ icp:['高并发、低延迟或高可靠 AI 产品团队，尤其合规敏感行业（HIPAA 医疗如 Picnic Health、金融 NLP）+ 高增长 AI 原生应用；买方是 CTO、AI/ML 平台和基础设施团队。','Teams running high-concurrency, low-latency, or high-reliability AI products — especially regulated industries (HIPAA healthcare like Picnic Health, financial NLP) plus fast-growing AI-natives; buyers are CTOs and AI/ML platform teams.'],
+ mkt:['性能工程内容、客户量化结果和开发者体验；"Talk to an engineer"把技术可信度直接放进销售入口；嵌入式合作扩 GTM（Benchling Inference 触达生物科技）；AWS 战略合作协议。','Performance-engineering content, quantified customer results, developer experience; "Talk to an engineer" puts technical credibility right in the funnel; embedded partnerships extend GTM (Benchling Inference reaching biotech); an AWS Strategic Collaboration Agreement.'],
+ sell:['双轨：Basic 自助（PLG）→ Pro/Enterprise 销售主导 + BYOC；合规认证（SOC 2、HIPAA）敲开受监管行业。','Dual-track: self-serve Basic (PLG) → sales-led Pro/Enterprise plus BYOC; compliance certifications (SOC 2, HIPAA) open regulated industries.'],
+ steps:[['自助 Model API/Basic 原型','真实流量 benchmark 与成本模型','工程师共同优化模型与部署','升级 Pro/Enterprise、专用/BYOC/混合云','SLA、全球区域和持续容量扩张'],
+        ['Prototype on the self-serve Model API/Basic','Benchmark on real traffic, build the cost model','Co-optimize models and deployment with engineers','Upgrade to Pro/Enterprise, dedicated/BYOC/hybrid','SLAs, global regions, ongoing capacity expansion']],
+ delivery:['原型数分钟；标准生产 1–4 周；自托管/混合云、深度优化 2–8 周或更久（估算）。','Prototypes in minutes; standard production 1–4 weeks; self-hosted/hybrid and deep optimization 2–8+ weeks (est.).'],
+ comm:['Basic 按量（分钟+token）；Pro/Enterprise 年度 commit 与定制 SLA；可部署在 Baseten、客户 VPC 或混合环境。','Basic usage-based (per-minute + per-token); Pro/Enterprise annual commits with custom SLAs; deployable on Baseten, customer VPC, or hybrid.'],
+ lesson:['当产品承诺是 uptime、延迟和成本，Forward Deployed Engineering 本身就是销售与留存机制。','When the promise is uptime, latency, and cost, Forward Deployed Engineering is itself the sales and retention mechanism.'],
+ src:[[['定价与分层','Pricing & tiers'],'https://www.baseten.co/pricing'],[['客户案例','Customer cases'],'https://www.baseten.co/resources/customers/'],[['企业与 FDE','Enterprise & FDE'],'https://www.baseten.co/enterprise/']]},
+{name:'Scale AI',sales:4.9,del:5.0,
+ track:['数据标注 → 企业/政府 AI 应用','Data labeling → enterprise/government AI applications'],
+ arch:['解决方案式企业 / 政府','Solution-led enterprise / government'],
+ conf:['高置信度｜官方企业与政府材料','High confidence | official enterprise and government materials'],
+ scale:['2026 营收预计约 $2B；Meta 持股 49%、保底 $450M/年；DoD Thunderforge $500M、入选 Golden Dome；400+ 企业客户（EY、Mayo Clinic）；估值 $29B','2026 revenue projected ~$2B; Meta owns 49% with a $450M/yr floor; $500M DoD Thunderforge; selected for Golden Dome; 400+ enterprise clients (EY, Mayo Clinic); $29B valuation'],
+ thesis:['围绕数据、评估和 agent 系统进行高管级咨询式销售，用工程团队把 pilot 做到生产；政府侧走正式采购、合同和长期运营。前沿实验室客户因中立性问题流失后，重心转向企业与政府。','Executive-level consultative selling around data, evals, and agent systems, with engineering teams carrying pilots to production; the government side runs on formal procurement, contracts, and long-term operations. After frontier labs churned over neutrality concerns, the pivot is to enterprise and government.'],
+ icp:['大型企业、政府/国防与高风险机构、车企（自动驾驶数据）；买方是高管、AI Office、CIO/CTO、任务负责人、数据/安全和政府采购。','Large enterprises, government/defense and other high-stakes institutions, automotive (AV data); buyers are executives, AI offices, CIO/CTO, mission owners, data/security, and government procurement.'],
+ mkt:['行业研究、政策与公共部门思想领导、客户结果和顾问式内容；大单依赖高层关系、技术证明与采购资质。','Industry research, policy and public-sector thought leadership, customer results, and advisory content; big deals ride on senior relationships, technical proof, and procurement credentials.'],
+ sell:['大客户直销 + 政府采购/国防合同投标；解决方案式销售，部署 forward-deployed 工程师。','Direct sales to major accounts plus government procurement and defense bids; solution selling with forward-deployed engineers.'],
+ steps:[['高管/任务 discovery','数据准备度与用例优先级','评估标准、系统设计和商业范围','pilot 与人类反馈闭环','安全、合同、生产部署','持续运营、评估和扩用例'],
+        ['Executive/mission discovery','Data readiness and use-case prioritization','Eval criteria, system design, commercial scope','Pilot with human-feedback loops','Security, contracting, production deployment','Ongoing operations, evals, more use cases']],
+ delivery:['企业页给出"6 周到生产"的代表性口径；政府采购或复杂系统通常数月到一年以上。','The enterprise page cites "6 weeks to production" as representative; government procurement or complex systems usually run months to a year or more.'],
+ comm:['项目/合同、平台与长期运营组合；政府框架合同和大型企业方案，不是自助席位模式。','A mix of projects/contracts, platform, and long-run operations; government framework contracts and large enterprise programs — not self-serve seats.'],
+ lesson:['对高风险客户，交付不是售后，而是售前可信度的一部分。规模上限取决于工程交付和采购周期。',"For high-stakes customers, delivery isn't post-sales — it's part of pre-sales credibility. The ceiling is engineering delivery and procurement cycles."],
+ src:[[['企业解决方案','Enterprise solutions'],'https://scale.com/enterprise'],[['全球公共部门','Global public sector'],'https://scale.com/global-public-sector'],[['政府部署方法','Government deployment methods'],'https://scale.com/blog/deployment-lessons-from-global-governments']]},
+{name:'Surge AI',sales:4.2,del:4.6,
+ track:['高端 RLHF / 人类反馈数据','Premium RLHF / human-feedback data'],
+ arch:['质量口碑 + 托管服务','Quality reputation + managed services'],
+ conf:['中等置信度｜产品/客户官方；"无销售团队"来自管理层访谈与二手报道','Medium confidence | product/customers official; "no sales team" from leadership interviews and secondhand reports'],
+ scale:['收入 $1B+、仅 110 名员工、零外部融资（2024 年 $1.2B 已超 Scale）','$1B+ revenue with just 110 employees, fully bootstrapped ($1.2B in 2024 — already ahead of Scale)'],
+ thesis:['面向少数前沿实验室，以高质量人类数据、技术信誉和老客户复购形成口碑；销售动作与数据方案设计、质量控制高度重合。溢价定位："最贵但最好"。','Serve a handful of frontier labs with premium human data; reputation compounds through quality, technical credibility, and repeat business. Selling and solution design are the same activity. Premium positioning: most expensive, and worth it.'],
+ icp:['前沿模型实验室、研究机构和大型科技公司的 post-training、评估与安全团队（OpenAI、Google、Anthropic、Meta、美国空军）；买方数量少、技术强、客单大。中立无大厂持股——恰好承接 Scale 被 Meta 入股后流失的客户。','Post-training, evals, and safety teams at frontier labs, research institutes, and big tech (OpenAI, Google, Anthropic, Meta, the US Air Force); few buyers, deeply technical, huge contracts. Neutral with no Big Tech ownership — perfectly placed to absorb customers leaving Scale after the Meta stake.'],
+ mkt:['研究者推荐、客户结果和创始人（前 Google/Meta 工程师）技术信誉；公开品牌营销极少；需求方主动找上门。',"Researcher referrals, customer results, and the founder's (ex-Google/Meta engineer) technical credibility; minimal public marketing; demand comes inbound."],
+ sell:['无独立销售部门；创始人关系 + 客户转介绍。注意："零销售"不等于没有方案设计与客户关系管理——这些工作与交付合一。','No standalone sales department; founder relationships plus referrals. Note: "zero sales" doesn\'t mean no solution design or account management — that work is fused with delivery.'],
+ steps:[['研究/数据负责人提出能力缺口','共同定义 rubric、样本与难度','小规模样本或付费 pilot','组建领域专家与 QC 管线','持续交付、反馈迭代和扩大数据范围'],
+        ['A research/data lead surfaces a capability gap','Jointly define rubrics, samples, difficulty','Small sample or paid pilot','Stand up domain-expert and QC pipelines','Continuous delivery, feedback loops, expanding scope']],
+ delivery:['样本与 pilot 数天到数周；大项目是持续 managed service。真正时长由专家招募、任务难度和质量门槛决定。','Samples and pilots in days to weeks; large projects are ongoing managed services. Real timelines are set by expert recruiting, task difficulty, and quality bars.'],
+ comm:['按项目、规模、复杂度与专家成本定制（溢价高于同行）；价值锚点是模型能力提升，不是标注席位。','Custom pricing by project, scale, complexity, and expert cost (a premium to peers); the value anchor is model capability gains, not annotation seats.'],
+ lesson:['买家极少且高度专业时，传统 SDR 规模化没有意义；质量口碑 + 中立性就是销售。','When buyers are few and expert, scaling SDRs is pointless; quality reputation plus neutrality is the sales motion.'],
+ src:[[['客户与托管服务','Customers & managed services'],'https://www.surgehq.ai/customers'],[['产品范围','Product scope'],'https://surgehq.ai/products'],[['无销售团队访谈摘要','"No sales team" interview summary'],'https://app.dealroom.co/news/note/surge-ai-scaling-to-1bn-in-revenue-with-no-funding']]},
+{name:'Mercor',sales:4.4,del:4.7,
+ track:['专家人才市场 → AI 训练数据 / RL 环境','Expert talent marketplace → AI training data / RL environments'],
+ arch:['双边专家网络 + 企业服务','Two-sided expert network + enterprise services'],
+ conf:['高置信度｜官方研究、企业产品与招聘','High confidence | official research, enterprise products, and job postings'],
+ scale:['ARR $1.5B（2026.5，2025 年底 $760M）；30,000+ 签约专家、日支付 $150 万+；估值 $10B+（2025.10）；20 个月从 $1M 到 $1B ARR','$1.5B ARR (May 2026, vs $760M end-2025); 30,000+ contractors paid $1.5M+/day; $10B+ valuation (Oct 2025); $1M → $1B ARR in 20 months'],
+ thesis:['供给侧用 AI 评估和高薪项目规模化吸引专家（"下月要 50 个儿科医生标医疗数据"→猎聘/签约/支付/项管全包）；需求侧服务前沿实验室，并正把能力扩到企业 agent、数据授权与正式 AE/交付组织。','Scale the supply side with AI-driven vetting and well-paid projects ("need 50 pediatricians next month to label medical data" → sourcing, contracting, payments, and PM as a service); serve frontier labs on the demand side while expanding into enterprise agents, data licensing, and a formal AE/delivery org.'],
+ icp:['需求侧：前沿 AI labs（OpenAI、Anthropic、Meta）、Mag 7 与企业 AI 团队；供给侧：医生、律师、工程师、金融等领域专家；新企业产品面向 Fortune 500 AI/运营负责人。买家集中但客单极大。','Demand side: frontier AI labs (OpenAI, Anthropic, Meta), the Mag 7, and enterprise AI teams; supply side: doctors, lawyers, engineers, finance, and other domain experts; new enterprise products target Fortune 500 AI/ops leaders. Few buyers, very large contracts.'],
+ mkt:['专家岗位、薪酬与推荐构成供给增长飞轮；研究 benchmark 和 lab 客户信誉获取需求。','Expert jobs, pay, and referrals power the supply flywheel; research benchmarks and lab-customer credibility bring the demand.'],
+ sell:['创始人主导大客户直销起家（三位 Thiel Fellows）；已在专业化——招聘 Founding AE 与 Engagement Manager，不能再写成"无销售组织"。','Founder-led major-account sales to start (three Thiel Fellows); now professionalizing — hiring Founding AEs and Engagement Managers, so "no sales org" is no longer accurate.'],
+ steps:[['明确模型能力/专家或企业 agent 需求','匹配专家、样本数据或 workflow discovery','评估/小 pilot','签约并规模化专家、项目和质量运营','扩到 RL 环境、benchmark、企业 agent 或数据授权'],
+        ['Define the model-capability, expert, or enterprise-agent need','Match experts, sample data, or workflow discovery','Evaluation / small pilot','Contract, then scale experts, projects, quality ops','Expand into RL environments, benchmarks, enterprise agents, data licensing']],
+ delivery:['专家项目数天到数周启动、持续数周/月；Mercor Enterprise 官方称 discovery 到生产 agent 约 4–6 周。','Expert projects start in days to weeks and run for weeks or months; Mercor Enterprise officially cites ~4–6 weeks from discovery to a production agent.'],
+ comm:['专家工时/项目计费 + 数据与 benchmark 许可 + 企业 agent 服务；不是单一 marketplace 抽成。','Expert hours and projects + data and benchmark licensing + enterprise agent services; not a single marketplace take rate.'],
+ lesson:['早期创始人销售可以拿下集中大客户；真正壁垒是专家供给、质量体系和工作流数据。','Founder selling can win concentrated mega-accounts early; the real moat is expert supply, quality systems, and workflow data.'],
+ src:[[['前沿数据与客户','Frontier data & customers'],'https://www.mercor.com/research/'],[['企业服务','Enterprise services'],'https://www.mercor.com/enterprise/'],[['4–6 周交付口径','4–6 week delivery claim'],'https://www.mercor.com/partner/'],[['AE/交付岗位','AE/delivery roles'],'https://www.mercor.com/careers/']]}
+];
+
+const motions = [
+ {t:['消费/工作流 PLG','Consumer / workflow PLG'],c:'Genspark · Manus · Perplexity',
+  p:[['免费/病毒传播','个人价值','Team 自助','企业治理','席位扩张'],['Free / viral spread','Individual value','Self-serve Team','Enterprise governance','Seat expansion']]},
+ {t:['开发者 → 企业','Developer → enterprise'],c:'OpenAI API · Anthropic · Fireworks · Together · Baseten',
+  p:[['文档/credits','原型','benchmark','生产触发','专用容量/SLA','commit'],['Docs / credits','Prototype','Benchmark','Production trigger','Dedicated capacity / SLA','Commit']]},
+ {t:['垂直高触达','Vertical high-touch'],c:'Harvey · Legora',
+  p:[['灯塔客户','领域 discovery','安全采购','真实 pilot','培训采用','全所扩张'],['Lighthouse customers','Domain discovery','Security & procurement','Pilot on real work','Training & adoption','Firmwide expansion']]},
+ {t:['嵌入式渠道','Embedded channels'],c:'Corgi · Genspark/Manus (partners)',
+  p:[['伙伴入口','联合方案','客户触发','自助/导流','分成或订阅'],['Partner entry point','Joint offering','Customer trigger','Self-serve / referral','Rev share or subscription']]},
+ {t:['方案/托管服务','Solutions / managed services'],c:'Scale · Surge · Mercor',
+  p:[['高层/研究需求','范围与 rubric','付费 pilot','专家/工程交付','持续 QC','框架扩张'],['Executive / research need','Scope & rubrics','Paid pilot','Expert / engineering delivery','Ongoing QC','Framework expansion']]}
+];
+
+const archetypes = [
+ [['消费级 PLG / 病毒式增长','Consumer PLG / viral growth'],'Genspark、Manus、Perplexity',
+  ['产品自传播获取海量个人用户 → 免费转付费 → 个人把产品带进公司 → 轻量企业销售收割自下而上的需求','The product spreads itself to masses of individual users → free-to-paid conversion → individuals carry it into their companies → a lightweight enterprise sales layer harvests the bottom-up demand'],
+  ['产品可"晒"、上手 <5 分钟、单人可感知价值','The product is shareable, time-to-value is under 5 minutes, and one person can feel the value alone'],
+  ['获客易流失也快；企业化时补销售/合规能力是坎；分发合作烧钱换增长','Easy come, easy go on retention; building sales and compliance muscle for the enterprise leap is hard; distribution deals burn cash for growth']],
+ [['开发者自助 + 企业升级','Developer self-serve + enterprise upsell'],'Fireworks、Together、Baseten、OpenAI (API)、Anthropic (API)',
+  ['开发者周末试 API → 半年后左右企业采购决策；自助走长尾，销售只做大 commit；云市场是放大器','A developer tries the API on a weekend → shapes the enterprise procurement decision six months later; self-serve captures the long tail, sales only handles large commits; cloud marketplaces are the amplifier'],
+  ['按用量计费；API 质量/速度/价格可被开发者客观 benchmark','Usage-based pricing; API quality, speed, and price can be objectively benchmarked by developers'],
+  ['同质化价格战（推理是 race to the bottom）；大客户议价强；被云厂商夹击','Commoditized price wars (inference is a race to the bottom); strong buyer leverage from big accounts; squeezed by hyperscalers']],
+ [['垂直行业高触达直销','Vertical high-touch enterprise sales'],'Harvey、Legora、Scale',
+  ['灯塔客户建立行业信任 → 自上而下渗透 → 席位/合同扩张；周期 6 个月+，客单百万级；Legora 变体：低价+共创陪跑','Lighthouse customers establish industry trust → top-down penetration → seat and contract expansion; 6+ month cycles, seven-figure deals; the Legora variant: lower price plus co-creation partnership'],
+  ['行业保守、决策集中、合规敏感、支付能力强','Conservative industries with centralized decisions, compliance sensitivity, and strong willingness to pay'],
+  ['销售成本高、扩张靠堆人；头部客户集中；价格挤压','High cost of sale, growth scales with headcount; customer concentration; price compression']],
+ [['口碑/创始人驱动的服务型','Word-of-mouth / founder-led services'],'Surge AI、Mercor',
+  ['买家全球仅几十个（前沿实验室），传统销售无意义；靠质量口碑、创始人信誉和中立性赢单；供给侧（专家网络）是真壁垒','Only a few dozen buyers exist worldwide (frontier labs), so traditional selling is pointless; deals are won on quality reputation, founder credibility, and neutrality; the supply side (expert network) is the real moat'],
+  ['市场极度集中；质量差异可被客户直接感知；按项目付费','An extremely concentrated market; quality differences customers can directly perceive; project-based payment'],
+  ['客户集中度极高；实验室自建/内化；"中立性"既是资产也是变数','Extreme customer concentration; labs may in-source the work; neutrality is both an asset and a variable']],
+ [['嵌入式/生态分销','Embedded / ecosystem distribution'],'Corgi、Perplexity (distribution)、Baseten (Benchling)、Manus (Microsoft)',
+  ['把产品嵌进别人的工作流/平台，借合作方的客户关系获客，边际获客成本趋近于零','Embed the product into someone else\'s workflow or platform, borrowing the partner\'s customer relationships — marginal CAC approaches zero'],
+  ['产品可 API 化；合作方有互补客户群且不构成竞争','The product is API-able; the partner has a complementary customer base and isn\'t a competitor'],
+  ['依赖渠道方；分成/买量成本；渠道关系变动（如 Meta–Manus 被监管拆散）','Channel dependence; rev-share and paid-distribution costs; partner-relationship shocks (e.g., the regulator-forced Meta–Manus separation)']]
+];
+
+const L = {
+ dt: {zh:['客户画像','获客 / Marketing','怎么卖','成交步骤','交付与时间','商业模式','规模数据','关键判断','证据'],
+      en:['ICP','Marketing & acquisition','How they sell','Deal steps','Delivery & timeline','Business model','Scale','Key takeaway','Evidence']},
+ oneliner: {zh:'一句话：',en:'In one line: '},
+ axis: {zh:['自助 / 低触达','解决方案 / 高触达','高定制','即开即用'],
+        en:['Self-serve / low touch','Solution / high touch','Highly custom','Turnkey']},
+ skeleton: {zh:['触发需求','资格判断','用例与 ROI','安全 / 法务','试点','合同','上线','扩张'],
+            en:['Trigger demand','Qualify','Use case & ROI','Security / legal','Pilot','Contract','Go live','Expand']}
+};
+
+let lang = 0; // 0 zh, 1 en
+const pick = f => Array.isArray(f) ? f[lang] : f;
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');}
+
+// ---- glossary: [abbr, full form, Chinese meaning] ----
+const GLOSS = [
+ ['ACV','Annual Contract Value','年合同金额'],
+ ['AE','Account Executive','客户经理（负责成交的销售）'],
+ ['Am Law 100','The American Lawyer Top 100','美国律所营收百强榜'],
+ ['API','Application Programming Interface','应用程序接口'],
+ ['ARR','Annual Recurring Revenue','年度经常性收入'],
+ ['B2B','Business-to-Business','企业对企业（的业务/营销）'],
+ ['BYOC','Bring Your Own Cloud','自带云部署（部署在客户自己的云上）'],
+ ['CAC','Customer Acquisition Cost','获客成本'],
+ ['CIO','Chief Information Officer','首席信息官'],
+ ['CRO','Chief Revenue Officer','首席收入官'],
+ ['CS','Customer Success','客户成功（团队/职能）'],
+ ['CTO','Chief Technology Officer','首席技术官'],
+ ['CX','Customer Experience','客户体验'],
+ ['DMS','Document Management System','（律所）文档管理系统'],
+ ['DoD','U.S. Department of Defense','美国国防部'],
+ ['FDE','Forward Deployed Engineer','前置部署工程师（驻场解决客户问题的工程师）'],
+ ['GA','General Availability','正式发布/全面开放'],
+ ['GC','General Counsel','总法律顾问'],
+ ['GRR','Gross Revenue Retention','毛收入留存率（不含扩张的留存）'],
+ ['GTM','Go-To-Market','市场进入策略（如何获客、销售、交付）'],
+ ['HIPAA','Health Insurance Portability and Accountability Act','美国医疗信息隐私与安全法案'],
+ ['ICP','Ideal Customer Profile','理想客户画像'],
+ ['IT','Information Technology','信息技术（部门）'],
+ ['Mag 7','Magnificent Seven','美股七巨头（苹果、微软、谷歌、亚马逊、英伟达、Meta、特斯拉）'],
+ ['MAU','Monthly Active Users','月活跃用户'],
+ ['MQL','Marketing Qualified Lead','市场认定的合格线索'],
+ ['NRR','Net Revenue Retention','净收入留存率（含扩张，>100% 代表老客户越买越多）'],
+ ['PLG','Product-Led Growth','产品驱动增长（产品本身承担获客与转化）'],
+ ['POC','Proof of Concept','概念验证（小范围试用验证价值）'],
+ ['QC','Quality Control','质量控制'],
+ ['RevOps','Revenue Operations','收入运营（打通营销/销售/CS 的数据、流程与工具）'],
+ ['RLHF','Reinforcement Learning from Human Feedback','基于人类反馈的强化学习'],
+ ['RL','Reinforcement Learning','强化学习'],
+ ['ROI','Return on Investment','投资回报率'],
+ ['SaaS','Software as a Service','软件即服务（订阅制软件）'],
+ ['SCIM','System for Cross-domain Identity Management','跨域身份管理（企业用户账号自动同步标准）'],
+ ['SDK','Software Development Kit','软件开发工具包'],
+ ['SDR','Sales Development Representative','销售开发代表（负责外呼/线索开发）'],
+ ['SE','Sales Engineer','售前工程师'],
+ ['SI','System Integrator','系统集成商'],
+ ['SLA','Service Level Agreement','服务等级协议（对可用性/延迟等的承诺）'],
+ ['SMB','Small and Medium-sized Business','中小企业'],
+ ['SOC 2','Service Organization Control 2','服务组织控制审计标准（数据安全合规认证）'],
+ ['SSO','Single Sign-On','单点登录'],
+ ['VC','Venture Capital','风险投资（机构）'],
+ ['VPC','Virtual Private Cloud','虚拟私有云'],
+ ['YC','Y Combinator','美国头部创业孵化器']
+];
+const GLOSS_MAP = Object.fromEntries(GLOSS.map(g=>[g[0],g]));
+// longest-first so RLHF beats RL, SOC 2 beats SOC
+const GLOSS_RE = new RegExp('\\b(?:'+GLOSS.map(g=>g[0].replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).sort((a,b)=>b.length-a.length).join('|')+')\\b','g');
+
+function annotate(root){
+  if(!root) return;
+  const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,null);
+  const nodes=[];
+  let n; while(n=walker.nextNode()) nodes.push(n);
+  nodes.forEach(node=>{
+    const p=node.parentNode;
+    if(!p) return;
+    const tag=p.nodeName;
+    if(tag==='ABBR'||tag==='SCRIPT'||tag==='STYLE'||tag==='A'||tag==='OPTION') return;
+    const text=node.nodeValue;
+    if(!GLOSS_RE.test(text)){GLOSS_RE.lastIndex=0;return;}
+    GLOSS_RE.lastIndex=0;
+    const frag=document.createDocumentFragment();
+    let last=0,m2;
+    while((m2=GLOSS_RE.exec(text))!==null){
+      const g=GLOSS_MAP[m2[0]];
+      if(m2.index>last) frag.appendChild(document.createTextNode(text.slice(last,m2.index)));
+      const ab=document.createElement('abbr');
+      ab.title=g[1]+'｜'+g[2];
+      ab.textContent=m2[0];
+      ab.dataset.abbr=g[0];
+      frag.appendChild(ab);
+      last=m2.index+m2[0].length;
+    }
+    if(last<text.length) frag.appendChild(document.createTextNode(text.slice(last)));
+    GLOSS_RE.lastIndex=0;
+    p.replaceChild(frag,node);
+  });
+}
+
+// ---- tabs ----
+const tabs = document.getElementById('tabs');
+function showTab(name){
+  tabs.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', b.dataset.tab===name ? 'true':'false'));
+  document.querySelectorAll('section[data-panel]').forEach(s => s.hidden = s.dataset.panel !== name);
+}
+tabs.addEventListener('click', e => {
+  const btn = e.target.closest('button'); if(!btn) return;
+  showTab(btn.dataset.tab);
+});
+
+// ---- click an abbr anywhere -> jump to its glossary row ----
+const glossId = a => 'gloss-' + a.replace(/[^A-Za-z0-9]/g,'_');
+document.addEventListener('click', e => {
+  const ab = e.target.closest('abbr[data-abbr]'); if(!ab) return;
+  showTab('glossary');
+  const row = document.getElementById(glossId(ab.dataset.abbr));
+  if(row){
+    row.scrollIntoView({behavior:'smooth', block:'center'});
+    row.classList.remove('gloss-hit'); void row.offsetWidth; row.classList.add('gloss-hit');
+  }
+});
+
+// ---- language toggle ----
+document.getElementById('lang-toggle').addEventListener('click', () => {
+  lang = 1 - lang;
+  document.documentElement.lang = lang ? 'en' : 'zh-CN';
+  renderAll();
+});
+
+// ---- scatter ----
+const svg = document.getElementById('plot');
+const NS='http://www.w3.org/2000/svg';
+const el=(t,a,txt)=>{const n=document.createElementNS(NS,t);for(const k in a)n.setAttribute(k,a[k]);if(txt)n.textContent=txt;return n;};
+const M={l:80,r:44,t:26,b:64},W=1000-M.l-M.r,H=560-M.t-M.b;
+const X=v=>M.l+(v-1)/4*W, Y=v=>M.t+H-(v-1)/4*H;
+// per-company label placement: [dx, dy, anchor]
+const LBL={
+  'Genspark':[12,-5,'start'],'Perplexity':[12,18,'start'],'Manus':[-12,5,'end'],
+  'Fireworks AI':[-12,5,'end'],'Surge AI':[-12,5,'end'],'Mercor':[12,18,'start'],
+  'Legora':[-12,-9,'end'],'Scale AI':[-12,-10,'end'],'Harvey':[12,18,'start']
+};
+let dots=[];
+function drawPlot(){
+  svg.innerHTML='';
+  for(let t=1;t<=5;t++){
+    svg.appendChild(el('line',{x1:X(t),y1:Y(1),x2:X(t),y2:Y(5),class:'grid-line'}));
+    svg.appendChild(el('line',{x1:X(1),y1:Y(t),x2:X(5),y2:Y(t),class:'grid-line'}));
+  }
+  const ax = lang ? L.axis.en : L.axis.zh;
+  svg.appendChild(el('text',{x:X(1),y:540,class:'axis','text-anchor':'start'},ax[0]));
+  svg.appendChild(el('text',{x:X(5),y:540,class:'axis','text-anchor':'end'},ax[1]));
+  svg.appendChild(el('text',{x:10,y:Y(5)+4,class:'axis'},ax[2]));
+  svg.appendChild(el('text',{x:10,y:Y(1)+4,class:'axis'},ax[3]));
+  dots=[];
+  companies.forEach((c,i)=>{
+    const cx=X(c.sales),cy=Y(c.del);
+    const d=el('circle',{cx,cy,r:8,class:'dot'});
+    d.addEventListener('click',()=>{select.value=String(i);render(i);});
+    svg.appendChild(d);dots.push(d);
+    const pos=LBL[c.name]||[12,5,'start'];
+    svg.appendChild(el('text',{x:cx+pos[0],y:cy+pos[1],class:'dot-label','text-anchor':pos[2]},c.name));
+  });
+}
+
+// ---- select + detail ----
+const select=document.getElementById('company-select');
+companies.forEach((c,i)=>{const o=document.createElement('option');o.value=String(i);o.textContent=c.name;select.appendChild(o);});
+select.addEventListener('change',()=>render(+select.value));
+
+function render(i){
+  const c=companies[i];
+  dots.forEach((d,j)=>d.classList.toggle('active',j===i));
+  document.getElementById('confidence').textContent=pick(c.conf);
+  const dt = lang ? L.dt.en : L.dt.zh;
+  const steps=pick(c.steps).map((s,k)=>`<span class="s">${k+1}. ${esc(s)}</span>`).join('<span class="arr">→</span>');
+  const srcs=c.src.map(s=>`<a href="${s[1]}" target="_blank" rel="noopener">${esc(pick(s[0]))}</a>`).join('');
+  document.getElementById('detail').innerHTML=`
+    <h2 style="margin-top:10px">${c.name} <span class="badge">｜${esc(pick(c.track))}｜${esc(pick(c.arch))}</span></h2>
+    <p style="margin:6px 0 12px"><b>${lang?L.oneliner.en:L.oneliner.zh}</b>${esc(pick(c.thesis))}</p>
+    <dl class="kv">
+      <dt>${dt[0]}</dt><dd>${esc(pick(c.icp))}</dd>
+      <dt>${dt[1]}</dt><dd>${esc(pick(c.mkt))}</dd>
+      <dt>${dt[2]}</dt><dd>${esc(pick(c.sell))}</dd>
+      <dt>${dt[3]}</dt><dd><div class="steps">${steps}</div></dd>
+      <dt>${dt[4]}</dt><dd>${esc(pick(c.delivery))}</dd>
+      <dt>${dt[5]}</dt><dd>${esc(pick(c.comm))}</dd>
+      <dt>${dt[6]}</dt><dd>${esc(pick(c.scale))}</dd>
+      <dt>${dt[7]}</dt><dd class="tag-good">${esc(pick(c.lesson))}</dd>
+      <dt>${dt[8]}</dt><dd class="src">${srcs}</dd>
+    </dl>`;
+  annotate(document.getElementById('detail'));
+  annotate(document.getElementById('confidence'));
+}
+
+// ---- quick table / motions / archetypes ----
+function drawTables(){
+  document.getElementById('quick-table').innerHTML=companies.map((c,i)=>
+    `<tr><td><a href="#" data-i="${i}">${c.name}</a></td><td>${esc(pick(c.track))}</td><td>${esc(pick(c.arch))}</td><td>${c.sales}</td><td>${c.del}</td><td>${esc(pick(c.scale))}</td></tr>`).join('');
+  document.getElementById('motions-list').innerHTML=motions.map(m=>`
+    <div style="border:1px solid var(--line);border-radius:10px;padding:12px 14px">
+      <b style="color:var(--blue-dark)">${esc(pick(m.t))}</b> <span class="badge">${esc(m.c)}</span>
+      <div class="steps" style="margin-top:8px">${pick(m.p).map(s=>`<span class="s">${esc(s)}</span>`).join('<span class="arr">→</span>')}</div>
+    </div>`).join('');
+  const sk = lang ? L.skeleton.en : L.skeleton.zh;
+  document.getElementById('skeleton').innerHTML=sk.map((s,i)=>`<span class="s">${i+1} ${esc(s)}</span>`).join('<span class="arr">→</span>');
+  document.getElementById('archetype-table').innerHTML=archetypes.map(r=>
+    `<tr>${r.map(c=>`<td>${esc(pick(c))}</td>`).join('')}</tr>`).join('');
+  document.getElementById('glossary-table').innerHTML=GLOSS.map(g=>
+    `<tr id="${glossId(g[0])}"><td><b>${esc(g[0])}</b></td><td>${esc(g[1])}</td><td>${esc(g[2])}</td></tr>`).join('');
+  ['quick-table','motions-list','skeleton','archetype-table'].forEach(id=>annotate(document.getElementById(id)));
+}
+document.getElementById('quick-table').addEventListener('click',e=>{
+  const a=e.target.closest('a[data-i]');if(!a)return;e.preventDefault();
+  select.value=a.dataset.i;render(+a.dataset.i);window.scrollTo({top:0,behavior:'smooth'});
+});
+
+function renderAll(){
+  drawPlot();
+  drawTables();
+  render(+select.value||0);
+}
+renderAll();
+// annotate static sections once (dynamic containers are re-annotated on each render)
+['cro','harvey','overview','motions'].forEach(p=>annotate(document.querySelector(`section[data-panel="${p}"]`)));
+annotate(document.querySelector('.lede'));
+</script>
+</body>
+</html>
