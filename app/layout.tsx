@@ -3,9 +3,9 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://ericwang0321.github.io"),
-  title: "Eric Wang — AI & Capital Markets Research",
+  title: "Eric Wang — AI Infrastructure × Markets",
   description:
-    "Eric Wang researches AI infrastructure, technology value chains and public markets, combining financial engineering with applied AI systems.",
+    "From silicon to systems to signals. Eric Wang researches AI infrastructure, technology value chains and public markets.",
   keywords: [
     "Eric Wang",
     "Yidong Wang",
@@ -18,18 +18,18 @@ export const metadata: Metadata = {
   authors: [{ name: "Eric Wang" }],
   alternates: { canonical: "/" },
   openGraph: {
-    title: "Eric Wang — AI & Capital Markets Research",
-    description: "Researching the infrastructure of intelligence.",
+    title: "Eric Wang — AI Infrastructure × Markets",
+    description: "From silicon to systems to signals.",
     type: "website",
     url: "/",
     siteName: "Eric Wang",
-    images: [{ url: "/og-light.png", width: 1536, height: 1024, alt: "Eric Wang — AI and Capital Markets Research" }],
+    images: [{ url: "/og.png", width: 1536, height: 1024, alt: "Eric Wang — AI Infrastructure and Markets" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Eric Wang — AI & Capital Markets Research",
-    description: "Researching the infrastructure of intelligence.",
-    images: ["/og-light.png"],
+    title: "Eric Wang — AI Infrastructure × Markets",
+    description: "From silicon to systems to signals.",
+    images: ["/og.png"],
   },
   icons: {
     icon: "/favicon.png",
