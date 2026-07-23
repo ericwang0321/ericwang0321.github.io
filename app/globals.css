@@ -207,7 +207,7 @@ html[lang="zh-CN"] .language-toggle i::after {
 .hero-section {
   --hero-progress: 0;
   background: var(--paper);
-  height: 480svh;
+  height: 640svh;
   position: relative;
 }
 

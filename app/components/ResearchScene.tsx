@@ -12,10 +12,16 @@ type ResearchSceneProps = {
 
 const phases = [
   {
-    en: "AI factory",
-    zh: "AI 数据中心",
-    factEn: "Liquid-cooled rack rows",
-    factZh: "液冷机柜集群",
+    en: "Power & grid",
+    zh: "电网与供电",
+    factEn: "Grid · substation · backup power",
+    factZh: "电网 · 变电站 · 备用供电",
+  },
+  {
+    en: "AI factory campus",
+    zh: "AI 数据中心园区",
+    factEn: "Data halls · chillers · liquid loops",
+    factZh: "数据机房 · 冷水机组 · 液冷循环",
   },
   {
     en: "GB300 NVL72 rack",
@@ -46,6 +52,12 @@ const phases = [
     zh: "芯片层",
     factEn: "GPU dies · HBM stacks · interposer",
     factZh: "GPU 裸片 · HBM 堆栈 · 中介层",
+  },
+  {
+    en: "AI application",
+    zh: "AI 应用终端",
+    factEn: "Model output becomes a human decision",
+    factZh: "模型输出走向人的工作流",
   },
 ];
 
@@ -97,7 +109,7 @@ export default function ResearchScene({
         rendererCanvas = renderer.domElement;
 
         const scene = new THREE.Scene();
-        scene.fog = new THREE.Fog(0xf7f5ef, 18, 44);
+        scene.fog = new THREE.Fog(0xf7f5ef, 28, 72);
 
         const camera = new THREE.PerspectiveCamera(32, 1, 0.1, 120);
         const world = new THREE.Group();
@@ -126,12 +138,14 @@ export default function ResearchScene({
         const copper = 0xbc7440;
         const silicon = 0x344960;
 
+        const campusMaterials: Material[] = [];
         const ambientMaterials: Material[] = [];
         const rackMaterials: Material[] = [];
         const trayMaterials: Material[] = [];
         const selectedGpuMaterials: Material[] = [];
         const fabricMaterials: Material[] = [];
         const packageMaterials: Material[] = [];
+        const userMaterials: Material[] = [];
 
         const makeMaterial = (
           bucket: Material[],
@@ -203,6 +217,22 @@ export default function ResearchScene({
           return mesh;
         };
 
+        const addSphere = (
+          parent: Object3D,
+          bucket: Material[],
+          radius: number,
+          position: [number, number, number],
+          color: number,
+        ) => {
+          const mesh = new THREE.Mesh(
+            new THREE.SphereGeometry(radius, 24, 16),
+            makeMaterial(bucket, color, 1, 0.38, 0.5),
+          );
+          mesh.position.set(...position);
+          parent.add(mesh);
+          return mesh;
+        };
+
         const addTube = (
           parent: Object3D,
           bucket: Material[],
@@ -226,9 +256,91 @@ export default function ResearchScene({
             const baseOpacity = typeof item.userData.baseOpacity === "number" ? item.userData.baseOpacity : 1;
             item.opacity = baseOpacity * safeFactor;
             item.visible = safeFactor > 0.005;
-            item.depthWrite = safeFactor > 0.72;
+            item.depthWrite = baseOpacity > 0.95 && safeFactor > 0.72;
           });
         };
+
+        const campusGroup = new THREE.Group();
+        world.add(campusGroup);
+        addBox(campusGroup, campusMaterials, [31, 0.18, 23], [0, -5.14, 0], ivory, {
+          opacity: 0.82,
+          metalness: 0.08,
+          roughness: 0.82,
+          outlined: true,
+        });
+
+        const dataHall = new THREE.Group();
+        campusGroup.add(dataHall);
+        addBox(dataHall, campusMaterials, [18.2, 10.2, 15.4], [0, -0.03, 0], ivory, {
+          opacity: 0.1,
+          metalness: 0.12,
+          roughness: 0.78,
+          outlined: true,
+        });
+        addBox(dataHall, campusMaterials, [18.4, 0.2, 15.6], [0, 5.05, 0], steel, {
+          opacity: 0.38,
+          metalness: 0.38,
+          outlined: true,
+        });
+        for (let roofUnit = 0; roofUnit < 6; roofUnit += 1) {
+          addBox(
+            dataHall,
+            campusMaterials,
+            [2.15, 0.48, 3.1],
+            [-6.4 + (roofUnit % 3) * 6.4, 5.38, -2.45 + Math.floor(roofUnit / 3) * 4.9],
+            graphiteMid,
+            { opacity: 0.72, outlined: true },
+          );
+        }
+        addBox(dataHall, campusMaterials, [3.2, 3.2, 0.18], [-4.6, -3.42, 7.79], graphite, { opacity: 0.64, outlined: true });
+        addBox(dataHall, campusMaterials, [3.2, 3.2, 0.18], [0, -3.42, 7.79], graphite, { opacity: 0.64, outlined: true });
+
+        const utilityGroup = new THREE.Group();
+        utilityGroup.position.x = 10.5;
+        campusGroup.add(utilityGroup);
+        [-13.2, -10.3, -7.4].forEach((x, index) => {
+          addCylinder(utilityGroup, campusMaterials, 0.1, 4.5, [x, -2.72, 4.4], graphite, [0, 0, 0]);
+          addBox(utilityGroup, campusMaterials, [2.25, 0.12, 0.12], [x, -0.7, 4.4], graphite, { outlined: true });
+          addBox(utilityGroup, campusMaterials, [1.55, 0.1, 0.1], [x, -1.18, 4.4], graphiteMid);
+          if (index < 2) {
+            [-0.72, 0, 0.72].forEach((zOffset) => {
+              addTube(
+                utilityGroup,
+                campusMaterials,
+                [[x - 1.45, -0.7, 4.4 + zOffset], [x, -0.38, 4.4 + zOffset], [x + 1.45, -0.7, 4.4 + zOffset]],
+                amber,
+                0.035,
+                0.88,
+              );
+            });
+          }
+        });
+        [-8.2, -5.8].forEach((x) => {
+          addBox(utilityGroup, campusMaterials, [1.7, 1.35, 2.15], [x, -4.35, 1.35], copper, { opacity: 0.88, outlined: true });
+          addCylinder(utilityGroup, campusMaterials, 0.16, 1.9, [x - 0.42, -3.08, 1.35], amber, [0, 0, 0]);
+          addCylinder(utilityGroup, campusMaterials, 0.16, 1.9, [x + 0.42, -3.08, 1.35], amber, [0, 0, 0]);
+        });
+        addTube(utilityGroup, campusMaterials, [[-7.4, -0.7, 4.4], [-7, -1.8, 2.4], [-5.8, -3.4, 1.35], [-3.8, -3.8, 0.8]], amber, 0.095, 0.92);
+        addTube(utilityGroup, campusMaterials, [[-7.4, -1.18, 4.4], [-7.6, -2.1, 2.2], [-8.2, -3.4, 1.35], [-3.8, -4.15, -0.1]], copper, 0.07, 0.82);
+
+        const coolingPlant = new THREE.Group();
+        coolingPlant.position.x = -5;
+        campusGroup.add(coolingPlant);
+        [10.6, 13.1].forEach((x) => {
+          addCylinder(coolingPlant, campusMaterials, 1.08, 2.15, [x, -4, -2.8], steel, [0, 0, 0]);
+          addCylinder(coolingPlant, campusMaterials, 0.76, 0.16, [x, -2.88, -2.8], graphiteMid, [0, 0, 0]);
+          for (let blade = 0; blade < 6; blade += 1) {
+            addBox(coolingPlant, campusMaterials, [0.05, 0.05, 1.18], [x, -2.76, -2.8], graphite, {
+              opacity: 0.66,
+              rotation: [0, blade * (Math.PI / 3), 0],
+            });
+          }
+        });
+        [10.2, 11.45, 12.7, 13.95].forEach((x) => {
+          addBox(coolingPlant, campusMaterials, [0.92, 0.78, 2.5], [x, -4.58, 1.35], graphiteMid, { opacity: 0.84, outlined: true });
+        });
+        addTube(coolingPlant, campusMaterials, [[13.1, -3.7, -2.8], [12.6, -3.55, 0], [9.15, -3.7, 0], [7.8, -3.9, -0.8]], teal, 0.13, 0.92);
+        addTube(coolingPlant, campusMaterials, [[10.6, -4.1, -2.8], [10.2, -4.25, -0.6], [8.7, -4.35, 0.5], [7.8, -4.2, 1.2]], 0x6dc8cf, 0.11, 0.78);
 
         const floor = new THREE.GridHelper(34, 34, 0xa2aaa7, 0xd8d4c9);
         floor.position.y = -5.1;
@@ -393,13 +505,60 @@ export default function ResearchScene({
           addBox(packageCover, packageMaterials, [0.18, 0.36, 3.75], [-2.15 + fin * 0.43, 1.17, 0], graphiteMid, { opacity: 0.64 });
         }
 
+        const userGroup = new THREE.Group();
+        world.add(userGroup);
+        userGroup.scale.setScalar(0.04);
+        userGroup.position.y = -0.2;
+        addBox(userGroup, userMaterials, [11.8, 0.18, 7.2], [0, -2.72, 0], ivory, {
+          opacity: 0.9,
+          metalness: 0.08,
+          roughness: 0.82,
+          outlined: true,
+        });
+        addBox(userGroup, userMaterials, [7.3, 0.22, 3.05], [0.25, -0.75, 0.5], graphiteMid, { outlined: true });
+        [-2.75, 2.75].forEach((x) => {
+          addBox(userGroup, userMaterials, [0.25, 1.9, 0.25], [x, -1.73, -0.42], graphite, { outlined: true });
+          addBox(userGroup, userMaterials, [0.25, 1.9, 0.25], [x, -1.73, 1.42], graphite, { outlined: true });
+        });
+
+        addBox(userGroup, userMaterials, [1.18, 1.62, 0.72], [-2.2, 0.15, -0.55], silicon, { outlined: true });
+        addBox(userGroup, userMaterials, [0.45, 0.28, 0.42], [-2.2, 1.08, -0.55], amber, { outlined: true });
+        addSphere(userGroup, userMaterials, 0.5, [-2.2, 1.58, -0.55], copper);
+        addBox(userGroup, userMaterials, [1.4, 1.75, 0.25], [-2.2, -0.2, -1.28], graphite, { opacity: 0.82, outlined: true });
+        addTube(userGroup, userMaterials, [[-1.78, 0.58, -0.28], [-1.15, 0.08, 0.12], [-0.42, -0.38, 0.26]], copper, 0.09, 0.92);
+        addTube(userGroup, userMaterials, [[-2.62, 0.58, -0.28], [-2.2, 0.05, 0.38], [-1.18, -0.38, 0.62]], copper, 0.09, 0.92);
+
+        const laptop = new THREE.Group();
+        userGroup.add(laptop);
+        addBox(laptop, userMaterials, [2.45, 0.09, 1.5], [0.12, -0.46, 0.32], steel, { outlined: true });
+        addBox(laptop, userMaterials, [2.45, 1.55, 0.11], [0.12, 0.32, -0.38], graphite, { outlined: true, rotation: [-0.08, 0, 0] });
+        addBox(laptop, userMaterials, [2.12, 1.23, 0.04], [0.12, 0.32, -0.31], 0x5cb8c1, { opacity: 0.86, metalness: 0.18 });
+        for (let message = 0; message < 4; message += 1) {
+          addBox(laptop, userMaterials, [1.35 - message * 0.13, 0.09, 0.025], [-0.12 + message * 0.09, 0.69 - message * 0.25, -0.275], message === 0 ? ivory : 0xd5ece9, { metalness: 0.08, roughness: 0.74 });
+        }
+
+        const appPanel = new THREE.Group();
+        userGroup.add(appPanel);
+        addBox(appPanel, userMaterials, [3.65, 2.35, 0.12], [3.35, 1.05, -0.62], graphite, { opacity: 0.94, outlined: true });
+        addBox(appPanel, userMaterials, [3.35, 2.02, 0.04], [3.35, 1.05, -0.54], ivory, { opacity: 0.94, metalness: 0.05, roughness: 0.82 });
+        addBox(appPanel, userMaterials, [0.42, 0.42, 0.035], [2.22, 1.65, -0.505], violet, { metalness: 0.12 });
+        addBox(appPanel, userMaterials, [1.68, 0.11, 0.035], [3.3, 1.72, -0.505], graphiteMid, { metalness: 0.12 });
+        for (let card = 0; card < 3; card += 1) {
+          addBox(appPanel, userMaterials, [2.78, 0.34, 0.035], [3.35, 1.18 - card * 0.49, -0.505], card === 1 ? 0xcce8e6 : steel, { opacity: 0.88, metalness: 0.08 });
+          addBox(appPanel, userMaterials, [0.18, 0.18, 0.025], [2.2, 1.18 - card * 0.49, -0.48], card === 1 ? teal : amber, { metalness: 0.12 });
+        }
+        addTube(userGroup, userMaterials, [[1.15, 0.55, -0.25], [1.8, 1.1, -0.55], [2.55, 1.58, -0.56]], violet, 0.055, 0.82);
+        addTube(userGroup, userMaterials, [[0.82, 0.18, -0.24], [1.75, 0.42, -0.82], [3.02, 0.18, -0.57]], teal, 0.045, 0.78);
+
         const cameraFrames = [
-          { at: 0, position: [18.5, 10.5, 22], target: [0, 0.4, 0] },
-          { at: 0.2, position: [8.8, 5.4, 11.2], target: [0, 0.25, 0] },
-          { at: 0.4, position: [6.1, 4, 7.8], target: [0, 0, 0] },
-          { at: 0.6, position: [5.2, 3.3, 6.4], target: [0.35, 0.2, 0] },
-          { at: 0.78, position: [3.9, 2.7, 4.8], target: [0.25, 0.25, 0.25] },
-          { at: 1, position: [0.35, 10.8, 1.25], target: [0, -0.08, 0] },
+          { at: 0, position: [28, 17.5, 36], target: [0, -0.4, 0] },
+          { at: 0.14, position: [21.5, 13.5, 28], target: [0, -0.25, 0] },
+          { at: 0.28, position: [13.5, 9.2, 18], target: [0, 0.1, 0] },
+          { at: 0.42, position: [9.6, 7.1, 12.6], target: [0, 0.05, 0] },
+          { at: 0.56, position: [8.2, 6.1, 10.4], target: [0.2, 0.15, 0] },
+          { at: 0.7, position: [7.2, 5.5, 9], target: [0.1, 0.1, 0] },
+          { at: 0.84, position: [0.45, 13.5, 1.4], target: [0, -0.08, 0] },
+          { at: 1, position: [10.8, 7.4, 14], target: [0.35, -0.05, -0.1] },
         ] as const;
 
         const interpolateFrame = (progress: number) => {
@@ -431,28 +590,49 @@ export default function ResearchScene({
           const progress = clamp(-rect.top / travel);
           track.style.setProperty("--hero-progress", progress.toFixed(4));
 
-          const phase = progress < 0.14 ? 0 : progress < 0.32 ? 1 : progress < 0.5 ? 2 : progress < 0.68 ? 3 : progress < 0.84 ? 4 : 5;
+          const phase = progress < 0.11
+            ? 0
+            : progress < 0.23
+              ? 1
+              : progress < 0.36
+                ? 2
+                : progress < 0.49
+                  ? 3
+                  : progress < 0.61
+                    ? 4
+                    : progress < 0.73
+                      ? 5
+                      : progress < 0.86
+                        ? 6
+                        : 7;
           setActivePhase((current) => (current === phase ? current : phase));
           interpolateFrame(progress);
 
-          const ambientFade = 1 - smoothstep(0.04, 0.23, progress);
-          const rackFade = 1 - smoothstep(0.22, 0.36, progress);
-          const trayReveal = smoothstep(0.2, 0.34, progress);
-          const trayFade = 1 - smoothstep(0.64, 0.77, progress);
-          const fabricReveal = smoothstep(0.43, 0.54, progress) * (1 - smoothstep(0.62, 0.73, progress));
-          const packageReveal = smoothstep(0.61, 0.73, progress);
+          const campusFade = 1 - smoothstep(0.14, 0.29, progress);
+          const ambientReveal = smoothstep(0.06, 0.14, progress) * (1 - smoothstep(0.22, 0.34, progress));
+          const rackReveal = smoothstep(0.14, 0.23, progress) * (1 - smoothstep(0.3, 0.42, progress));
+          const trayReveal = smoothstep(0.29, 0.4, progress);
+          const trayFade = 1 - smoothstep(0.58, 0.69, progress);
+          const fabricReveal = smoothstep(0.43, 0.52, progress) * (1 - smoothstep(0.58, 0.69, progress));
+          const packageReveal = smoothstep(0.57, 0.68, progress);
+          const packageFade = 1 - smoothstep(0.87, 0.96, progress);
+          const userReveal = smoothstep(0.85, 0.97, progress);
 
-          setOpacity(ambientMaterials, ambientFade);
-          setOpacity(rackMaterials, rackFade);
+          setOpacity(campusMaterials, campusFade);
+          setOpacity(ambientMaterials, ambientReveal);
+          setOpacity(rackMaterials, rackReveal);
           setOpacity(trayMaterials, trayReveal * trayFade);
-          setOpacity(selectedGpuMaterials, trayReveal * (1 - smoothstep(0.69, 0.84, progress)));
+          setOpacity(selectedGpuMaterials, trayReveal * (1 - smoothstep(0.63, 0.75, progress)));
           setOpacity(fabricMaterials, fabricReveal);
-          setOpacity(packageMaterials, packageReveal);
+          setOpacity(packageMaterials, packageReveal * packageFade);
+          setOpacity(userMaterials, userReveal);
 
-          world.rotation.y = THREE.MathUtils.lerp(-0.08, 0.08, progress);
-          ambientRacks.position.z = -smoothstep(0.04, 0.24, progress) * 2.2;
+          world.position.x = THREE.MathUtils.lerp(5.1, 2.15, smoothstep(0.08, 0.29, progress));
+          world.rotation.y = THREE.MathUtils.lerp(-0.06, 0.055, progress);
+          campusGroup.rotation.y = THREE.MathUtils.lerp(-0.035, 0.025, smoothstep(0, 0.22, progress));
+          ambientRacks.position.z = -smoothstep(0.14, 0.3, progress) * 1.6;
 
-          const rackExplode = smoothstep(0.12, 0.34, progress);
+          const rackExplode = smoothstep(0.2, 0.35, progress);
           rackTrays.forEach((tray, index) => {
             const lane = index % 3;
             tray.position.z = rackExplode * (1.3 + lane * 0.85);
@@ -460,12 +640,12 @@ export default function ResearchScene({
           });
           rackGroup.rotation.y = rackExplode * -0.2;
 
-          computeTray.scale.setScalar(THREE.MathUtils.lerp(0.22, 1.12, trayReveal));
+          computeTray.scale.setScalar(THREE.MathUtils.lerp(0.18, 0.98, trayReveal));
           computeTray.position.z = THREE.MathUtils.lerp(0, 0.55, trayReveal);
-          computeTray.rotation.y = THREE.MathUtils.lerp(0.03, -0.16, smoothstep(0.32, 0.6, progress));
+          computeTray.rotation.y = THREE.MathUtils.lerp(0.03, -0.13, smoothstep(0.34, 0.58, progress));
 
-          const trayExplode = smoothstep(0.36, 0.57, progress);
-          trayLid.position.y = trayExplode * 3.2;
+          const trayExplode = smoothstep(0.35, 0.55, progress);
+          trayLid.position.y = trayExplode * 3.55;
           trayLid.rotation.z = trayExplode * -0.13;
           gpuGroups.forEach((gpu, index) => {
             const directionX = index % 2 === 0 ? -1 : 1;
@@ -474,16 +654,16 @@ export default function ResearchScene({
             gpu.position.z = gpu.userData.baseZ + directionZ * trayExplode * 0.22;
             gpu.position.y = trayExplode * (0.35 + index * 0.08);
           });
-          fabricGroup.position.y = smoothstep(0.48, 0.66, progress) * 0.55;
+          fabricGroup.position.y = smoothstep(0.47, 0.62, progress) * 0.55;
 
-          packageGroup.scale.setScalar(THREE.MathUtils.lerp(0.04, 1.18, packageReveal));
-          packageGroup.rotation.y = THREE.MathUtils.lerp(0.12, -0.08, smoothstep(0.7, 0.9, progress));
+          packageGroup.scale.setScalar(THREE.MathUtils.lerp(0.04, 0.98, packageReveal));
+          packageGroup.rotation.y = THREE.MathUtils.lerp(0.12, -0.06, smoothstep(0.66, 0.84, progress));
           packageGroup.position.y = THREE.MathUtils.lerp(-0.2, 0.15, packageReveal);
 
-          const coverExplode = smoothstep(0.66, 0.82, progress);
-          const chipExplode = smoothstep(0.82, 1, progress);
-          packageCover.position.x = coverExplode * 4.2;
-          packageCover.position.y = coverExplode * 1.75;
+          const coverExplode = smoothstep(0.61, 0.73, progress);
+          const chipExplode = smoothstep(0.74, 0.87, progress);
+          packageCover.position.x = coverExplode * 4.8;
+          packageCover.position.y = coverExplode * 2.05;
           packageCover.position.z = coverExplode * -0.55;
           packageCover.rotation.z = coverExplode * -0.08;
           dieGroup.position.y = chipExplode * 0.9;
@@ -495,6 +675,10 @@ export default function ResearchScene({
             stack.position.z = stack.userData.baseZ + (stack.userData.baseZ / length) * chipExplode * 0.5;
             stack.position.y = -0.18 + chipExplode * 0.64;
           });
+
+          userGroup.scale.setScalar(THREE.MathUtils.lerp(0.04, 1.06, userReveal));
+          userGroup.position.y = THREE.MathUtils.lerp(-0.2, 0, userReveal);
+          userGroup.rotation.y = THREE.MathUtils.lerp(0.1, -0.045, userReveal);
 
           if (rendererVisible) renderer.render(scene, camera);
         };
@@ -574,7 +758,7 @@ export default function ResearchScene({
       ) : null}
       <div className="scene-wash" aria-hidden="true" />
       <div className="scene-status" aria-live="polite">
-        <span>0{activePhase + 1} / 06</span>
+        <span>0{activePhase + 1} / 08</span>
         <strong>{language === "en" ? phase.en : phase.zh}</strong>
         <small>{language === "en" ? phase.factEn : phase.factZh}</small>
         <div aria-hidden="true">
@@ -583,7 +767,7 @@ export default function ResearchScene({
           ))}
         </div>
       </div>
-      <div className="scene-source">ARCHITECTURE REFERENCE · NVIDIA GB300 NVL72</div>
+      <div className="scene-source">SYSTEM JOURNEY · GRID → GPU → APPLICATION</div>
     </div>
   );
 }
