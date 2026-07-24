@@ -219,10 +219,10 @@ html[lang="zh-CN"] .language-toggle i::after {
 }
 
 .hero-sticky::after {
-  background: linear-gradient(90deg, rgba(247, 245, 239, 0.99) 0%, rgba(247, 245, 239, 0.92) 32%, rgba(247, 245, 239, 0.22) 59%, transparent 78%);
+  background: linear-gradient(90deg, rgba(247, 245, 239, 0.99) 0%, rgba(247, 245, 239, 0.9) 30%, rgba(247, 245, 239, 0.16) 58%, transparent 76%);
   content: "";
   inset: 0;
-  opacity: max(0.05, calc(1 - var(--hero-progress) * 2.4));
+  opacity: max(0, calc(1 - var(--hero-progress) * 6.8));
   pointer-events: none;
   position: absolute;
   z-index: 2;
@@ -231,10 +231,10 @@ html[lang="zh-CN"] .language-toggle i::after {
 .hero-copy {
   left: clamp(24px, 6vw, 100px);
   max-width: min(710px, 47vw);
-  opacity: max(0, calc(1 - var(--hero-progress) * 3));
+  opacity: max(0, calc(1 - var(--hero-progress) * 7.4));
   position: absolute;
   top: 50%;
-  transform: translateY(calc(-50% - var(--hero-progress) * 42px));
+  transform: translateY(calc(-50% - var(--hero-progress) * 54px));
   z-index: 3;
 }
 
@@ -320,24 +320,48 @@ html[lang="zh-CN"] .hero-copy h1 {
   z-index: 1;
 }
 
-.scene-canvas {
-  display: block;
-  height: 100%;
-  width: 100%;
+.journey-frames,
+.journey-frame {
+  inset: 0;
+  position: absolute;
+}
+
+.journey-frames {
+  background: #f7f5ef;
+  overflow: hidden;
+}
+
+.journey-frame {
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  transform-origin: 67% 51%;
+  will-change: opacity, transform, filter;
 }
 
 .scene-fallback {
-  background-position: 78% 52%;
+  background-position: center;
   background-repeat: no-repeat;
-  background-size: min(76vw, 1180px) auto;
+  background-size: cover;
   inset: 0;
   position: absolute;
 }
 
+.scene-atmosphere {
+  background:
+    radial-gradient(circle at 70% 49%, rgba(255, 255, 255, 0) 30%, rgba(247, 245, 239, 0.08) 70%),
+    linear-gradient(90deg, rgba(247, 245, 239, 0.08), transparent 48%);
+  inset: 0;
+  pointer-events: none;
+  position: absolute;
+  z-index: 3;
+}
+
 .scene-wash {
-  background: linear-gradient(180deg, transparent 68%, rgba(247, 245, 239, 0.82) 100%);
+  background: linear-gradient(180deg, rgba(247, 245, 239, 0.08), transparent 62%, rgba(247, 245, 239, 0.76) 100%);
   inset: 0;
   position: absolute;
+  z-index: 3;
 }
 
 .scene-status {
