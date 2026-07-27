@@ -21,6 +21,16 @@ type ResearchItem = {
   image?: string;
 };
 
+type SystemWork = {
+  number: string;
+  title: Localized;
+  category: Localized;
+  meta: Localized;
+  href: string;
+  image: string;
+  kind: "deck" | "article";
+};
+
 const officialOutstandingStudentProof =
   "https://www.polyu.edu.hk/sao/-/media/department/sao/content/srss/scholarships/osa/2023-24/fs_osa_sharing_wang-yidong.pdf?rev=d818a07102884a909ef84694e661e084&hash=ACB92226AB1532239025C9D15C6C093C";
 
@@ -43,6 +53,12 @@ const copy = {
     title: { en: "Mapping the systems behind intelligence.", zh: "拆解智能背后的系统。" },
     open: { en: "Open research", zh: "打开研究" },
     more: { en: "More from the archive", zh: "更多研究档案" },
+    systemsLabel: { en: "AI agents & model systems", zh: "AI Agent 与模型系统" },
+    systemsTitle: { en: "From reasoning patterns to secure execution.", zh: "从推理模式到安全执行环境。" },
+    systemsBody: {
+      en: "Original visual explainers and long-form technical work on agents, harnesses, sandboxes and model-to-hardware deployment.",
+      zh: "围绕 Agent、Harness、Sandbox 与模型硬件部署的原创视觉讲解和长篇技术研究。",
+    },
   },
   proof: {
     monitored: { en: "HK equities monitored", zh: "港股自动监控" },
@@ -149,6 +165,54 @@ const researchItems: ResearchItem[] = [
     href: "/research/voice-ai/",
     year: "2026",
     tier: "compact",
+  },
+];
+
+const systemWorks: SystemWork[] = [
+  {
+    number: "09",
+    title: { en: "The Three Layers of LLM Agents", zh: "LLM Agent 的三层结构" },
+    category: { en: "Agent architecture", zh: "Agent 架构" },
+    meta: { en: "13-page visual deck", zh: "13 页视觉讲解" },
+    href: "/library/llm-agent-three-layers/",
+    image: "/readings/llm-agent-three-layers/page-01.avif",
+    kind: "deck",
+  },
+  {
+    number: "10",
+    title: { en: "Agents & Harnesses", zh: "Agent 与 Harness" },
+    category: { en: "Agent systems", zh: "Agent 系统" },
+    meta: { en: "19-page visual deck", zh: "19 页视觉讲解" },
+    href: "/library/agent-harness/",
+    image: "/readings/agent-harness/page-01.avif",
+    kind: "deck",
+  },
+  {
+    number: "11",
+    title: { en: "Sandbox, Docker & Virtual Machines", zh: "Agent Sandbox 架构" },
+    category: { en: "Secure execution", zh: "安全执行环境" },
+    meta: { en: "11-page visual deck", zh: "11 页视觉讲解" },
+    href: "/library/agent-sandbox/",
+    image: "/readings/agent-sandbox/page-01.avif",
+    kind: "deck",
+  },
+  {
+    number: "12",
+    title: { en: "Kimi K3: Architecture to Real Hardware", zh: "Kimi K3 架构与硬件部署" },
+    category: { en: "Model × hardware", zh: "模型 × 硬件" },
+    meta: { en: "42-page visual deck", zh: "42 页视觉讲解" },
+    href: "/library/kimi-k3-deployment/",
+    image: "/readings/kimi-k3-deployment/page-01.avif",
+    kind: "deck",
+  },
+  {
+    number: "13",
+    title: { en: "Kimi K3: From Model Architecture to Real Hardware", zh: "Kimi K3：从模型架构到真实硬件" },
+    category: { en: "Long-form technical article", zh: "长篇技术文章" },
+    meta: { en: "10,000+ words · 7 architecture figures", zh: "10,000+ 词 · 7 张架构图" },
+    href: "/research/kimi-k3/",
+    image: "/readings/kimi-k3-deployment/page-03.avif",
+    kind: "article",
   },
 ];
 
@@ -329,6 +393,40 @@ export default function Home() {
               <p>{t(item.category, language)}</p>
               <h3>{t(item.title, language)}</h3>
               <b aria-hidden="true">↗</b>
+            </a>
+          ))}
+        </div>
+
+        <div className="systems-heading" data-reveal>
+          <div>
+            <p>{t(copy.research.systemsLabel, language)}</p>
+            <h3>{t(copy.research.systemsTitle, language)}</h3>
+          </div>
+          <p>{t(copy.research.systemsBody, language)}</p>
+          <span>05 / NEW</span>
+        </div>
+
+        <div className="system-work-grid">
+          {systemWorks.map((item) => (
+            <a
+              className={`system-work-card${item.kind === "article" ? " is-article" : ""}`}
+              href={item.href}
+              target="_blank"
+              rel="noreferrer"
+              key={item.number}
+              data-reveal
+            >
+              <div className="system-work-image">
+                <Image src={item.image} alt={t(item.title, language)} fill sizes={item.kind === "article" ? "100vw" : "(max-width: 820px) 100vw, 50vw"} />
+                <span>{item.number}</span>
+                <small>{item.kind === "article" ? (language === "en" ? "ARTICLE" : "文章") : (language === "en" ? "WEB DECK" : "网页讲解")}</small>
+              </div>
+              <div className="system-work-copy">
+                <p>{t(item.category, language)}</p>
+                <h3>{t(item.title, language)}</h3>
+                <small>{t(item.meta, language)}</small>
+                <b aria-hidden="true">↗</b>
+              </div>
             </a>
           ))}
         </div>

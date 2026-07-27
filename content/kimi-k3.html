@@ -1,0 +1,2051 @@
+<h1 id="contents">Contents</h1>
+<p><strong>0. Start with the End-to-End Data Path</strong></p>
+<p><strong>Part I — Fundamental Units: bit, Byte, GB, GiB and TB<br />
+</strong>1. What Are a bit and a Byte?<br />
+2. How Do Parameters Translate into Weight Capacity?</p>
+<p><strong>Part II — What Are Weight, Activation and HBM?<br />
+</strong>3. What Is a Weight?<br />
+4. What Is an Activation?<br />
+5. What Is HBM, and What Must It Store?</p>
+<p><strong>Part III — What Does “Precision” Mean?<br />
+</strong>6. Numerical Precision Is Not Answer Accuracy<br />
+7. Common Numerical Formats<br />
+8. What Are MXFP4 and MXFP8?</p>
+<p><strong>Part IV — Operators, Kernels and Inference Engines<br />
+</strong>9. What Is an Operator?<br />
+10. What Is an Inference Engine?</p>
+<p><strong>Part V — Kimi K3’s Four Core Architectural Components<br />
+</strong>10.1 Put the Four Components Back into the Full
+Architecture<br />
+10.2 Which Technology Is Triggered at Each Step?<br />
+11. KDA: Compressed Memory Along the Token Dimension<br />
+12. Gated MLA: More Precise Explicit Retrieval<br />
+13. AttnRes: Information Selection Along the Layer Dimension<br />
+14. Stable LatentMoE: Activating Only a Small Number of Experts</p>
+<p><strong>Part VI — How Multiple Accelerators Run Kimi K3
+Together<br />
+</strong>15. Three Common Forms of Parallelism<br />
+16. What Is WideEP?</p>
+<p><strong>Part VII — One Unified Scenario for Inference and Training
+Hardware<br />
+</strong>17. Fix Two Scenarios Before Using Percentages<br />
+18. How Many GPUs and Racks Does Inference Need, and What Does It
+Cost?<br />
+19. Must Training Use GB200 or GB300 NVL72?<br />
+20. Native Precision and Kimi K3 Feasibility Across Platforms<br />
+21. Final Conclusions<br />
+Primary Sources for Part VII</p>
+<blockquote>
+<p>This guide is written for readers without a computer-architecture
+background. The intended reading order is:<br />
+<strong>how text enters the model → how the model computes → where the
+data is stored → why low precision saves HBM → why some GPUs or TPUs can
+run the model more easily than others.</strong></p>
+<p><strong>Important:</strong> Until Kimi K3’s complete weights,
+layer-by-layer configuration, module dimensions and full deployment
+implementation are public, the capacity calculations in this guide must
+be treated as engineering estimates. “Mathematically runnable,”
+“runnable after adaptation,” “efficiently runnable,” and
+“production-ready” are four different levels.</p>
+<p><strong>Scope:</strong> The guide first places Kimi K3’s four core
+architectural components into one complete data path. It then estimates
+inference and training HBM, minimum accelerator counts, platform
+adaptation requirements and full-system deployment costs. Hardware
+specifications, public prices and product status are current to 21 July
+2026. All prices are planning estimates rather than vendor
+quotations.</p>
+</blockquote>
+<h2 id="start-with-the-end-to-end-data-path">0. Start with the
+End-to-End Data Path</h2>
+<blockquote>
+<pre><code>A piece of text
+   ↓ Tokenizer: split it into Tokens and convert them into integer IDs
+Token IDs
+   ↓ Embedding: look up a vector for each ID
+Initial Activation
+   ↓
+Pass repeatedly through many Layers / Transformer Blocks
+   ├─ KDA / Gated MLA: read and update historical information
+   ├─ AttnRes: choose which earlier Layer outputs should be reused
+   ├─ Router: select a small number of Experts for the current Token
+   └─ Expert FFN / MLP: execute large matrix multiplications
+   ↓
+Final Activation
+   ↓ LM Head: convert the vector into a score for every candidate Token
+Logits
+   ↓ Sampling
+Next Token</code></pre>
+</blockquote>
+<p>When the model runs, the chip is not literally “understanding text.”
+It is continuously moving and computing very large collections of
+numbers. Those numbers fall into several main categories:</p>
+<table>
+<colgroup>
+<col style="width: 19%" />
+<col style="width: 46%" />
+<col style="width: 34%" />
+</colgroup>
+<thead>
+<tr>
+<th><strong>Data</strong></th>
+<th><strong>What it is</strong></th>
+<th><strong>Where it is usually stored</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Weight</td>
+<td>Model parameters learned during training and largely fixed during
+inference</td>
+<td>Storage, CPU memory and GPU/TPU HBM</td>
+</tr>
+<tr>
+<td>Activation</td>
+<td>Intermediate results produced as the current input moves through
+each layer</td>
+<td>HBM, on-chip cache and registers</td>
+</tr>
+<tr>
+<td>KV Cache / Latent Cache</td>
+<td>Historical attention information retained for later Tokens</td>
+<td>HBM</td>
+</tr>
+<tr>
+<td>KDA State</td>
+<td>A compressed history state that KDA updates continuously</td>
+<td>HBM or cache closer to the compute units</td>
+</tr>
+<tr>
+<td>Scale</td>
+<td>A shared scaling factor used by low-precision formats such as MXFP4
+and MXFP8</td>
+<td>Usually stored with the quantized data</td>
+</tr>
+<tr>
+<td>Workspace / Buffer</td>
+<td>Temporary space used by Kernels, matrix multiplication,
+communication and scheduling</td>
+<td>HBM</td>
+</tr>
+<tr>
+<td>Communication Buffer</td>
+<td>Send and receive buffers used by TP, EP and PP across
+accelerators</td>
+<td>HBM</td>
+</tr>
+</tbody>
+</table>
+<p>This is why deciding whether an accelerator can run a model requires
+more than checking whether the Weight alone fits.</p>
+<h3 id="read-the-official-kimi-k3-architecture-first">0.1 Read the
+Official Kimi K3 Architecture First</h3>
+<p><img src="/research/kimi-k3/media/image1.png" style="width:6.38in;height:6.24568in"
+alt="Official Kimi K3 architecture: Stable LatentMoE, KDA, Gated MLA and Block Attention Residuals" /></p>
+<p>Official Kimi K3 architecture: Stable LatentMoE, KDA, Gated MLA and
+Block Attention Residuals</p>
+<p><em>Figure 1 | Official Kimi K3 architecture. Source: Kimi K3 Tech
+Blog, 17 July 2026, <a href="https://www.kimi.com/blog/kimi-k3">original
+post</a>. This is the official figure, not a redraw.</em></p>
+<p>The figure contains a great deal of information. On a first reading,
+do not try to follow every line at once. Read it in this order:</p>
+<ol type="1">
+<li><strong>Start with the vertical backbone on the right.</strong> The
+<code>Embedding</code> at the bottom is the vector representation of a
+Token as it enters the model. It moves upward through many Blocks before
+reaching <code>Output</code>. This portion answers: “How does one Token
+representation flow upward through the network?”</li>
+<li><strong>Then examine the blue and red modules inside the
+Block.</strong> Blue <code>KDA</code> and red <code>Gated MLA</code>
+both allow the current Token to use historical Tokens; they address the
+problem of reading prior context. The figure shows three KDA Blocks
+followed by one Gated MLA Block. This illustrates the repeating-unit
+pattern, not a fully disclosed layer count.</li>
+<li><strong>Each sequence-processing module is followed by a
+green</strong> <code>Stable LatentMoE</code><strong>.</strong> It
+transforms the current Token’s features. The enlarged view at upper left
+shows a <code>Router</code> scoring Routed Experts and selecting only a
+small subset, while the green Shared Expert follows an always-on
+path.</li>
+<li><strong>Finally inspect the long reddish-brown connections on the
+right.</strong> Earlier Block outputs are not passed only to the
+immediately following layer; later layers can select among them. The
+circles labelled <code>α</code> are selection weights, and
+<code>w</code> denotes parameters used to generate those weights. This
+is <code>Attention Residuals (AttnRes)</code>.</li>
+<li><strong>The lower-left panel expands KDA.</strong> Several
+<code>Linear</code>, <code>Conv</code> and Gate paths jointly produce
+the quantities used to update the KDA State. KDA is therefore not simply
+Full Attention under a different name; it has new projections, short
+convolutions, gates and state-update computation.</li>
+</ol>
+<p>The official figure mainly answers where the modules sit and how they
+connect. It does not disclose every Latent dimension, every Gate
+formula, the complete layer count, or the exact Shape of every Weight.
+The following sections therefore use figures from related papers to
+explain the underlying mechanisms while keeping “what the paper
+establishes” separate from “what Kimi has publicly confirmed for
+K3.”</p>
+<h1 id="part-i-fundamental-units-bit-byte-gb-gib-and-tb">Part I —
+Fundamental Units: bit, Byte, GB, GiB and TB</h1>
+<h2 id="what-are-a-bit-and-a-byte">1. What Are a bit and a Byte?</h2>
+<ul>
+<li>A <strong>bit</strong> (abbreviated <code>b</code>) is the smallest
+binary unit and can be either 0 or 1.</li>
+<li>A <strong>Byte</strong> (abbreviated <code>B</code>) normally
+contains 8 bits.</li>
+</ul>
+<p>The most important conversion is:</p>
+<blockquote>
+<pre><code>1 Byte = 8 bits</code></pre>
+</blockquote>
+<p>Therefore:</p>
+<blockquote>
+<pre><code>400 Gbit/s ÷ 8 = 50 GB/s</code></pre>
+</blockquote>
+<p>Capitalization matters:</p>
+<ul>
+<li><code>Gb/s</code> or <code>Gbit/s</code> means billions of
+<strong>bits</strong> per second.</li>
+<li><code>GB/s</code> means billions of <strong>Bytes</strong> per
+second.</li>
+<li>Uppercase <code>B</code> and lowercase <code>b</code> differ by a
+factor of eight.</li>
+</ul>
+<h3 id="decimal-and-binary-units">1.1 Decimal and Binary Units</h3>
+<p>Hardware vendors normally use decimal units:</p>
+<blockquote>
+<pre><code>1 KB = 1,000 Bytes
+1 MB = 1,000,000 Bytes
+1 GB = 1,000,000,000 Bytes
+1 TB = 1,000,000,000,000 Bytes</code></pre>
+</blockquote>
+<p>Operating systems and some software also use binary units:</p>
+<blockquote>
+<pre><code>1 KiB = 1,024 Bytes
+1 MiB = 1,024 KiB
+1 GiB = 1,024 MiB
+1 TiB = 1,024 GiB</code></pre>
+</blockquote>
+<p>Consequently, <code>192 GB</code> and <code>192 GiB</code> are not
+exactly the same capacity. Vendor-labelled capacity is adequate for
+rough estimates, but a deployment budget must use one consistent unit
+system.</p>
+<h2 id="how-do-parameters-translate-into-weight-capacity">2. How Do
+Parameters Translate into Weight Capacity?</h2>
+<p>Under an idealized calculation:</p>
+<blockquote>
+<pre><code>Weight capacity in Bytes
+= number of parameters × bits per parameter ÷ 8</code></pre>
+</blockquote>
+<p>For a 2.8T-parameter model:</p>
+<blockquote>
+<pre><code>2.8T = 2.8 × 10^12 parameters</code></pre>
+</blockquote>
+<p>If each parameter uses BF16:</p>
+<blockquote>
+<pre><code>2.8 × 10^12 × 16 ÷ 8
+= 5.6 × 10^12 Bytes
+≈ 5.6 TB</code></pre>
+</blockquote>
+<p>With FP8:</p>
+<blockquote>
+<pre><code>2.8 × 10^12 × 8 ÷ 8
+≈ 2.8 TB</code></pre>
+</blockquote>
+<p>With ideal FP4:</p>
+<blockquote>
+<pre><code>2.8 × 10^12 × 4 ÷ 8
+≈ 1.4 TB</code></pre>
+</blockquote>
+<p>Kimi K3’s MXFP4 format also needs shared Scales. If 32 elements share
+one 8-bit Scale:</p>
+<blockquote>
+<pre><code>32 × 4 bits + 8 bits = 136 bits
+136 ÷ 32 = 4.25 bits per parameter</code></pre>
+</blockquote>
+<p>The resulting simplified lower bound is:</p>
+<blockquote>
+<pre><code>2.8 × 10^12 × 4.25 ÷ 8
+≈ 1.4875 × 10^12 Bytes
+≈ 1.49 TB</code></pre>
+</blockquote>
+<p>This is only an <strong>ideal lower bound for Weight</strong>. It
+excludes:</p>
+<ul>
+<li>layers or parameters not stored in MXFP4;</li>
+<li>alignment, Padding and metadata;</li>
+<li>Activation;</li>
+<li>KV / Latent Cache;</li>
+<li>KDA State;</li>
+<li>AttnRes history buffers;</li>
+<li>Kernel Workspace;</li>
+<li>EP / TP communication buffers; and</li>
+<li>memory consumed by the inference framework itself.</li>
+</ul>
+<p>Therefore, “2.8T parameters require about 1.49TB in MXFP4” does not
+mean that 1.49TB of HBM is automatically enough to run the model.</p>
+<h1 id="part-ii-what-are-weight-activation-and-hbm">Part II — What Are
+Weight, Activation and HBM?</h1>
+<h2 id="what-is-a-weight">3. What Is a Weight?</h2>
+<p>A Weight is one of the many numbers learned during model training.
+Most of the large matrices used in matrix multiplication consist of
+Weights.</p>
+<p>A simplified linear layer is:</p>
+<blockquote>
+<pre><code>Output Y = Input X × Weight matrix W + Bias b</code></pre>
+</blockquote>
+<p>Here:</p>
+<ul>
+<li><code>X</code> is an Activation;</li>
+<li><code>W</code> is a Weight matrix; and</li>
+<li><code>Y</code> is a new Activation.</li>
+</ul>
+<p>More parameters mean more Weight must be stored. Although an MoE
+model computes only a small subset of Experts for each Token,
+<strong>the Weight of every Expert must still be stored somewhere in the
+cluster</strong>.</p>
+<h3 id="a-weight-is-not-a-stored-sentence-of-knowledge">3.1 A Weight Is
+Not a Stored Sentence of Knowledge</h3>
+<p>The model does not place the sentence “The capital of France is
+Paris” intact inside a particular Weight. Training distributes
+repeatedly observed relationships across many matrix elements. One
+Weight is only one number; large collections of Weights jointly
+determine how an input vector should be amplified, reduced, mixed or
+suppressed.</p>
+<p>Consider a simplified example with three inputs:</p>
+<blockquote>
+<pre><code>z = x₁ × w₁ + x₂ × w₂ + x₃ × w₃ + b</code></pre>
+</blockquote>
+<ul>
+<li><code>x₁</code>, <code>x₂</code> and <code>x₃</code> are Activations
+created by this input;</li>
+<li><code>w₁</code>, <code>w₂</code> and <code>w₃</code> are learned
+Weights;</li>
+<li><code>b</code> is a Bias, which is also a parameter; and</li>
+<li><code>z</code> is the new intermediate value passed to the next
+operation.</li>
+</ul>
+<p>When the model is wrong during training, backpropagation estimates
+which Weights should change and by how much, after which the optimizer
+updates them. Once training is complete, ordinary inference repeatedly
+reads and reuses the same Weights rather than modifying them for each
+Token.</p>
+<p>The distinction is therefore:</p>
+<blockquote>
+<pre><code>Weight: long-lived computation rules determined mainly by training
+Input / Activation: request-specific data that changes on every run</code></pre>
+</blockquote>
+<h3 id="where-does-kimi-k3-contain-weights">3.2 Where Does Kimi K3
+Contain Weights?</h3>
+<p>Weights do not exist only inside Experts. Major categories
+include:</p>
+<ul>
+<li><strong>Embedding Weight:</strong> looks up the starting vector
+associated with a Token ID;</li>
+<li><strong>KDA / Gated MLA Weight:</strong> projects inputs into
+queries, memory components, Gates or State-update components;</li>
+<li><strong>Router Weight:</strong> computes Expert scores from the
+current Token features;</li>
+<li><strong>Shared and Routed Expert Weight:</strong> performs large FFN
+/ MLP feature transformations;</li>
+<li><strong>AttnRes Weight:</strong> helps the current layer decide
+which earlier Blocks should be read; and</li>
+<li><strong>LM Head Weight:</strong> converts the final vector into a
+score for every Token in the vocabulary.</li>
+</ul>
+<p>This also explains why <code>2.8T × 16 ÷ 896</code> is not an exact
+active-parameter count. The <code>16/896</code> ratio describes only
+Routed Expert selection and excludes all of the always-needed Weight
+categories above.</p>
+<h3 id="why-do-weights-dominate-capacity-and-bandwidth">3.3 Why Do
+Weights Dominate Capacity and Bandwidth?</h3>
+<p>One Token’s Activation is only a collection of vectors currently
+moving through the network. A 2.8T model, by contrast, must retain 2.8
+trillion parameters. Even at an ideal 4 bits per Weight, the total is
+still about 1.4TB.</p>
+<p>Before matrix multiplication begins, the required Weights also have
+to be read from HBM toward the compute units. If every generated Token
+requires large volumes of Expert Weight to be read, performance may be
+constrained by HBM bandwidth before it is constrained by peak FLOPS.</p>
+<h2 id="what-is-an-activation">4. What Is an Activation?</h2>
+<p>After text is split into Tokens, each Token is first converted into a
+vector of numbers. That vector changes repeatedly as it moves through
+the layers. These changing intermediate values are Activations.</p>
+<p>Activation is not fixed:</p>
+<ul>
+<li>different inputs produce different Activations;</li>
+<li>different Layers produce different Activations;</li>
+<li>a larger Batch means more simultaneous Activations;</li>
+<li>training retains more intermediate Activations for backpropagation;
+and</li>
+<li>inference retains fewer, but still needs working memory and
+caches.</li>
+</ul>
+<p>In short:</p>
+<blockquote>
+<pre><code>Weight is what the model has learned.
+Activation is what the model is processing now.</code></pre>
+</blockquote>
+<h3 id="activation-versus-activation-function">4.1 Activation Versus
+Activation Function</h3>
+<p>The names are similar but the concepts are different:</p>
+<ul>
+<li>An <strong>Activation</strong> is an intermediate number or tensor
+created while the model runs.</li>
+<li>An <strong>Activation Function</strong> is a nonlinear function—such
+as SiLU, Sigmoid or Tanh—that transforms intermediate values.</li>
+</ul>
+<p>Engineers often call Embedding outputs, Attention outputs, Q/K/V
+tensors, Router Scores, FFN intermediate vectors and Layer outputs
+“Activations.” They do not all need to have just passed through an
+Activation Function; in this context, Activation simply means
+input-dependent intermediate data produced during the current run.</p>
+<h3 id="why-does-a-neural-network-need-activation-functions">4.2 Why
+Does a Neural Network Need Activation Functions?</h3>
+<p>A neural network repeatedly transforms its current representation
+into a representation that is more useful for the task. Early layers may
+identify local meaning, middle layers may combine syntax and references,
+and later layers may turn the resulting information into probabilities
+for the next Token.</p>
+<p>If every layer were purely linear, stacking many layers would not
+create genuinely greater expressive power. Suppose two consecutive
+layers are linear:</p>
+<blockquote>
+<pre><code>h₁ = xW₁ + b₁
+y  = h₁W₂ + b₂</code></pre>
+</blockquote>
+<p>Substituting the first equation into the second gives:</p>
+<blockquote>
+<pre><code>y = x(W₁W₂) + (b₁W₂ + b₂)</code></pre>
+</blockquote>
+<p>The result is still one larger linear transformation. Dozens of
+purely linear layers could be collapsed into one, leaving the model
+unable to form sufficiently complex curved boundaries, conditional
+choices and feature combinations.</p>
+<p>An Activation Function inserts nonlinearity:</p>
+<blockquote>
+<pre><code>h = SiLU(xW₁)
+y = hW₂</code></pre>
+</blockquote>
+<p>These two steps can no longer be collapsed into one matrix. Different
+inputs can activate, suppress or recombine different features, allowing
+the model to express rules such as: “if this context appears, strengthen
+one type of information; otherwise use a different transformation.”</p>
+<p>In Kimi K3, nonlinear behavior is not confined to the conventional
+FFN:</p>
+<ul>
+<li>Experts normally contain SiLU-, SwiGLU- or similar
+nonlinearities;</li>
+<li>the Router produces different Expert scores from different
+Activations, sending different Tokens along different paths;</li>
+<li>Gates in KDA and Gated MLA decide which information passes according
+to the current data; and</li>
+<li>AttnRes changes how strongly the current layer reads earlier Blocks
+based on the current Activation.</li>
+</ul>
+<h3 id="how-does-one-tokens-activation-change">4.3 How Does One Token’s
+Activation Change?</h3>
+<p>One Token’s journey can be viewed as repeatedly rewriting the same
+working representation:</p>
+<blockquote>
+<pre><code>Token ID
+→ initial Activation returned by the Embedding lookup
+→ Activation after incorporating historical information
+→ Activation after Expert transformation
+→ Activation after the Residual merge
+→ input Activation for the next Layer
+→ final Activation before the LM Head</code></pre>
+</blockquote>
+<p>Weight determines how each transformation is performed; Activation is
+the object being transformed this time. The same Weights produce
+entirely different Activations for different sentences. This input
+dependence is one fundamental reason why Activation is usually harder to
+compress to 4 bits than Weight.</p>
+<h3
+id="why-is-the-activation-hbm-budget-different-in-training-and-inference">4.4
+Why Is the Activation HBM Budget Different in Training and
+Inference?</h3>
+<p>Inference only needs to continue forward to generate an answer, so
+many intermediate Activations can be released or overwritten after use.
+Training also performs backpropagation and must determine how each layer
+affected the Weight update. It therefore retains more intermediate
+Activations, or uses Activation Checkpointing to trade extra computation
+for lower memory.</p>
+<p>For the same model:</p>
+<ul>
+<li>Activation is often a major HBM item during training;</li>
+<li>Weight usually dominates capacity for single-request inference;
+and</li>
+<li>under high-concurrency, long-context inference, Activation, Cache,
+State and communication buffers can still grow rapidly.</li>
+</ul>
+<h2 id="what-is-hbm-and-what-must-it-store">5. What Is HBM, and What
+Must It Store?</h2>
+<p>HBM stands for <strong>High Bandwidth Memory</strong>. It is the fast
+memory placed next to a GPU, TPU or NPU compute package.</p>
+<p>HBM has two core metrics:</p>
+<ol type="1">
+<li><strong>Capacity:</strong> how much data it can hold.</li>
+<li><strong>Bandwidth:</strong> how much data it can read and write per
+second.</li>
+</ol>
+<p>These must not be confused.</p>
+<p>For example:</p>
+<ul>
+<li>Enough capacity but insufficient bandwidth: the model fits, but
+Weight arrives too slowly.</li>
+<li>High bandwidth but insufficient capacity: the chip is fast, but the
+model does not fit.</li>
+<li>Enough capacity and bandwidth but slow interconnect: multiple
+accelerators spend their time waiting for communication.</li>
+<li>Adequate hardware but a missing Kernel: the model’s mathematical
+structure cannot be mapped efficiently onto the chip.</li>
+</ul>
+<h3 id="what-usually-occupies-hbm-during-inference">5.1 What Usually
+Occupies HBM During Inference?</h3>
+<blockquote>
+<pre><code> Model Weight
+  ├─ Embedding
+  ├─ Attention / KDA / MLA Weight
+  ├─ Router Weight
+  ├─ Routed Expert Weight
+  ├─ Shared Expert Weight
+  └─ Norm / LM Head, etc.
+├─────────────────────────────────────┤
+ Activation
+├─────────────────────────────────────┤
+ KV Cache / Latent Cache
+├─────────────────────────────────────┤
+ KDA State
+├─────────────────────────────────────┤
+ AttnRes Block History
+├─────────────────────────────────────┤
+ MX Scale / Quantization Metadata
+├─────────────────────────────────────┤
+ GEMM / Attention Workspace
+├─────────────────────────────────────┤
+ EP Dispatch / Combine Buffer
+├─────────────────────────────────────┤
+ Runtime / CUDA Graph / Framework</code></pre>
+</blockquote>
+<h3 id="why-does-a-longer-context-require-more-hbm">5.2 Why Does a
+Longer Context Require More HBM?</h3>
+<p>Traditional Attention stores K and V for historical Tokens. KV Cache
+therefore grows approximately linearly with context length.</p>
+<p>The main variables are:</p>
+<blockquote>
+<pre><code>Batch Size
+× Context Length
+× number of Layers
+× number of K/V Heads
+× dimension per Head
+× Bytes per element</code></pre>
+</blockquote>
+<p>KDA uses a fixed or nearly fixed-size State, reducing cache growth
+for long contexts. Gated MLA compresses K/V and lowers the explicit
+Cache footprint. Neither means that memory requirements disappear
+entirely.</p>
+<h1 id="part-iii-what-does-precision-mean">Part III — What Does
+“Precision” Mean?</h1>
+<h2 id="numerical-precision-is-not-answer-accuracy">6. Numerical
+Precision Is Not Answer Accuracy</h2>
+<p>FP16, BF16, FP8 and FP4 describe <strong>how many bits represent one
+number and how those bits are allocated among the sign, exponent and
+significand</strong>. They do not directly describe whether the model’s
+answer is correct.</p>
+<p>A floating-point number can be approximated as scientific
+notation:</p>
+<blockquote>
+<pre><code>value ≈ sign × significant digits × 2^exponent</code></pre>
+</blockquote>
+<ul>
+<li>More exponent bits provide a wider dynamic range.</li>
+<li>More significand bits distinguish nearby values more finely.</li>
+<li>Fewer total bits reduce capacity and bandwidth pressure, but
+normally increase quantization error.</li>
+</ul>
+<h2 id="common-numerical-formats">7. Common Numerical Formats</h2>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 15%" />
+<col style="width: 15%" />
+<col style="width: 32%" />
+<col style="width: 36%" />
+</colgroup>
+<thead>
+<tr>
+<th><strong>Format</strong></th>
+<th style="text-align: center;"><strong>Bits per element</strong></th>
+<th><strong>General characteristics</strong></th>
+<th><strong>Common use</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>FP32</td>
+<td style="text-align: center;">32</td>
+<td>High precision and wide range; large footprint</td>
+<td>Reference computation and some accumulation</td>
+</tr>
+<tr>
+<td>TF32</td>
+<td style="text-align: center;">roughly a 19-bit effective encoding
+path</td>
+<td>Designed by NVIDIA for matrix computation</td>
+<td>Matrix multiplication in training</td>
+</tr>
+<tr>
+<td>BF16</td>
+<td style="text-align: center;">16</td>
+<td>Exponent range close to FP32, shorter significand</td>
+<td>Large-model training and inference</td>
+</tr>
+<tr>
+<td>FP16</td>
+<td style="text-align: center;">16</td>
+<td>More significand precision than BF16, narrower exponent range</td>
+<td>Training and inference</td>
+</tr>
+<tr>
+<td>FP8 E4M3</td>
+<td style="text-align: center;">8</td>
+<td>Relatively better precision, narrower range</td>
+<td>Activation and Weight</td>
+</tr>
+<tr>
+<td>FP8 E5M2</td>
+<td style="text-align: center;">8</td>
+<td>Wider range, lower precision</td>
+<td>Gradients and data with a wide dynamic range</td>
+</tr>
+<tr>
+<td>INT8</td>
+<td style="text-align: center;">8</td>
+<td>Integer format requiring a Scale</td>
+<td>Inference quantization</td>
+</tr>
+<tr>
+<td>FP4 / MXFP4</td>
+<td style="text-align: center;">about 4</td>
+<td>Very compact, with larger error</td>
+<td>Weight and selected matrix multiplication</td>
+</tr>
+<tr>
+<td>INT4</td>
+<td style="text-align: center;">4</td>
+<td>4-bit integer requiring quantization parameters</td>
+<td>Weight-only inference</td>
+</tr>
+</tbody>
+</table>
+<h3 id="bf16-versus-fp16">7.1 BF16 Versus FP16</h3>
+<p>Both use 16 bits, but allocate them differently:</p>
+<ul>
+<li>FP16 has fewer exponent bits and more significand bits.</li>
+<li>BF16 has more exponent bits and fewer significand bits.</li>
+</ul>
+<p>As a result:</p>
+<ul>
+<li>BF16 represents a wider dynamic range and is less prone to
+overflow.</li>
+<li>FP16 distinguishes nearby values slightly more finely.</li>
+<li>Large-model training often prefers BF16 because numerical stability
+matters more than the extra local resolution.</li>
+</ul>
+<h3 id="fp8-e4m3-versus-e5m2">7.2 FP8 E4M3 Versus E5M2</h3>
+<ul>
+<li><code>E4M3</code> has four exponent bits and three significand
+bits.</li>
+<li><code>E5M2</code> has five exponent bits and two significand
+bits.</li>
+</ul>
+<p>An intuitive analogy is:</p>
+<ul>
+<li>E4M3 is a shorter ruler with finer markings.</li>
+<li>E5M2 is a longer ruler with coarser markings.</li>
+</ul>
+<h3 id="fp4-and-int4-are-not-the-same">7.3 FP4 and INT4 Are Not the
+Same</h3>
+<p>Both may use four bits, but their encodings differ:</p>
+<ul>
+<li>FP4 is floating point and includes an exponent concept.</li>
+<li>INT4 is integer and normally uses a Scale and Zero Point.</li>
+<li>INT4 support does not imply MXFP4 support.</li>
+<li>Software being able to read a 4-bit Checkpoint does not imply that
+the chip can execute native 4-bit Tensor Core computation at full
+speed.</li>
+</ul>
+<h2 id="what-are-mxfp4-and-mxfp8">8. What Are MXFP4 and MXFP8?</h2>
+<p>MX means <strong>Microscaling</strong>. A small group of values
+shares one Scale.</p>
+<h3 id="why-use-a-shared-scale">8.1 Why Use a Shared Scale?</h3>
+<p>With only four bits, a value has very few representable levels.
+Giving each block of 32 values one shared Scale shifts that small group
+into a more useful numerical range:</p>
+<blockquote>
+<pre><code>real value ≈ low-precision value × shared Scale</code></pre>
+</blockquote>
+<p>Suppose a group of Weights is clustered near <code>0.001</code>.
+Direct FP4 conversion might round many of them to the same value.
+Scaling the group before encoding it in FP4 can reduce that error.</p>
+<h3 id="effective-average-footprint-of-mxfp4">8.2 Effective Average
+Footprint of MXFP4</h3>
+<blockquote>
+<pre><code>32 elements × 4 bits = 128 bits
+1 shared Scale = 8 bits
+Total = 136 bits
+Average = 4.25 bits per element</code></pre>
+</blockquote>
+<h3 id="effective-average-footprint-of-mxfp8">8.3 Effective Average
+Footprint of MXFP8</h3>
+<blockquote>
+<pre><code>32 elements × 8 bits = 256 bits
+1 shared Scale = 8 bits
+Total = 264 bits
+Average = 8.25 bits per element</code></pre>
+</blockquote>
+<h3
+id="why-is-mxfp4-common-for-weight-while-mxfp8-is-common-for-activation">8.4
+Why Is MXFP4 Common for Weight While MXFP8 Is Common for
+Activation?</h3>
+<p>Weight is:</p>
+<ul>
+<li>extremely numerous;</li>
+<li>largely fixed during inference;</li>
+<li>available for offline calibration; and</li>
+<li>the most valuable target for aggressive compression.</li>
+</ul>
+<p>Activation is:</p>
+<ul>
+<li>generated dynamically from the input;</li>
+<li>more variable in dynamic range;</li>
+<li>capable of propagating error through every following layer; and</li>
+<li>normally safer at a higher precision.</li>
+</ul>
+<p>The basic allocation is therefore:</p>
+<blockquote>
+<pre><code>Weight: prioritize capacity and bandwidth savings → MXFP4
+Activation: prioritize numerical stability → MXFP8
+Accumulator: retain higher precision → FP16 / BF16 / FP32</code></pre>
+</blockquote>
+<p>This does not mean Weight is less important. Weight and Activation
+have different statistical behavior, usage patterns and failure
+modes.</p>
+<h4
+id="reason-1-weight-is-fixed-activation-changes-with-the-input">Reason
+1: Weight Is Fixed; Activation Changes with the Input</h4>
+<p>Weights are known before inference starts. Engineers can measure
+every Block’s range, select Scales, identify outliers and use
+Quantization-Aware Training (QAT) to help the model adapt to MXFP4
+rounding error.</p>
+<p>Activations are created at runtime. The same layer may produce very
+different distributions for ordinary conversation, source code, long
+digit strings or an extremely long context. A fixed 4-bit set of levels
+is more likely to encounter two problems:</p>
+<ul>
+<li>small values collapse to zero or to the same level; or</li>
+<li>large values exceed the representable range and are clipped.</li>
+</ul>
+<p>MXFP8 has more representable values and a wider usable range, making
+it more tolerant of input-dependent variation.</p>
+<h4
+id="reason-2-outliers-in-an-activation-block-affect-every-value-sharing-its-scale">Reason
+2: Outliers in an Activation Block Affect Every Value Sharing Its
+Scale</h4>
+<p>MX formats share one Scale across a group. If an Activation Block
+suddenly contains one large outlier, the Scale must accommodate it. The
+smaller values are then squeezed into fewer encoding levels. Weight
+distributions are fixed and can be improved through training, grouping
+and offline calibration. Activation outliers depend on the current Token
+and are harder to anticipate.</p>
+<h4 id="reason-3-weight-is-enormous-and-repeatedly-read">Reason 3:
+Weight Is Enormous and Repeatedly Read</h4>
+<p>Compressing 2.8T Weights from 8 bits to roughly 4 bits can
+theoretically cut both Weight capacity and Weight-read traffic by almost
+half. That directly affects HBM requirements, accelerator count and the
+time each Token waits for Weight to arrive.</p>
+<p>Activation also consumes bandwidth, but in low-Batch Decode for a
+large MoE, Expert Weight reads are often the more prominent cost.
+Applying the most aggressive compression to Weight first therefore tends
+to provide the largest system benefit.</p>
+<h4
+id="reason-4-activation-error-immediately-enters-every-later-computation">Reason
+4: Activation Error Immediately Enters Every Later Computation</h4>
+<p>One layer’s Activation is the next layer’s input. Excessive
+quantization error immediately affects Attention, Router, Gate, Residual
+and every later Layer. Weight quantization error also affects results,
+but it is fixed and can be jointly compensated by other parameters
+during QAT. Activation error varies with the input, Token and Layer,
+making it harder for the model to anticipate.</p>
+<h3
+id="what-happens-in-one-mxfp4-weight-mxfp8-activation-matrix-multiplication">8.5
+What Happens in One MXFP4 Weight × MXFP8 Activation Matrix
+Multiplication?</h3>
+<p>The operation can be divided into four steps:</p>
+<blockquote>
+<pre><code>1. Read packed MXFP4 Weight and its Scale from HBM.
+2. Read the current layer’s MXFP8 Activation and its Scale.
+3. Use the Scales to recover the numerical meaning and execute multiplication.
+4. Accumulate many products in a higher precision such as BF16 or FP32.</code></pre>
+</blockquote>
+<p>One output of a matrix multiplication is normally the sum of many
+products:</p>
+<blockquote>
+<pre><code>yⱼ = x₁w₁ⱼ + x₂w₂ⱼ + ... + xₙwₙⱼ</code></pre>
+</blockquote>
+<p>Even when each multiplication uses low-precision inputs, accumulation
+needs more bits. Otherwise, repeatedly adding thousands of small
+products quickly magnifies rounding error or exceeds the low-precision
+format’s range.</p>
+<p><code>W4A8</code> therefore normally means:</p>
+<blockquote>
+<pre><code>Weight input is mainly stored and multiplied at approximately 4 bits.
+Activation input is mainly represented at approximately 8 bits.
+The sum of products uses a higher-precision Accumulator.
+The output is converted to MXFP8, BF16 or another format required next.</code></pre>
+</blockquote>
+<p>It does not mean that Norm, Softmax, Router, Gate, Residual addition
+and every intermediate tensor must use the same low precision.
+Numerically sensitive operations may remain in BF16 or FP32.</p>
+<p>Kimi states that K3 begins adapting to MXFP4 Weight and MXFP8
+Activation during the SFT stage. This form of QAT simulates deployment
+quantization and Scale behavior during training so that the model learns
+to operate in the presence of those errors. It improves viability, but
+does not automatically provide native chip instructions, efficient
+Kernels or a compatible Checkpoint Layout.</p>
+<p>Using FP4 Weight and FP8 Activation also does not imply that the
+entire matrix multiplication remains at four or eight bits from
+beginning to end. Chips normally accumulate the result internally at a
+higher precision.</p>
+<h1 id="part-iv-operators-kernels-and-inference-engines">Part IV —
+Operators, Kernels and Inference Engines</h1>
+<h2 id="what-is-an-operator">9. What Is an Operator?</h2>
+<p>An <strong>Operator</strong> is a standard mathematical action in a
+neural-network computation graph.</p>
+<p>Common Operators include:</p>
+<ul>
+<li>Matrix Multiplication / GEMM;</li>
+<li>Softmax;</li>
+<li>LayerNorm / RMSNorm;</li>
+<li>RoPE;</li>
+<li>Top-K;</li>
+<li>Gather / Scatter;</li>
+<li>Convolution;</li>
+<li>Scan;</li>
+<li>All-Reduce;</li>
+<li>All-to-All; and</li>
+<li>Quantize / Dequantize.</li>
+</ul>
+<p>For example:</p>
+<blockquote>
+<pre><code>Y = X × W</code></pre>
+</blockquote>
+<p>is a matrix-multiplication Operator.</p>
+<p>The instruction:</p>
+<blockquote>
+<pre><code>Select the 16 Experts with the highest Router scores.</code></pre>
+</blockquote>
+<p>uses Top-K, sorting or selection Operators.</p>
+<h3 id="an-operator-is-not-a-kernel">9.1 An Operator Is Not a
+Kernel</h3>
+<ul>
+<li>An <strong>Operator</strong> describes the mathematical or
+model-level action.</li>
+<li>A <strong>Kernel</strong> is the concrete program that executes that
+action on one type of chip.</li>
+</ul>
+<p>The same matrix-multiplication Operator may be executed by:</p>
+<ul>
+<li>a CUDA / CUTLASS Kernel on an NVIDIA GPU;</li>
+<li>a ROCm / HIP Kernel on an AMD GPU;</li>
+<li>XLA-generated TPU instructions on a TPU; or</li>
+<li>CANN / AscendC on an Ascend accelerator.</li>
+</ul>
+<p>One analogy is:</p>
+<blockquote>
+<pre><code>Operator = the recipe instruction “sear”
+Kernel = the exact heat and procedure written for one particular stove</code></pre>
+</blockquote>
+<h3 id="why-is-an-operator-definition-not-enough">9.2 Why Is an Operator
+Definition Not Enough?</h3>
+<p>A general framework may be able to assemble the correct result from
+many small Operators, yet run very slowly. High-performance deployment
+normally requires:</p>
+<ul>
+<li>fusing multiple Operators;</li>
+<li>avoiding intermediate writes back to HBM;</li>
+<li>using the chip’s native low-precision matrix units;</li>
+<li>arranging data in the expected memory Layout;</li>
+<li>overlapping communication with computation; and</li>
+<li>tuning for specific Shapes.</li>
+</ul>
+<p>KDA, for example, may contain:</p>
+<blockquote>
+<pre><code>Linear projection
+→ short convolution
+→ Gate
+→ State read
+→ Delta update
+→ State write</code></pre>
+</blockquote>
+<p>Launching one Kernel for each step and writing every intermediate
+result to HBM would be slow. The preferred implementation fuses these
+operations into one or a small number of Kernels.</p>
+<h2 id="what-is-an-inference-engine">10. What Is an Inference
+Engine?</h2>
+<p>An inference engine turns the complete model into a running service.
+It normally handles:</p>
+<ul>
+<li>loading the Checkpoint;</li>
+<li>distributing Weight across accelerators;</li>
+<li>managing KV Cache and State;</li>
+<li>scheduling Kernels;</li>
+<li>dynamic batching;</li>
+<li>Token Sampling;</li>
+<li>Tensor Parallelism;</li>
+<li>Expert Parallelism;</li>
+<li>Pipeline Parallelism;</li>
+<li>cross-accelerator communication; and</li>
+<li>failure recovery and monitoring.</li>
+</ul>
+<p>Common frameworks and engines include vLLM, SGLang, TensorRT-LLM,
+Megatron, JAX/XLA and MindIE. Support for a conventional Transformer
+does not automatically imply support for Kimi K3’s new structures.</p>
+<p>Kimi K3 specifically requires validation of:</p>
+<ul>
+<li>KDA State Update and long-sequence Scan;</li>
+<li>Gated MLA’s compressed Cache and Gate;</li>
+<li>AttnRes cross-layer history management;</li>
+<li>Stable LatentMoE’s Latent projection;</li>
+<li>896-to-16 Expert routing;</li>
+<li>MXFP4 Weight and MXFP8 Activation;</li>
+<li>Grouped GEMM;</li>
+<li>EP Dispatch / Combine; and</li>
+<li>Quantile Balancing or other load-balancing logic.</li>
+</ul>
+<h1 id="part-v-kimi-k3s-four-core-architectural-components">Part V —
+Kimi K3’s Four Core Architectural Components</h1>
+<h2 id="put-the-four-components-back-into-the-full-architecture">10.1
+Put the Four Components Back into the Full Architecture</h2>
+<p>Before studying KDA, Gated MLA, AttnRes and Stable LatentMoE, it is
+important to understand that they are not four pieces of software that
+execute side by side. They operate on three different information
+flows:</p>
+<ul>
+<li><strong>information between the current Token and historical
+Tokens:</strong> handled by KDA or Gated MLA;</li>
+<li><strong>information carried by the current Token across different
+Layers:</strong> handled by AttnRes; and</li>
+<li><strong>feature transformation within the current Token:</strong>
+handled by Stable LatentMoE.</li>
+</ul>
+<p>Placed back into one Token’s journey, the sequence is:</p>
+<blockquote>
+<pre><code>Token ID
+  ↓ Embedding lookup
+Initial vector
+  ↓
+┌──────────── Kimi K3 Block, repeated many times ────────────┐
+
+  KDA or Gated MLA
+  Let the current Token use information from prior Tokens
+       ↓
+  AttnRes
+  Select which earlier Layer outputs remain useful
+       ↓
+  Stable LatentMoE
+  Router selects 16/896 Routed Experts; Shared Expert runs
+       ↓
+  AttnRes
+  Return the new Block result to the depth information flow
+
+  ↓ Final Norm and LM Head
+Scores for the next Token</code></pre>
+</blockquote>
+<p>Kimi’s official architecture shows a repeating unit of <strong>three
+KDA Blocks plus one Gated MLA Block</strong>. This indicates that KDA is
+the primary efficient path for compressed historical memory, with Gated
+MLA periodically providing more direct historical retrieval. It does not
+establish that Kimi has disclosed the model’s complete layer count;
+production deployment must still use the final Config.</p>
+<table>
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 17%" />
+<col style="width: 21%" />
+<col style="width: 25%" />
+<col style="width: 21%" />
+</colgroup>
+<thead>
+<tr>
+<th><strong>Core component</strong></th>
+<th><strong>Input</strong></th>
+<th><strong>Output</strong></th>
+<th><strong>Problem solved</strong></th>
+<th><strong>Hardware resource affected first</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>KDA</td>
+<td>Current Token vector and prior State</td>
+<td>New vector containing compressed historical information, plus a new
+State</td>
+<td>Prevent long-context history storage from growing too quickly with
+Token count</td>
+<td>State capacity, HBM reads/writes and Scan / State Update
+Kernels</td>
+</tr>
+<tr>
+<td>Gated MLA</td>
+<td>Current Token Query and compressed historical Latent Cache</td>
+<td>Information retrieved from explicit historical positions</td>
+<td>A compressed State alone may not recall one old Token precisely</td>
+<td>Latent Cache, Attention Kernel and HBM bandwidth</td>
+</tr>
+<tr>
+<td>AttnRes</td>
+<td>Current Layer representation and selected earlier Layer
+representations</td>
+<td>Depth-wise information weighted according to content</td>
+<td>A deep network need not rely only on one fixed residual path</td>
+<td>Activation history, cross-Pipeline-Stage communication and Depth
+Routing Kernel</td>
+</tr>
+<tr>
+<td>Stable LatentMoE</td>
+<td>Current Token Hidden State</td>
+<td>Vector transformed by a small subset of Experts</td>
+<td>Use 896 Experts for capacity while computing only 16 per Token</td>
+<td>Expert Weight, Grouped GEMM, All-to-All and EP buffers</td>
+</tr>
+</tbody>
+</table>
+<p>Two distinctions are especially important:</p>
+<ol type="1">
+<li><strong>An Attention Head is not an Expert.</strong> A Head
+retrieves information across Token history; an Expert applies a matrix
+transformation to the current Token’s features.</li>
+<li><strong>The Latent in MLA is not the Latent in LatentMoE.</strong>
+MLA compresses Attention Key/Value information to reduce historical
+Cache. LatentMoE compresses the representation sent to routed Experts to
+reduce Expert Weight traffic and cross-accelerator communication.</li>
+</ol>
+<h2 id="which-technology-is-triggered-at-each-step">10.2 Which
+Technology Is Triggered at Each Step?</h2>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 17%" />
+<col style="width: 26%" />
+<col style="width: 23%" />
+<col style="width: 32%" />
+</colgroup>
+<thead>
+<tr>
+<th><strong>Execution step</strong></th>
+<th><strong>What actually happens</strong></th>
+<th><strong>Relevant Kimi K3 technology</strong></th>
+<th><strong>Direct deployment requirement</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Token enters the model</td>
+<td>Look up a vector from a matrix using the Token ID</td>
+<td>Embedding</td>
+<td>Large lookup and Weight read; not part of 16/896 routing</td>
+</tr>
+<tr>
+<td>Read prior context</td>
+<td>Update compressed State or read Latent Cache</td>
+<td>KDA / Gated MLA</td>
+<td>Dedicated State Update, Scan, compressed-Cache and Gate Kernels</td>
+</tr>
+<tr>
+<td>Read earlier Layers</td>
+<td>Compute weights for earlier Block representations</td>
+<td>AttnRes</td>
+<td>Retain required historical Activations and compute Depth Routing
+efficiently</td>
+</tr>
+<tr>
+<td>Select Experts</td>
+<td>Router scores Experts and chooses Top-16</td>
+<td>Quantile Balancing and Static-Shape routing</td>
+<td>Router, Top-K, fixed communication buffers and load balancing</td>
+</tr>
+<tr>
+<td>Send Tokens to Experts</td>
+<td>If an Expert is remote, send the Token to its GPU</td>
+<td>EP, WideEP, Dispatch and All-to-All</td>
+<td>NVLink, Infinity Fabric, TPU ICI, HCCL or Scale-Out network</td>
+</tr>
+<tr>
+<td>Execute Experts</td>
+<td>Pack Tokens belonging to each Expert and run matrix
+multiplication</td>
+<td>Stable LatentMoE, Grouped GEMM and Shared Expert overlap</td>
+<td>Low-precision matrix units, HBM bandwidth and efficient Kernels</td>
+</tr>
+<tr>
+<td>Merge results</td>
+<td>Weight Expert outputs by Router score and return them to the
+originating Rank</td>
+<td>Combine and All-to-All</td>
+<td>A second communication phase and communication/computation
+overlap</td>
+</tr>
+<tr>
+<td>Low-precision inference</td>
+<td>Read MXFP4 Weight and multiply it by MXFP8 Activation</td>
+<td>Deployment outcome of MXFP4/MXFP8 QAT</td>
+<td>Chip instructions, Scale Layout and Quantize / Dequantize
+Kernels</td>
+</tr>
+</tbody>
+</table>
+<p>Several additional names are often mixed together with
+“architecture,” but belong to different levels:</p>
+<ul>
+<li><strong>Per-Head Muon</strong> is an Optimizer used to update
+Weights during training, not a type of Attention.</li>
+<li><strong>SiTU</strong> is a nonlinear unit used in numerical and
+model design, not a multi-accelerator communication protocol.</li>
+<li><strong>QAT</strong> trains the model to tolerate low-precision
+error; it is not a new Layer.</li>
+<li><strong>WideEP</strong> spreads Experts across more accelerators; it
+does not change the fact that the model has 896 Experts.</li>
+<li><strong>DeepEP</strong> is a communication library for MoE Dispatch
+/ Combine, while <strong>EPLB</strong> attempts to balance load across
+Ranks. Neither is a fifth core Kimi K3 architecture component.</li>
+</ul>
+<h2 id="kda-compressed-memory-along-the-token-dimension">11. KDA:
+Compressed Memory Along the Token Dimension</h2>
+<p>Traditional Full Attention stores K and V for every historical Token.
+KDA instead maintains a continuously updated State:</p>
+<blockquote>
+<pre><code>A new Token arrives
+   ↓
+Read the previous State
+   ↓
+Compute what the previous State predicts about the current information
+   ↓
+Compute the Delta between the new value and the old prediction
+   ↓
+Use a Gate to decide how much to retain and how much to update
+   ↓
+Write the new State</code></pre>
+</blockquote>
+<p><img src="/research/kimi-k3/media/image2.png" style="width:6.38in;height:5.20944in"
+alt="Hybrid architecture and KDA module from the Kimi Linear paper" /></p>
+<p>Hybrid architecture and KDA module from the Kimi Linear paper</p>
+<p><em>Figure 2 | Figure 3 (p.6) of the Kimi Linear technical report.
+Source: <a href="https://arxiv.org/abs/2510.26692">arXiv:2510.26692</a>.
+The figure explains the base KDA structure; Kimi K3’s official
+architecture additionally includes Gated MLA, Stable LatentMoE and Block
+AttnRes.</em></p>
+<p>Read the paper figure in three parts:</p>
+<ol type="1">
+<li><strong>Begin with the vertical backbone on the left.</strong> The
+lower <code>N×</code> Blocks use KDA and the upper <code>1×</code> Block
+uses MLA. KDA therefore does not remove every explicit Attention layer;
+it is mixed with a smaller number of MLA layers.</li>
+<li><strong>Then examine the lower-right panel.</strong> The input
+enters from below and is projected through several Linear paths, some of
+which include short <code>Conv</code> operations. The symbols in the
+circles denote Gates or control quantities. They jointly feed
+<code>Kimi Delta Attention</code>, followed by Norm and Linear
+output.</li>
+<li><strong>Finally inspect the upper-right panel.</strong> This expands
+the MoE: the Router selects Routed Experts while the Shared Expert
+always participates. KDA handles information mixing between Tokens;
+Experts transform features within one Token. They are complementary, not
+substitutes.</li>
+</ol>
+<p>This figure documents the Kimi Linear mechanism. Its individual
+Shapes, per-layer counts and Gate positions must not be treated as the
+fully disclosed Kimi K3 configuration. Kimi K3’s official figure
+confirms the repeated 3×KDA plus 1×Gated MLA pattern, but the exact
+layer count and State Shape still depend on the final Config.</p>
+<p>A simplified abstraction is:</p>
+<blockquote>
+<pre><code>New State
+= retained part of the old State
++ the Delta information that needs correction</code></pre>
+</blockquote>
+<p>Advantages:</p>
+<ul>
+<li>Long contexts do not require complete K/V storage for every old
+Token.</li>
+<li>State size can remain fixed or nearly fixed during Decode.</li>
+<li>HBM capacity and read pressure can be reduced.</li>
+</ul>
+<p>Costs and limitations:</p>
+<ul>
+<li>State is compressed memory, so details can be overwritten.</li>
+<li>Prefill contains sequential recurrence dependencies.</li>
+<li>Efficient execution requires Scan / Chunk algorithms and dedicated
+Kernels.</li>
+<li>A conventional Attention Kernel cannot simply be substituted
+unchanged.</li>
+</ul>
+<h2 id="gated-mla-more-precise-explicit-retrieval">12. Gated MLA: More
+Precise Explicit Retrieval</h2>
+<p>MLA compresses K/V into a smaller Latent representation before
+storing it in Cache:</p>
+<blockquote>
+<pre><code>Full K/V
+   ↓ compress
+Latent Cache
+   ↓ reconstruct or project when needed
+Attention computation</code></pre>
+</blockquote>
+<p><img src="/research/kimi-k3/media/image3.png" style="width:6.38in;height:4.99318in"
+alt="MLA and MoE structure from the DeepSeek-V3 technical report" /></p>
+<p>MLA and MoE structure from the DeepSeek-V3 technical report</p>
+<p><em>Figure 3 | Figure 2 (p.7) of the DeepSeek-V3 technical report.
+Source: <a href="https://arxiv.org/abs/2412.19437">arXiv:2412.19437</a>.
+The figure is used only to explain the base MLA compression method; it
+is not a complete Kimi K3 architecture diagram.</em></p>
+<p>When reading the figure, focus on the Transformer Block at left and
+the MLA area at lower right:</p>
+<ol type="1">
+<li>The left panel shows Attention followed by FFN / MoE as two
+consecutive sublayers. MLA occupies the Attention position, while
+LatentMoE occupies the Expert/FFN position. <strong>MLA and LatentMoE
+are therefore not the same Latent technique.</strong></li>
+<li>The lower-right panel separates Query, Key and Value into multiple
+projection paths. The hatched components labelled
+<code>Cached During Inference</code> are the compressed representations
+retained during inference. The key saving is that the model no longer
+stores complete K/V for every Head and every historical Token.</li>
+<li>RoPE-related components are handled separately because positional
+information cannot simply be discarded during compression. The current
+Query then participates in Attention with Key/Value reconstructed or
+projected from the Latent representation.</li>
+</ol>
+<p>Kimi K3’s <code>Gated MLA</code> adds a Gate to MLA. Public
+information confirms that it is mixed with KDA, but the exact Gate
+location, formula and per-layer Cache Shape are not fully disclosed. We
+can therefore say that it preserves compressed explicit historical
+retrieval and uses a Gate to control information; the DeepSeek figure
+does not establish Kimi K3’s full implementation.</p>
+<p>It remains a form of explicit Attention:</p>
+<ul>
+<li>the current Token can still match explicit historical
+positions;</li>
+<li>Cache still grows with Context length; but</li>
+<li>the growth rate and per-Token footprint are lower.</li>
+</ul>
+<p>KDA and Gated MLA can be viewed as:</p>
+<table>
+<colgroup>
+<col style="width: 15%" />
+<col style="width: 38%" />
+<col style="width: 46%" />
+</colgroup>
+<thead>
+<tr>
+<th><strong>Module</strong></th>
+<th><strong>Intuition</strong></th>
+<th><strong>Primary advantage</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>KDA</td>
+<td>A continuously updated summary</td>
+<td>Small Cache; well suited to long context</td>
+</tr>
+<tr>
+<td>Gated MLA</td>
+<td>A compressed but searchable archive</td>
+<td>Easier precise recall of historical positions</td>
+</tr>
+</tbody>
+</table>
+<p>Their combination balances efficiency with precise retrieval.</p>
+<h2 id="attnres-information-selection-along-the-layer-dimension">13.
+AttnRes: Information Selection Along the Layer Dimension</h2>
+<p>A conventional residual connection is approximately:</p>
+<blockquote>
+<pre><code>Current layer output = current layer transformation + previous layer input</code></pre>
+</blockquote>
+<p>As depth increases, information from prior layers is repeatedly
+accumulated. AttnRes instead lets the current Layer compute weights over
+selected earlier Layer representations:</p>
+<blockquote>
+<pre><code>Information read by the current layer
+= Σ earlier Layer representation × dynamic weight</code></pre>
+</blockquote>
+<p><img src="/research/kimi-k3/media/image4.png" style="width:6.38in;height:4.17698in"
+alt="Standard, Full and Block AttnRes from the Attention Residuals paper" /></p>
+<p>Standard, Full and Block AttnRes from the Attention Residuals
+paper</p>
+<p><em>Figure 4 | Figure 1 (p.1) of the Attention Residuals technical
+report. Source: <a
+href="https://arxiv.org/abs/2603.15031">arXiv:2603.15031</a>.</em></p>
+<p>The figure presents three approaches from left to right:</p>
+<ul>
+<li><strong>(a) Standard Residuals:</strong> each sublayer adds its
+input directly to its output through a Shortcut. Old information
+accumulates, but the current layer cannot actively choose which earlier
+Layer it needs most.</li>
+<li><strong>(b) Full Attention Residuals:</strong> every Layer can read
+all earlier Layer outputs. The reddish-brown lines denote candidate
+history and <code>α</code> denotes content-dependent read weights.</li>
+<li><strong>(c) Block Attention Residuals:</strong> several Layers are
+grouped into a Block, and later Blocks read fewer representative
+historical states. This retains selection while reducing long-lived
+Activation storage and cross-Pipeline-Stage transfer.</li>
+</ul>
+<p>The enlarged Q, K and V in the centre can be confusing. This
+Attention does not search historical Tokens; it selects among historical
+Layer or Block representations. It operates along model depth and can
+coexist with token-wise KDA or MLA.</p>
+<p>Remember:</p>
+<ul>
+<li>conventional Attention selects historical Tokens;</li>
+<li>AttnRes selects historical Layers; and</li>
+<li>the two operate along different dimensions.</li>
+</ul>
+<h3 id="why-not-simply-pass-the-original-value">13.1 Why Not Simply Pass
+the “Original Value”?</h3>
+<p>Each layer output is the model’s current representation, not a raw
+copy of the original input. A residual connection provides a shortcut
+for both information and gradients:</p>
+<blockquote>
+<pre><code>New representation = old representation + correction learned by this layer</code></pre>
+</blockquote>
+<p>Each layer learns how much to change instead of reconstructing the
+entire representation from zero. This makes deep networks easier to
+train and reduces the risk that early information is completely
+overwritten.</p>
+<p>AttnRes goes one step further and lets the model decide:</p>
+<blockquote>
+<pre><code>Should this step read more from Layer 5, Layer 20, or the most recent Layer?</code></pre>
+</blockquote>
+<h3 id="block-attnres">13.2 Block AttnRes</h3>
+<p>If every Layer remains available to every later Layer, the Activation
+history becomes large. Block AttnRes groups several Layers and retains
+fewer Block-level representations, reducing HBM use and
+cross-Pipeline-Stage communication.</p>
+<h2 id="stable-latentmoe-activating-only-a-small-number-of-experts">14.
+Stable LatentMoE: Activating Only a Small Number of Experts</h2>
+<p>Kimi K3 stores a large number of Experts, but each Token activates
+only a small subset:</p>
+<blockquote>
+<pre><code>Current Token
+   ↓ Router scores all Experts
+Top-16
+   ↓ Dispatch
+Send the Token to the GPUs that own the selected Experts
+   ↓ Grouped GEMM
+Execute Expert matrix multiplications
+   ↓ Combine
+Merge outputs using the Routing Weights</code></pre>
+</blockquote>
+<p><img src="/research/kimi-k3/media/image5.png" style="width:6.38in;height:3.86657in"
+alt="Routed Experts and Shared Experts from the DeepSeekMoE paper" /></p>
+<p>Routed Experts and Shared Experts from the DeepSeekMoE paper</p>
+<p><em>Figure 5 | Figure 2 (p.5) of the DeepSeekMoE paper. Source: <a
+href="https://arxiv.org/abs/2401.06066">arXiv:2401.06066</a>. It
+illustrates the origin of Shared Experts and fine-grained Routed
+Experts; it does not imply that Kimi K3 uses the same Expert count or
+Top-K shown in the figure.</em></p>
+<p>Read the figure from left to right:</p>
+<ol type="1">
+<li>Conventional Top-2 routing selects two large Experts from one
+pool.</li>
+<li>The middle design divides large Experts into more fine-grained
+Experts and selects a correspondingly larger number, increasing the
+flexibility of Expert combinations.</li>
+<li>The right-hand design adds green Shared Experts. A Shared Expert is
+not conditionally enabled by the Router and handles more general
+capability; blue Routed Experts are selected per Token and focus on
+differentiated transformations.</li>
+</ol>
+<p>Kimi K3’s official architecture similarly shows an always-on green
+Shared Expert path and Routed Experts selected by a Router. Stable
+LatentMoE additionally introduces Latent compression and
+stability-related routing design, so the DeepSeekMoE figure alone does
+not explain the full Kimi mechanism.</p>
+<h3 id="what-does-896-16-mean">14.1 What Does 896 → 16 Mean?</h3>
+<ul>
+<li>There are 896 Routed Experts in total.</li>
+<li>Each Token selects 16.</li>
+<li>Different Tokens can select different Experts.</li>
+<li>One Batch can collectively touch many or even all Experts.</li>
+</ul>
+<p>You cannot compute:</p>
+<blockquote>
+<pre><code>2.8T × 16 ÷ 896</code></pre>
+</blockquote>
+<p>and treat the result as the exact active parameter count, because
+2.8T also includes:</p>
+<ul>
+<li>Embedding;</li>
+<li>KDA / MLA;</li>
+<li>Router;</li>
+<li>Shared Expert;</li>
+<li>AttnRes;</li>
+<li>Norm;</li>
+<li>LM Head; and</li>
+<li>other non-Routed-Expert parameters.</li>
+</ul>
+<h3 id="why-must-every-expert-still-be-stored">14.2 Why Must Every
+Expert Still Be Stored?</h3>
+<p>Conditional computation reduces how much is computed this time; it
+does not reduce how much total model capacity must be stored.</p>
+<p>MoE therefore has two different ledgers:</p>
+<blockquote>
+<pre><code>Capacity ledger: store all Expert Weight
+Compute ledger: execute only Top-16 for each Token</code></pre>
+</blockquote>
+<h3 id="what-does-latentmoe-change">14.3 What Does LatentMoE
+Change?</h3>
+<p><img src="/research/kimi-k3/media/image6.png" style="width:6.38in;height:4.72683in"
+alt="Standard MoE and LatentMoE from the LatentMoE paper" /></p>
+<p>Standard MoE and LatentMoE from the LatentMoE paper</p>
+<p><em>Figure 6 | Figure 1 (p.2) of the LatentMoE paper. Source: <a
+href="https://arxiv.org/abs/2601.18089">arXiv:2601.18089</a>. The Latent
+down-projection and Latent up-projection in the right-hand diagram are
+the key to understanding the communication change.</em></p>
+<p>The left diagram is a conventional MoE: the wide Hidden State is used
+for routing and sent through All-to-All; remote Experts receive and
+compute on that full-width representation.</p>
+<p>The right diagram adds a shared Latent bottleneck around the routed
+Expert path. In the published base LatentMoE design, the Router still
+scores Experts from the full Hidden State. The payload sent to Routed
+Experts is then projected down before Dispatch:</p>
+<blockquote>
+<pre><code>Full Hidden State
+  ├─ Router scores Experts in the full dimension
+  ├─ Residual / Shared Expert retains the full dimension
+  └─ Shared Latent down-projection
+        ↓ narrower Latent payload
+     All-to-All Dispatch
+        ↓ Latent Expert computation
+     All-to-All Combine
+        ↓ Shared Latent up-projection
+     Full model Hidden Dimension</code></pre>
+</blockquote>
+<p>This changes two major costs:</p>
+<ul>
+<li><strong>Less communication:</strong> GPUs exchange a narrower Latent
+payload rather than the complete Hidden State.</li>
+<li><strong>Less Expert Weight traffic:</strong> Routed Experts operate
+in a lower-dimensional space, allowing their expert-specific matrices to
+be narrower.</li>
+</ul>
+<p><code>SE</code> in the figure denotes the Shared Expert, which
+remains on an always-on full-width path. Kimi K3 has confirmed Stable
+LatentMoE and 896→16 routing, but the exact <code>Stable</code>
+modifications, Latent Dimension, Shared Expert count and precise
+active-parameter total cannot be inferred from this base paper
+figure.</p>
+<p>Compression is not free or lossless. The down- and up-projections are
+trained end to end, the full residual stream remains available, and the
+latent width must stay above a task-dependent information floor.
+Compressing too aggressively can reduce quality. The published LatentMoE
+experiments found that roughly 4× compression preserved quality in the
+configurations tested, but that result does not establish Kimi K3’s
+unpublished compression ratio.</p>
+<h3 id="why-does-moe-depend-on-the-network">14.4 Why Does MoE Depend on
+the Network?</h3>
+<p>Once Experts are distributed across GPUs, a selected Expert may not
+reside on the current GPU. The Token must follow:</p>
+<blockquote>
+<pre><code>Dispatch All-to-All
+→ remote Expert computation
+→ Combine All-to-All</code></pre>
+</blockquote>
+<p>MoE therefore requires not only compute, but also an efficient
+accelerator interconnect.</p>
+<h1 id="part-vi-how-multiple-accelerators-run-kimi-k3-together">Part VI
+— How Multiple Accelerators Run Kimi K3 Together</h1>
+<h2 id="three-common-forms-of-parallelism">15. Three Common Forms of
+Parallelism</h2>
+<h3 id="tensor-parallelism-tp">15.1 Tensor Parallelism (TP)</h3>
+<p>Tensor Parallelism splits one large matrix across several GPUs:</p>
+<blockquote>
+<pre><code>One large Weight matrix
+→ split by rows or columns
+→ several GPUs compute simultaneously
+→ All-Reduce / All-Gather merges the results</code></pre>
+</blockquote>
+<p>Characteristics:</p>
+<ul>
+<li>well suited to splitting Attention, shared projections and large
+Dense matrices;</li>
+<li>normally involves several GPUs for every Token; and</li>
+<li>requires a low-latency, high-bandwidth interconnect.</li>
+</ul>
+<h3 id="expert-parallelism-ep">15.2 Expert Parallelism (EP)</h3>
+<p>Expert Parallelism places different Experts on different GPUs:</p>
+<blockquote>
+<pre><code>GPU 0: Experts 0–13
+GPU 1: Experts 14–27
+...</code></pre>
+</blockquote>
+<p>Characteristics:</p>
+<ul>
+<li>particularly well suited to MoE;</li>
+<li>Tokens move across GPUs according to Router decisions;</li>
+<li>primarily depends on All-to-All; and</li>
+<li>uneven Expert load leaves some GPUs busy while others are idle.</li>
+</ul>
+<h3 id="pipeline-parallelism-pp">15.3 Pipeline Parallelism (PP)</h3>
+<p>Pipeline Parallelism places different Layers on different GPU
+groups:</p>
+<blockquote>
+<pre><code>GPU group A: Layers 1–20
+GPU group B: Layers 21–40
+GPU group C: Layers 41–60</code></pre>
+</blockquote>
+<p>Characteristics:</p>
+<ul>
+<li>helps when the model is too deep to fit on one accelerator
+group;</li>
+<li>moves Micro-Batches through the system like a pipeline;</li>
+<li>can create a Pipeline Bubble; and</li>
+<li>becomes harder when AttnRes needs representations from earlier
+Blocks, because those representations must be cached or
+transferred.</li>
+</ul>
+<h2 id="what-is-wideep">16. What Is WideEP?</h2>
+<p>WideEP extends Expert Parallelism across a larger number of
+accelerators.</p>
+<p>Advantages:</p>
+<ul>
+<li>each GPU stores fewer Experts;</li>
+<li>aggregate HBM bandwidth increases;</li>
+<li>more Expert Weight can be read in parallel; and</li>
+<li>very large MoE models become easier to accommodate.</li>
+</ul>
+<p>Costs:</p>
+<ul>
+<li>a Token is more likely to be sent to a remote GPU;</li>
+<li>the All-to-All domain becomes wider;</li>
+<li>latency and congestion can increase sharply across Node boundaries;
+and</li>
+<li>if the network is too slow, GPUs wait for data.</li>
+</ul>
+<p>WideEP is therefore not automatically better when made wider. The
+useful point is where:</p>
+<blockquote>
+<pre><code>additional HBM-bandwidth benefit
+&gt;
+additional cross-accelerator communication cost</code></pre>
+</blockquote>
+<p><img src="/research/kimi-k3/media/image7.png" style="width:6.38in;height:4.02632in"
+alt="MoE GroupGEMM from NVIDIA’s WideEP article" /></p>
+<p>MoE GroupGEMM from NVIDIA’s WideEP article</p>
+<p><em>Figure 7 | Original GroupGEMM figure from NVIDIA’s developer
+article <a
+href="https://developer.nvidia.com/blog/scaling-large-moe-models-with-wide-expert-parallelism-on-nvl72-rack-scale-systems/">Scaling
+Large MoE Models with Wide Expert Parallelism</a>.</em></p>
+<p>The figure shows what happens after Tokens have already crossed the
+network and reached the destination GPU:</p>
+<ol type="1">
+<li>Each row at left is a Token routed to this GPU; its colour
+identifies the Expert that should process it.</li>
+<li>Tokens for the same Expert are reordered and packed into a larger
+matrix. This avoids launching one tiny matrix multiplication for every
+Token.</li>
+<li>Several Experts’ FFN computations are passed to one fused
+<code>Grouped GEMM Kernel</code>. They are still separate matrix
+multiplications with different Weights, but scheduling them together
+improves compute-unit utilization and reduces Kernel launch and data
+movement overhead.</li>
+</ol>
+<p>The complete WideEP path is therefore:</p>
+<blockquote>
+<pre><code>Router selects Experts
+→ Dispatch / All-to-All sends Tokens to destination GPUs
+→ Tokens are grouped by Expert
+→ Grouped GEMM executes multiple local Experts
+→ Combine / All-to-All returns results to the originating Rank</code></pre>
+</blockquote>
+<p>GroupGEMM solves “how to compute efficiently once the Tokens arrive.”
+It does not replace the preceding and following network communication.
+If NVLink or the inter-Node network cannot keep up as the EP domain
+widens, GPUs still wait during Dispatch and Combine.</p>
+<h1
+id="part-vii-one-unified-scenario-for-inference-and-training-hardware">Part
+VII — One Unified Scenario for Inference and Training Hardware</h1>
+<blockquote>
+<p><strong>Separate the two workloads first.</strong> Request count,
+Context and KV Cache belong to inference. Training has no online
+requests or KV Cache; it must store Gradient, Optimizer State and the
+Activations needed for backpropagation. Both scenarios reserve 30% of
+HBM for items outside the main object, but that 30% contains different
+data.</p>
+</blockquote>
+<h2 id="fix-two-scenarios-before-using-percentages">17. Fix Two
+Scenarios Before Using Percentages</h2>
+<h3 id="inference-scenario-weight-uses-70-everything-else-uses-30">17.1
+Inference Scenario: Weight Uses 70%; Everything Else Uses 30%</h3>
+<blockquote>
+<pre><code>MXFP4 Weight and Scale ≈ 1.4875TB = 70% of total HBM
+Total HBM ≈ 1.4875TB ÷ 70% = 2.125TB
+Non-Weight space ≈ 2.125TB × 30% = 637.5GB</code></pre>
+</blockquote>
+<p>To turn 637.5GB into an understandable service workload, assume 128
+Active Sequences at the same time, an average retained Context of 200K
+Tokens per request, and 16KB per active Token for the Gated MLA
+Cache.</p>
+<blockquote>
+<pre><code>128 requests × 200K Tokens = 25.6M active Tokens
+25.6M × 16KB/Token ≈ 419GB KV/Latent Cache
+637.5GB − 419GB ≈ 219GB</code></pre>
+</blockquote>
+<p>The remaining approximately 219GB must hold per-request KDA State,
+current Activation, Workspace, Expert communication buffers, Runtime,
+memory fragmentation and safety margin.</p>
+<p>Because Kimi K3’s actual Bytes/Token and Bytes/Sequence have not been
+fully disclosed, this is a reproducible procurement baseline rather than
+an official minimum. If KDA State and Workspace exceed 219GB, more HBM
+is required.</p>
+<h3
+id="training-scenario-parameter-states-use-70-everything-else-uses-30">17.2
+Training Scenario: Parameter States Use 70%; Everything Else Uses
+30%</h3>
+<p>Training cannot keep only one copy of Weight. The following teaching
+baseline uses standard Adam mixed-precision training. BF16 Weight,
+Gradient, FP32 Master Weight and two Adam States coexist, so their
+capacities are added.</p>
+<table>
+<colgroup>
+<col style="width: 32%" />
+<col style="width: 15%" />
+<col style="width: 52%" />
+</colgroup>
+<thead>
+<tr>
+<th><strong>Training data that coexists</strong></th>
+<th><strong>Bytes per parameter</strong></th>
+<th><strong>Purpose</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>BF16 Weight</td>
+<td>2</td>
+<td>Weight used by forward and backward computation</td>
+</tr>
+<tr>
+<td>Gradient</td>
+<td>2</td>
+<td>Update direction calculated from the current Batch</td>
+</tr>
+<tr>
+<td>FP32 Master Weight</td>
+<td>4</td>
+<td>High-precision copy used by the Optimizer</td>
+</tr>
+<tr>
+<td>Adam first moment</td>
+<td>4</td>
+<td>Moving average of the Gradient</td>
+</tr>
+<tr>
+<td>Adam second moment</td>
+<td>4</td>
+<td>Moving average of the squared Gradient</td>
+</tr>
+<tr>
+<td><strong>Total</strong></td>
+<td><strong>16</strong></td>
+<td><strong>Five different objects that exist at the same
+time</strong></td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<pre><code>2.8T parameters × 16 Bytes/parameter = 44.8TB of parameter state
+44.8TB = 70% of total training HBM
+Total training HBM ≈ 44.8TB ÷ 70% = 64TB
+Activation, Workspace and communication buffers ≈ 64TB × 30% = 19.2TB</code></pre>
+</blockquote>
+<p>This 30% is not KV Cache. It covers training Activation, Operator
+Workspace, communication buffers, Runtime and safety margin. The 64TB
+estimate changes with the Optimizer, ZeRO/FSDP, Offload and the
+aggressiveness of Activation Checkpointing.</p>
+<h2
+id="how-many-gpus-and-racks-does-inference-need-and-what-does-it-cost">18.
+How Many GPUs and Racks Does Inference Need, and What Does It Cost?</h2>
+<p>The following table uses the same 2.125TB inference-HBM scenario
+throughout. “Capacity floor” answers only whether the stated workload
+fits. “More realistic production starting point” also considers Kimi’s
+recommendation for a high-bandwidth Supernode with 64 or more
+accelerators. The number of production replicas must ultimately be
+determined from measured TTFT, TPOT and Tokens/s.</p>
+<table>
+<colgroup>
+<col style="width: 12%" />
+<col style="width: 14%" />
+<col style="width: 19%" />
+<col style="width: 28%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th><strong>Platform</strong></th>
+<th><strong>HBM per accelerator</strong></th>
+<th><strong>Capacity floor for 2.125TB</strong></th>
+<th><strong>More realistic production starting point</strong></th>
+<th><strong>Equipment or cloud cost</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>H100</td>
+<td>80GB</td>
+<td>32 GPUs / four 8-GPU Nodes</td>
+<td>64 GPUs</td>
+<td>about $2.03M per 64 GPUs</td>
+</tr>
+<tr>
+<td>H200</td>
+<td>141GB</td>
+<td>16 GPUs / two Nodes</td>
+<td>64 GPUs</td>
+<td>Request quote</td>
+</tr>
+<tr>
+<td>B200</td>
+<td>180GB</td>
+<td>16 GPUs / two Nodes</td>
+<td>64 GPUs or GB200 NVL72</td>
+<td>about $3M–$5M per 64 GPUs</td>
+</tr>
+<tr>
+<td>B300</td>
+<td>288GB</td>
+<td>8 GPUs / one Node</td>
+<td>GB300 NVL72</td>
+<td>about $4.5M–$6M per 64 GPUs</td>
+</tr>
+<tr>
+<td>GB200 NVL72</td>
+<td>about 13.4TB/Rack</td>
+<td>1 Rack / 72 GPUs</td>
+<td>1 Rack</td>
+<td>about $4.296M per Rack</td>
+</tr>
+<tr>
+<td>GB300 NVL72</td>
+<td>up to about 21TB/Rack</td>
+<td>1 Rack / 72 GPUs</td>
+<td>1 Rack</td>
+<td>planning range $5M–$7M per Rack</td>
+</tr>
+<tr>
+<td>MI300X</td>
+<td>192GB</td>
+<td>16 GPUs / two Nodes</td>
+<td>64 GPUs</td>
+<td>Request OEM quote</td>
+</tr>
+<tr>
+<td>MI325X</td>
+<td>256GB</td>
+<td>16 GPUs / two Nodes</td>
+<td>64 GPUs</td>
+<td>Request OEM quote</td>
+</tr>
+<tr>
+<td>MI355X</td>
+<td>288GB</td>
+<td>8 GPUs / one Node</td>
+<td>64 GPUs</td>
+<td>planning range $3M–$5M per 64 GPUs</td>
+</tr>
+<tr>
+<td>TPU v5p</td>
+<td>95GiB</td>
+<td>32-Chip Slice</td>
+<td>64 Chips</td>
+<td>On-Demand about $196K/month</td>
+</tr>
+<tr>
+<td>TPU v6e</td>
+<td>32GB</td>
+<td>128-Chip Slice</td>
+<td>128 Chips</td>
+<td>On-Demand about $252K/month</td>
+</tr>
+<tr>
+<td>TPU7x</td>
+<td>192GiB</td>
+<td>16-Chip Slice</td>
+<td>64 Chips</td>
+<td>On-Demand about $561K/month</td>
+</tr>
+<tr>
+<td>Ascend 950DT</td>
+<td>144GB roadmap value</td>
+<td>about 16 NPUs</td>
+<td>evaluate 64+ NPUs</td>
+<td>insufficient public pricing</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>How to interpret the minimum accelerator count:</strong> 32
+H100s or 8 B300s are HBM-capacity floors only. Kimi K3 has 896 Experts,
+and production throughput also depends on WideEP, All-to-All, dedicated
+Kernels and a sufficiently large Batch. The official 64+ recommendation
+primarily addresses efficiency and communication; it is not a simple
+division of Weight capacity.</p>
+</blockquote>
+<h2 id="must-training-use-gb200-or-gb300-nvl72">19. Must Training Use
+GB200 or GB300 NVL72?</h2>
+<blockquote>
+<p><strong>Finding:</strong> No. Kimi has not disclosed Kimi K3’s actual
+training cluster and has not said that training requires GB200 or GB300.
+H100/H200 natively supports BF16/FP8 training; MI355X has published
+MXFP4 training results; and TPU7x explicitly targets large-model
+pretraining. GB200/GB300 NVL72 offers a 72-GPU high-bandwidth domain,
+mature training software and high HBM density. For that reason, the
+detailed economic model below is limited to those platforms and the
+next-generation NVL72 scenario.</p>
+</blockquote>
+<h3 id="detailed-training-estimates-for-three-rack-scale-options">19.1
+Detailed Training Estimates for Three Rack-Scale Options</h3>
+<p>The training-time estimate uses one transparent scenario: 80B active
+parameters, 15T training Tokens, about six times active parameters in
+computation per Token, approximately <code>7.2×10²⁴ FLOP</code> in
+total, and 35% end-to-end effective utilization. These are not Kimi
+disclosures.</p>
+<table>
+<colgroup>
+<col style="width: 19%" />
+<col style="width: 12%" />
+<col style="width: 23%" />
+<col style="width: 20%" />
+<col style="width: 24%" />
+</colgroup>
+<thead>
+<tr>
+<th><strong>Training platform</strong></th>
+<th style="text-align: center;"><strong>HBM per Rack</strong></th>
+<th style="text-align: center;"><strong>Minimum configuration for
+64TB</strong></th>
+<th style="text-align: center;"><strong>Scenario training
+time</strong></th>
+<th style="text-align: center;"><strong>Minimum equipment
+cost</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GB200 NVL72</td>
+<td style="text-align: center;">13.4TB</td>
+<td style="text-align: center;">5 Racks / 360 GPUs</td>
+<td style="text-align: center;">about 132 days</td>
+<td style="text-align: center;">about $21.5M</td>
+</tr>
+<tr>
+<td>GB300 NVL72</td>
+<td style="text-align: center;">up to about 21TB</td>
+<td style="text-align: center;">4 Racks / 288 GPUs</td>
+<td style="text-align: center;">about 165 days</td>
+<td style="text-align: center;">planning range $20M–$28M</td>
+</tr>
+<tr>
+<td>Vera Rubin NVL72</td>
+<td style="text-align: center;">20.7TB planning value</td>
+<td style="text-align: center;">4 Racks / 288 GPUs</td>
+<td style="text-align: center;">about 47 days</td>
+<td style="text-align: center;">model estimate about $36.4M</td>
+</tr>
+</tbody>
+</table>
+<p>The minimum-capacity GB300 configuration uses one fewer Rack than
+GB200 but takes longer in this scenario because both platforms use
+conservative and comparable effective FP8 compute assumptions. More HBM
+answers “does it fit”; training duration still depends on total compute
+deployed.</p>
+<p>Vera Rubin figures come from the user-provided Bernstein planning
+model. They are a next-generation scenario, not a current procurement
+quote.</p>
+<h3 id="what-would-approximately-60-day-or-30-day-training-cost">19.2
+What Would Approximately 60-Day or 30-Day Training Cost?</h3>
+<table>
+<colgroup>
+<col style="width: 19%" />
+<col style="width: 16%" />
+<col style="width: 19%" />
+<col style="width: 16%" />
+<col style="width: 28%" />
+</colgroup>
+<thead>
+<tr>
+<th><strong>Training platform</strong></th>
+<th style="text-align: center;"><strong>About 60 days</strong></th>
+<th style="text-align: center;"><strong>Equipment cost</strong></th>
+<th style="text-align: center;"><strong>About 30 days</strong></th>
+<th style="text-align: center;"><strong>Equipment cost</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GB200 NVL72</td>
+<td style="text-align: center;">12 Racks / 864 GPUs</td>
+<td style="text-align: center;">about $51.6M</td>
+<td style="text-align: center;">23 Racks / 1,656 GPUs</td>
+<td style="text-align: center;">about $98.8M</td>
+</tr>
+<tr>
+<td>GB300 NVL72</td>
+<td style="text-align: center;">12 Racks / 864 GPUs</td>
+<td style="text-align: center;">planning range $60M–$84M</td>
+<td style="text-align: center;">23 Racks / 1,656 GPUs</td>
+<td style="text-align: center;">planning range $115M–$161M</td>
+</tr>
+<tr>
+<td>Vera Rubin NVL72</td>
+<td style="text-align: center;">4 Racks / 288 GPUs</td>
+<td style="text-align: center;">model estimate about $36.4M</td>
+<td style="text-align: center;">7 Racks / 504 GPUs</td>
+<td style="text-align: center;">model estimate about $63.6M</td>
+</tr>
+</tbody>
+</table>
+<p>These figures include only equipment or Rack planning values. They
+exclude switching, storage, the data-centre building, power, cooling,
+software, operations and spare clusters. If cross-Rack MoE All-to-All
+prevents the system from achieving 35% effective utilization, training
+will take longer.</p>
+<h2 id="native-precision-and-kimi-k3-feasibility-across-platforms">20.
+Native Precision and Kimi K3 Feasibility Across Platforms</h2>
+<table>
+<colgroup>
+<col style="width: 16%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th><strong>Platform</strong></th>
+<th><strong>Native training precision</strong></th>
+<th><strong>Can it train Kimi K3?</strong></th>
+<th><strong>Actual limitation</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>H100 / H200</td>
+<td>BF16 and FP8</td>
+<td>Mathematically yes; no detailed economic estimate here</td>
+<td>No native MXFP4/MXFP8; many Racks and heavy cross-Rack Expert
+communication</td>
+</tr>
+<tr>
+<td>GB200 / GB300</td>
+<td>BF16, FP8, MXFP8 and NVFP4</td>
+<td>Preferred training platform</td>
+<td>Kimi’s MXFP4 Layout, KDA, AttnRes and LatentMoE still require
+validation</td>
+</tr>
+<tr>
+<td>MI300X / MI325X</td>
+<td>BF16 and FP8</td>
+<td>Yes, after ROCm porting</td>
+<td>No native MXFP4; K3 Kernels and RCCL WideEP remain unverified</td>
+</tr>
+<tr>
+<td>MI355X</td>
+<td>BF16, FP8, MXFP8 and MXFP4</td>
+<td>Hardware is highly suitable for training</td>
+<td>Requires a complete K3 ROCm Backend, RCCL and Rack-scale
+validation</td>
+</tr>
+<tr>
+<td>TPU v5p / v6e</td>
+<td>BF16; v6e targets both training and inference</td>
+<td>A training path can be rebuilt</td>
+<td>K3-specific Operators must be implemented in XLA/Pallas; CUDA
+Kernels cannot execute directly</td>
+</tr>
+<tr>
+<td>TPU7x</td>
+<td>BF16 and FP8</td>
+<td>Strong large-model training capability</td>
+<td>No native K3 MXFP4 path; requires a JAX or PyTorch TPU Backend</td>
+</tr>
+<tr>
+<td>Ascend 910/950</td>
+<td>BF16/FP8 roadmap</td>
+<td>Mathematically possible; insufficient evidence</td>
+<td>Insufficient public unified specifications, MXFP4 semantics, CANN
+Kernels, HCCL evidence and pricing</td>
+</tr>
+</tbody>
+</table>
+<p>“Native support for a precision” means only that the chip has
+corresponding matrix instructions. It does not mean Kimi K3 runs
+directly. Block/Scale/Packed Layout, Checkpoint conversion, KDA State
+Update, Gated MLA, AttnRes, LatentMoE Grouped GEMM and Expert All-to-All
+must all be confirmed.</p>
+<h2 id="final-conclusions">21. Final Conclusions</h2>
+<ul>
+<li><strong>Unified inference scenario:</strong> MXFP4 Weight is
+approximately 1.4875TB and occupies 70% of total HBM; total HBM is
+approximately 2.125TB.</li>
+<li><strong>The remaining 30%:</strong> approximately 637.5GB can
+represent 128 concurrent requests at an average 200K Context, with about
+419GB of Cache and approximately 219GB left for KDA State and runtime
+overhead.</li>
+<li><strong>Capacity versus production:</strong> the inference capacity
+floor can be below 64 accelerators, but production deployment should
+still begin by evaluating Kimi’s recommended high-bandwidth domain of 64
+or more accelerators.</li>
+<li><strong>Unified training scenario:</strong> 44.8TB of parameter
+state occupies 70%; Activation, Workspace and communication occupy 30%;
+total training HBM is approximately 64TB. Training has no online
+requests or KV Cache.</li>
+<li><strong>Training platform choice:</strong> GB200/GB300 are not the
+only hardware capable of training Kimi K3. They are simply the mature
+NVIDIA platforms most suitable for detailed Rack, time and cost
+modelling today.</li>
+<li><strong>A capacity floor is not a speed recommendation:</strong>
+four GB300 Racks can hold the 64TB scenario, but completing it in
+roughly 60 days still requires approximately 12 Racks under the stated
+assumptions.</li>
+</ul>
+<h2 id="primary-sources-for-part-vii">Primary Sources for Part VII</h2>
+<ul>
+<li><a href="https://www.kimi.com/blog/kimi-k3">Kimi K3 official blog:
+2.8T, MXFP4/MXFP8 QAT and the 64+ Accelerator inference
+recommendation</a></li>
+<li><a
+href="https://docs.nvidia.com/dgx/dgxh100-user-guide/introduction-to-dgxh100.html">NVIDIA
+DGX H100/H200: training and inference positioning and HBM specifications
+for an 8-GPU system</a></li>
+<li><a
+href="https://docs.nvidia.com/deeplearning/transformer-engine/user-guide/examples/fp8_primer.html">NVIDIA
+Transformer Engine: H100 FP8 and Blackwell MXFP8/NVFP4 training
+formats</a></li>
+<li><a
+href="https://www.nvidia.com/es-es/data-center/gb200-nvl72/">NVIDIA
+GB200 NVL72: Rack-Scale NVLink and large-model training
+positioning</a></li>
+<li><a
+href="https://docs.nvidia.com/enterprise-reference-architectures/nvl72-ai-factory/latest/overview.html">NVIDIA
+GB300 NVL72 Reference Architecture: trillion-parameter training</a></li>
+<li><a
+href="https://www.amd.com/en/products/accelerators/instinct/mi350/mi355x.html">AMD
+MI355X: 288GB HBM3E and native MXFP4/MXFP8</a></li>
+<li><a href="https://docs.cloud.google.com/tpu/docs/tpu7x">Google TPU7x:
+BF16/FP8 and large-scale Dense/MoE pretraining and inference</a></li>
+<li><a href="https://cloud.google.com/tpu/pricing">Google Cloud TPU
+Pricing: On-Demand and committed prices per Chip-Hour</a></li>
+</ul>
+<p>Rack prices for H100, GB200 and Vera Rubin NVL72 come from the
+user-provided Bernstein Vera Rubin AI DC Model. GB300, B200, B300 and
+MI355X use planning ranges. All prices should be re-quoted at the time
+of procurement.</p>
