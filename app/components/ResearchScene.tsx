@@ -75,7 +75,7 @@ const phases = [
 
 const journeyFrames: JourneyFrame[] = [
   {
-    src: "/hero-journey/01-grid-campus-v1.jpg",
+    src: "/hero-journey/01-grid-campus-v1.avif",
     focus: [0.72, 0.47],
     offsetStart: [0, 0],
     offsetEnd: [0.018, -0.006],
@@ -83,7 +83,7 @@ const journeyFrames: JourneyFrame[] = [
     scaleEnd: 1.11,
   },
   {
-    src: "/hero-journey/06-campus-rack-bridge-v2.jpg",
+    src: "/hero-journey/06-campus-rack-bridge-v2.avif",
     focus: [0.7, 0.47],
     offsetStart: [0.008, 0],
     offsetEnd: [0.018, -0.004],
@@ -91,7 +91,7 @@ const journeyFrames: JourneyFrame[] = [
     scaleEnd: 1.105,
   },
   {
-    src: "/hero-journey/07-rack-close-v2.jpg",
+    src: "/hero-journey/07-rack-close-v2.avif",
     focus: [0.68, 0.49],
     offsetStart: [0.008, 0],
     offsetEnd: [0.018, -0.004],
@@ -99,7 +99,7 @@ const journeyFrames: JourneyFrame[] = [
     scaleEnd: 1.115,
   },
   {
-    src: "/hero-journey/02-nvl72-rack-v1.jpg",
+    src: "/hero-journey/02-nvl72-rack-v1.avif",
     focus: [0.64, 0.5],
     offsetStart: [0.004, 0],
     offsetEnd: [0.014, -0.003],
@@ -107,7 +107,7 @@ const journeyFrames: JourneyFrame[] = [
     scaleEnd: 1.105,
   },
   {
-    src: "/hero-journey/08-rack-tray-extract-v2.jpg",
+    src: "/hero-journey/08-rack-tray-extract-v2.avif",
     focus: [0.62, 0.54],
     offsetStart: [0.004, 0],
     offsetEnd: [0.016, -0.004],
@@ -115,7 +115,7 @@ const journeyFrames: JourneyFrame[] = [
     scaleEnd: 1.115,
   },
   {
-    src: "/hero-journey/03-compute-tray-v1.jpg",
+    src: "/hero-journey/03-compute-tray-v1.avif",
     focus: [0.66, 0.5],
     offsetStart: [0.004, 0],
     offsetEnd: [0.015, -0.004],
@@ -123,7 +123,7 @@ const journeyFrames: JourneyFrame[] = [
     scaleEnd: 1.115,
   },
   {
-    src: "/hero-journey/09-tray-gpu-macro-v2.jpg",
+    src: "/hero-journey/09-tray-gpu-macro-v2.avif",
     focus: [0.57, 0.48],
     offsetStart: [0, 0],
     offsetEnd: [0.01, -0.005],
@@ -131,7 +131,7 @@ const journeyFrames: JourneyFrame[] = [
     scaleEnd: 1.12,
   },
   {
-    src: "/hero-journey/04-gpu-package-v1.jpg",
+    src: "/hero-journey/04-gpu-package-v1.avif",
     focus: [0.66, 0.48],
     offsetStart: [0.004, 0],
     offsetEnd: [0.014, -0.004],
@@ -139,7 +139,7 @@ const journeyFrames: JourneyFrame[] = [
     scaleEnd: 1.115,
   },
   {
-    src: "/hero-journey/10-chip-app-bridge-v2.jpg",
+    src: "/hero-journey/10-chip-app-bridge-v2.avif",
     focus: [0.64, 0.53],
     offsetStart: [0.004, 0],
     offsetEnd: [0.014, -0.004],
@@ -147,7 +147,7 @@ const journeyFrames: JourneyFrame[] = [
     scaleEnd: 1.105,
   },
   {
-    src: "/hero-journey/05-ai-application-v1.jpg",
+    src: "/hero-journey/05-ai-application-v1.avif",
     focus: [0.64, 0.49],
     offsetStart: [0.004, 0],
     offsetEnd: [0.012, -0.003],
@@ -414,7 +414,13 @@ export default function ResearchScene({
 
     const loader = new THREE.TextureLoader();
     const loadTexture = async (index: number) => {
-      const texture = await loader.loadAsync(journeyFrames[index].src);
+      const source = journeyFrames[index].src;
+      let texture: THREE.Texture;
+      try {
+        texture = await loader.loadAsync(source);
+      } catch {
+        texture = await loader.loadAsync(source.replace(/\.avif$/, ".jpg"));
+      }
       if (disposed) {
         texture.dispose();
         return;
@@ -523,7 +529,9 @@ export default function ResearchScene({
     >
       <div
         className="scene-poster"
-        style={{ backgroundImage: `url(${reducedMotionFallback})` }}
+        style={{
+          backgroundImage: `image-set(url("/hero-journey/01-grid-campus-v1.avif") type("image/avif"), url("${reducedMotionFallback}") type("image/jpeg"))`,
+        }}
         aria-hidden="true"
       />
       <canvas className="research-canvas" ref={canvasRef} aria-hidden="true" />

@@ -44,7 +44,8 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <link
           rel="preload"
           as="image"
-          href="/hero-journey/01-grid-campus-v1.jpg"
+          href="/hero-journey/01-grid-campus-v1.avif"
+          type="image/avif"
           fetchPriority="high"
         />
       </head>
