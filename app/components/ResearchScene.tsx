@@ -306,7 +306,7 @@ export default function ResearchScene({
 
     const pointerTarget = new THREE.Vector2();
     const pointer = new THREE.Vector2();
-    const textures: THREE.Texture[] = [];
+    const textures: Array<THREE.Texture | null> = new Array(journeyFrames.length).fill(null);
     let targetProgress = 0;
     let renderedProgress = 0;
     let previousPhase = -1;
@@ -358,8 +358,23 @@ export default function ResearchScene({
       const nextIndex = Math.min(journeyFrames.length - 1, frameIndex + 1);
       const localProgress = frameIndex === journeyFrames.length - 1 ? 1 : scaled - frameIndex;
       const mix = frameIndex === nextIndex ? 0 : smoothstep(0.28, 0.94, localProgress);
-      const currentFrame = journeyFrames[frameIndex];
-      const nextFrame = journeyFrames[nextIndex];
+      const resolveTextureIndex = (requestedIndex: number) => {
+        for (let distance = 0; distance < journeyFrames.length; distance += 1) {
+          const previousIndex = requestedIndex - distance;
+          if (previousIndex >= 0 && textures[previousIndex]) return previousIndex;
+          const followingIndex = requestedIndex + distance;
+          if (followingIndex < journeyFrames.length && textures[followingIndex]) return followingIndex;
+        }
+        return 0;
+      };
+      const resolvedFrameIndex = resolveTextureIndex(frameIndex);
+      const resolvedNextIndex = textures[nextIndex] ? nextIndex : resolvedFrameIndex;
+      const currentTexture = textures[resolvedFrameIndex];
+      const nextTexture = textures[resolvedNextIndex];
+      if (!currentTexture || !nextTexture) return;
+      const currentFrame = journeyFrames[resolvedFrameIndex];
+      const nextFrame = journeyFrames[resolvedNextIndex];
+      const effectiveMix = resolvedFrameIndex === resolvedNextIndex ? 0 : mix;
       const currentOffset = new THREE.Vector2(...currentFrame.offsetStart)
         .lerp(new THREE.Vector2(...currentFrame.offsetEnd), smoothstep(0, 1, localProgress));
       currentOffset.x += pointer.x * 0.0025;
@@ -368,22 +383,22 @@ export default function ResearchScene({
       nextOffset.x += pointer.x * 0.0025;
       nextOffset.y += pointer.y * 0.0018;
 
-      material.uniforms.tFrom.value = textures[frameIndex];
-      material.uniforms.tTo.value = textures[nextIndex];
-      material.uniforms.uFromSize.value.copy(textureSize(textures[frameIndex]));
-      material.uniforms.uToSize.value.copy(textureSize(textures[nextIndex]));
+      material.uniforms.tFrom.value = currentTexture;
+      material.uniforms.tTo.value = nextTexture;
+      material.uniforms.uFromSize.value.copy(textureSize(currentTexture));
+      material.uniforms.uToSize.value.copy(textureSize(nextTexture));
       material.uniforms.uFromOffset.value.copy(currentOffset);
       material.uniforms.uToOffset.value.copy(nextOffset);
       material.uniforms.uFocus.value
         .set(...currentFrame.focus)
-        .lerp(new THREE.Vector2(...nextFrame.focus), mix);
+        .lerp(new THREE.Vector2(...nextFrame.focus), effectiveMix);
       material.uniforms.uFromScale.value = THREE.MathUtils.lerp(
         currentFrame.scaleStart,
         currentFrame.scaleEnd,
         smoothstep(0, 1, localProgress),
       );
-      material.uniforms.uToScale.value = nextFrame.scaleStart - (1 - mix) * 0.018;
-      material.uniforms.uMix.value = mix;
+      material.uniforms.uToScale.value = nextFrame.scaleStart - (1 - effectiveMix) * 0.018;
+      material.uniforms.uMix.value = effectiveMix;
 
       renderer.render(scene, camera);
 
@@ -398,22 +413,29 @@ export default function ResearchScene({
     };
 
     const loader = new THREE.TextureLoader();
-    Promise.all(journeyFrames.map((frame) => loader.loadAsync(frame.src)))
-      .then((loadedTextures) => {
-        if (disposed) {
-          loadedTextures.forEach((texture) => texture.dispose());
-          return;
-        }
-        loadedTextures.forEach((texture) => {
-          texture.colorSpace = THREE.SRGBColorSpace;
-          texture.minFilter = THREE.LinearFilter;
-          texture.magFilter = THREE.LinearFilter;
-          texture.generateMipmaps = false;
-          textures.push(texture);
-        });
+    const loadTexture = async (index: number) => {
+      const texture = await loader.loadAsync(journeyFrames[index].src);
+      if (disposed) {
+        texture.dispose();
+        return;
+      }
+      texture.colorSpace = THREE.SRGBColorSpace;
+      texture.minFilter = THREE.LinearFilter;
+      texture.magFilter = THREE.LinearFilter;
+      texture.generateMipmaps = false;
+      textures[index] = texture;
+      if (index === 0) {
         loaded = true;
         setReady(true);
-        requestRender();
+      }
+      requestRender();
+    };
+
+    loadTexture(0)
+      .then(() => {
+        journeyFrames.slice(1).forEach((_, frameOffset) => {
+          void loadTexture(frameOffset + 1).catch(() => undefined);
+        });
       })
       .catch(() => {
         if (!disposed) setFallback(true);
@@ -484,7 +506,7 @@ export default function ResearchScene({
       window.removeEventListener("resize", onResize);
       canvas.removeEventListener("webglcontextlost", onContextLost);
       window.cancelAnimationFrame(animationFrame);
-      textures.forEach((texture) => texture.dispose());
+      textures.forEach((texture) => texture?.dispose());
       geometry.dispose();
       material.dispose();
       renderer.dispose();
@@ -499,14 +521,12 @@ export default function ResearchScene({
       className={`research-scene${fallback ? " is-fallback" : " is-webgl"}${ready ? " is-ready" : ""}`}
       ref={mountRef}
     >
+      <div
+        className="scene-poster"
+        style={{ backgroundImage: `url(${reducedMotionFallback})` }}
+        aria-hidden="true"
+      />
       <canvas className="research-canvas" ref={canvasRef} aria-hidden="true" />
-      {fallback && (
-        <div
-          className="scene-fallback"
-          style={{ backgroundImage: `url(${reducedMotionFallback})` }}
-          aria-hidden="true"
-        />
-      )}
       {!fallback && !ready && (
         <div className="scene-loading" aria-live="polite">
           <i />

@@ -330,6 +330,7 @@ html[lang="zh-CN"] .hero-copy h1 {
   position: absolute;
   transition: opacity 420ms ease;
   width: 100%;
+  z-index: 1;
 }
 
 .research-scene.is-ready .research-canvas {
@@ -366,12 +367,18 @@ html[lang="zh-CN"] .hero-copy h1 {
   }
 }
 
-.scene-fallback {
+.scene-poster {
   background-position: center;
   background-repeat: no-repeat;
   background-size: cover;
   inset: 0;
+  opacity: 1;
   position: absolute;
+  transition: opacity 420ms ease;
+}
+
+.research-scene.is-ready .scene-poster {
+  opacity: 0;
 }
 
 .scene-atmosphere {
@@ -1127,10 +1134,14 @@ html[lang="zh-CN"] .hero-copy h1 {
     margin-top: 24px;
   }
 
-  .scene-fallback {
+  .scene-poster {
     background-position: 68% 82%;
     background-size: auto 72%;
     opacity: 0.78;
+  }
+
+  .research-scene.is-ready .scene-poster {
+    opacity: 0;
   }
 
   .scene-loading {
