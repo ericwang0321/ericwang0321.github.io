@@ -5,7 +5,6 @@ import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Lenis from "lenis";
 import * as THREE from "three";
-import { createResearchScenes, createTransitionPass } from "./researchScene3d";
 
 type Language = "en" | "zh";
 
@@ -14,48 +13,57 @@ type ResearchSceneProps = {
   reducedMotionFallback?: string;
 };
 
+type JourneyFrame = {
+  src: string;
+  focus: [number, number];
+  offsetStart: [number, number];
+  offsetEnd: [number, number];
+  scaleStart: number;
+  scaleEnd: number;
+};
+
 const phases = [
   {
-    en: "Power & grid",
-    zh: "电网与供电",
-    factEn: "Grid · substation · backup power",
-    factZh: "电网 · 变电站 · 备用供电",
+    en: "Power & campus",
+    zh: "供电与园区",
+    factEn: "Grid · substation · liquid-cooling plant",
+    factZh: "电网 · 变电站 · 液冷基础设施",
   },
   {
-    en: "AI factory campus",
-    zh: "AI 数据中心园区",
-    factEn: "Data halls · chillers · liquid loops",
-    factZh: "数据机房 · 冷水机组 · 液冷循环",
+    en: "AI data hall",
+    zh: "AI 数据机房",
+    factEn: "Power busways · coolant loops · rack rows",
+    factZh: "电力母线 · 冷却回路 · 机架集群",
   },
   {
-    en: "GB300 NVL72 rack",
+    en: "GB300 NVL72",
     zh: "GB300 NVL72 整柜",
-    factEn: "72 Blackwell Ultra GPUs · 36 Grace CPUs",
-    factZh: "72 个 Blackwell Ultra GPU · 36 个 Grace CPU",
+    factEn: "72 B300 GPUs · 36 Grace CPUs · 18 compute trays",
+    factZh: "72 个 B300 · 36 个 Grace · 18 个计算托盘",
+  },
+  {
+    en: "Rack fabric",
+    zh: "整柜互联",
+    factEn: "9 NVLink trays · 130 TB/s · liquid cooled",
+    factZh: "9 个 NVLink 托盘 · 130 TB/s · 全液冷",
   },
   {
     en: "Compute tray",
     zh: "计算托盘",
-    factEn: "4 B300 GPUs · 2 Grace CPUs · liquid cooling",
-    factZh: "4 个 B300 GPU · 2 个 Grace CPU · 液冷",
+    factEn: "4 B300 · 2 Grace · ConnectX-8 · BlueField-3",
+    factZh: "4 个 B300 · 2 个 Grace · ConnectX-8 · BlueField-3",
   },
   {
-    en: "NVLink fabric",
-    zh: "NVLink 互联",
-    factEn: "Switch fabric · optical links · system bandwidth",
-    factZh: "交换网络 · 光互联 · 系统带宽",
+    en: "Board & I/O",
+    zh: "板级与 I/O",
+    factEn: "NVMe · power delivery · cold-plate manifold",
+    factZh: "NVMe · 供电网络 · 冷板歧管",
   },
   {
-    en: "GPU module",
-    zh: "GPU 模组",
-    factEn: "Compute dies · HBM · cold plate",
-    factZh: "计算裸片 · HBM · 冷板",
-  },
-  {
-    en: "Chip level",
-    zh: "芯片层",
-    factEn: "GPU dies · HBM stacks · interposer",
-    factZh: "GPU 裸片 · HBM 堆栈 · 中介层",
+    en: "GPU + HBM",
+    zh: "GPU 与 HBM",
+    factEn: "Compute dies · HBM3E · interposer · cold plate",
+    factZh: "计算裸片 · HBM3E · 中介层 · 冷板",
   },
   {
     en: "AI application",
@@ -65,11 +73,172 @@ const phases = [
   },
 ];
 
+const journeyFrames: JourneyFrame[] = [
+  {
+    src: "/hero-journey/01-grid-campus-v1.jpg",
+    focus: [0.72, 0.47],
+    offsetStart: [0, 0],
+    offsetEnd: [0.018, -0.006],
+    scaleStart: 1.03,
+    scaleEnd: 1.11,
+  },
+  {
+    src: "/hero-journey/06-campus-rack-bridge-v2.jpg",
+    focus: [0.7, 0.47],
+    offsetStart: [0.008, 0],
+    offsetEnd: [0.018, -0.004],
+    scaleStart: 1.035,
+    scaleEnd: 1.105,
+  },
+  {
+    src: "/hero-journey/07-rack-close-v2.jpg",
+    focus: [0.68, 0.49],
+    offsetStart: [0.008, 0],
+    offsetEnd: [0.018, -0.004],
+    scaleStart: 1.04,
+    scaleEnd: 1.115,
+  },
+  {
+    src: "/hero-journey/02-nvl72-rack-v1.jpg",
+    focus: [0.64, 0.5],
+    offsetStart: [0.004, 0],
+    offsetEnd: [0.014, -0.003],
+    scaleStart: 1.035,
+    scaleEnd: 1.105,
+  },
+  {
+    src: "/hero-journey/08-rack-tray-extract-v2.jpg",
+    focus: [0.62, 0.54],
+    offsetStart: [0.004, 0],
+    offsetEnd: [0.016, -0.004],
+    scaleStart: 1.035,
+    scaleEnd: 1.115,
+  },
+  {
+    src: "/hero-journey/03-compute-tray-v1.jpg",
+    focus: [0.66, 0.5],
+    offsetStart: [0.004, 0],
+    offsetEnd: [0.015, -0.004],
+    scaleStart: 1.035,
+    scaleEnd: 1.115,
+  },
+  {
+    src: "/hero-journey/09-tray-gpu-macro-v2.jpg",
+    focus: [0.57, 0.48],
+    offsetStart: [0, 0],
+    offsetEnd: [0.01, -0.005],
+    scaleStart: 1.035,
+    scaleEnd: 1.12,
+  },
+  {
+    src: "/hero-journey/04-gpu-package-v1.jpg",
+    focus: [0.66, 0.48],
+    offsetStart: [0.004, 0],
+    offsetEnd: [0.014, -0.004],
+    scaleStart: 1.035,
+    scaleEnd: 1.115,
+  },
+  {
+    src: "/hero-journey/10-chip-app-bridge-v2.jpg",
+    focus: [0.64, 0.53],
+    offsetStart: [0.004, 0],
+    offsetEnd: [0.014, -0.004],
+    scaleStart: 1.035,
+    scaleEnd: 1.105,
+  },
+  {
+    src: "/hero-journey/05-ai-application-v1.jpg",
+    focus: [0.64, 0.49],
+    offsetStart: [0.004, 0],
+    offsetEnd: [0.012, -0.003],
+    scaleStart: 1.035,
+    scaleEnd: 1.09,
+  },
+];
+
 const clamp = (value: number, min = 0, max = 1) => Math.min(max, Math.max(min, value));
 const smoothstep = (start: number, end: number, value: number) => {
   const progress = clamp((value - start) / Math.max(0.0001, end - start));
   return progress * progress * (3 - 2 * progress);
 };
+
+const vertexShader = `
+  varying vec2 vUv;
+
+  void main() {
+    vUv = uv;
+    gl_Position = vec4(position.xy, 0.0, 1.0);
+  }
+`;
+
+const fragmentShader = `
+  precision highp float;
+
+  varying vec2 vUv;
+  uniform sampler2D tFrom;
+  uniform sampler2D tTo;
+  uniform vec2 uResolution;
+  uniform vec2 uFromSize;
+  uniform vec2 uToSize;
+  uniform vec2 uFromOffset;
+  uniform vec2 uToOffset;
+  uniform vec2 uFocus;
+  uniform float uFromScale;
+  uniform float uToScale;
+  uniform float uMix;
+
+  vec2 coverUv(vec2 uv, vec2 imageSize, float scale, vec2 offset) {
+    float viewportAspect = uResolution.x / max(uResolution.y, 1.0);
+    float imageAspect = imageSize.x / max(imageSize.y, 1.0);
+    vec2 crop = vec2(1.0);
+
+    if (viewportAspect > imageAspect) {
+      crop.y = imageAspect / viewportAspect;
+    } else {
+      crop.x = viewportAspect / imageAspect;
+    }
+
+    vec2 mapped = (uv - 0.5) * crop / scale + 0.5 + offset;
+    return clamp(mapped, vec2(0.001), vec2(0.999));
+  }
+
+  vec4 softSample(sampler2D image, vec2 uv, float blurAmount) {
+    vec2 pixel = blurAmount / max(uResolution, vec2(1.0));
+    vec4 color = texture2D(image, uv) * 0.44;
+    color += texture2D(image, clamp(uv + vec2(pixel.x, 0.0), 0.001, 0.999)) * 0.14;
+    color += texture2D(image, clamp(uv - vec2(pixel.x, 0.0), 0.001, 0.999)) * 0.14;
+    color += texture2D(image, clamp(uv + vec2(0.0, pixel.y), 0.001, 0.999)) * 0.14;
+    color += texture2D(image, clamp(uv - vec2(0.0, pixel.y), 0.001, 0.999)) * 0.14;
+    return color;
+  }
+
+  void main() {
+    float eased = uMix * uMix * (3.0 - 2.0 * uMix);
+    float energy = sin(eased * 3.14159265);
+    float aspect = uResolution.x / max(uResolution.y, 1.0);
+    vec2 radial = vUv - uFocus;
+    radial.x *= aspect;
+    float distanceFromFocus = length(radial);
+    vec2 direction = distanceFromFocus > 0.0001 ? normalize(radial) : vec2(0.0);
+    direction.x /= max(aspect, 0.001);
+
+    vec2 fromUv = coverUv(vUv, uFromSize, uFromScale, uFromOffset);
+    vec2 toUv = coverUv(vUv, uToSize, uToScale, uToOffset);
+    fromUv = clamp(fromUv + direction * eased * 0.012, 0.001, 0.999);
+    toUv = clamp(toUv - direction * (1.0 - eased) * 0.016, 0.001, 0.999);
+
+    float blurAmount = energy * 2.25;
+    vec4 fromColor = softSample(tFrom, fromUv, blurAmount);
+    vec4 toColor = softSample(tTo, toUv, blurAmount);
+    float spatialLead = (0.55 - distanceFromFocus) * 0.15;
+    float blend = smoothstep(0.05, 0.95, eased + spatialLead);
+    vec4 color = mix(fromColor, toColor, blend);
+
+    vec3 warmVeil = vec3(0.965, 0.952, 0.925);
+    color.rgb = mix(color.rgb, warmVeil, energy * 0.045);
+    gl_FragColor = color;
+  }
+`;
 
 export default function ResearchScene({
   language,
@@ -98,7 +267,7 @@ export default function ResearchScene({
     try {
       renderer = new THREE.WebGLRenderer({
         canvas,
-        antialias: window.innerWidth > 720,
+        antialias: false,
         alpha: false,
         powerPreference: "high-performance",
       });
@@ -109,25 +278,35 @@ export default function ResearchScene({
 
     gsap.registerPlugin(ScrollTrigger);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
-    renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 0.98;
-    renderer.autoClear = true;
+    renderer.toneMapping = THREE.NoToneMapping;
 
-    const scenes = createResearchScenes();
-    const transition = createTransitionPass();
-    const targetOptions: THREE.RenderTargetOptions = {
-      minFilter: THREE.LinearFilter,
-      magFilter: THREE.LinearFilter,
-      format: THREE.RGBAFormat,
-      type: THREE.UnsignedByteType,
-      depthBuffer: true,
-      stencilBuffer: false,
-    };
-    const renderTargetA = new THREE.WebGLRenderTarget(1, 1, targetOptions);
-    const renderTargetB = new THREE.WebGLRenderTarget(1, 1, targetOptions);
+    const scene = new THREE.Scene();
+    const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+    const geometry = new THREE.PlaneGeometry(2, 2);
+    const material = new THREE.ShaderMaterial({
+      depthTest: false,
+      depthWrite: false,
+      uniforms: {
+        tFrom: { value: null },
+        tTo: { value: null },
+        uResolution: { value: new THREE.Vector2(1, 1) },
+        uFromSize: { value: new THREE.Vector2(1, 1) },
+        uToSize: { value: new THREE.Vector2(1, 1) },
+        uFromOffset: { value: new THREE.Vector2() },
+        uToOffset: { value: new THREE.Vector2() },
+        uFocus: { value: new THREE.Vector2(0.65, 0.5) },
+        uFromScale: { value: 1.03 },
+        uToScale: { value: 1.03 },
+        uMix: { value: 0 },
+      },
+      vertexShader,
+      fragmentShader,
+    });
+    scene.add(new THREE.Mesh(geometry, material));
 
-    const pointerTarget = { x: 0, y: 0 };
-    const pointer = { x: 0, y: 0 };
+    const pointerTarget = new THREE.Vector2();
+    const pointer = new THREE.Vector2();
+    const textures: THREE.Texture[] = [];
     let targetProgress = 0;
     let renderedProgress = 0;
     let previousPhase = -1;
@@ -135,34 +314,34 @@ export default function ResearchScene({
     let animationFrame = 0;
     let visible = true;
     let disposed = false;
-    let firstFrame = true;
+    let loaded = false;
+
+    const textureSize = (texture: THREE.Texture) => {
+      const image = texture.image as { naturalWidth?: number; naturalHeight?: number; width?: number; height?: number };
+      return new THREE.Vector2(
+        image.naturalWidth ?? image.width ?? 1,
+        image.naturalHeight ?? image.height ?? 1,
+      );
+    };
 
     const resize = () => {
       const width = Math.max(1, mount.clientWidth);
       const height = Math.max(1, mount.clientHeight);
       const mobile = width <= 720;
-      const pixelRatio = Math.min(window.devicePixelRatio || 1, mobile ? 1.1 : 1.5);
-      renderer.setPixelRatio(pixelRatio);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, mobile ? 1.15 : 1.5));
       renderer.setSize(width, height, false);
-      renderTargetA.setSize(Math.round(width * pixelRatio), Math.round(height * pixelRatio));
-      renderTargetB.setSize(Math.round(width * pixelRatio), Math.round(height * pixelRatio));
-      scenes.forEach((bundle) => {
-        bundle.camera.aspect = width / height;
-        bundle.camera.fov = mobile ? 46 : 35;
-        bundle.camera.updateProjectionMatrix();
-      });
+      material.uniforms.uResolution.value.set(width, height);
       ScrollTrigger.refresh();
     };
 
     const render = (time: number) => {
       animationFrame = 0;
-      if (disposed || !visible) return;
+      if (disposed || !visible || !loaded) return;
 
       const deltaSeconds = Math.min(0.064, Math.max(0.001, (time - previousTime) / 1000));
       previousTime = time;
-      renderedProgress = THREE.MathUtils.damp(renderedProgress, targetProgress, 10.5, deltaSeconds);
-      pointer.x = THREE.MathUtils.damp(pointer.x, pointerTarget.x, 7.5, deltaSeconds);
-      pointer.y = THREE.MathUtils.damp(pointer.y, pointerTarget.y, 7.5, deltaSeconds);
+      renderedProgress = THREE.MathUtils.damp(renderedProgress, targetProgress, 11.5, deltaSeconds);
+      pointer.lerp(pointerTarget, 1 - Math.exp(-deltaSeconds * 7.5));
       if (Math.abs(renderedProgress - targetProgress) < 0.00008) renderedProgress = targetProgress;
 
       track.style.setProperty("--hero-progress", renderedProgress.toFixed(4));
@@ -172,43 +351,45 @@ export default function ResearchScene({
         setActivePhase(phaseIndex);
       }
 
-      const scaled = renderedProgress >= 0.9999 ? 4 : renderedProgress * 4;
-      const sceneIndex = Math.min(4, Math.floor(scaled));
-      const sceneProgress = sceneIndex === 4 ? 1 : scaled - sceneIndex;
-      const nextIndex = Math.min(4, sceneIndex + 1);
-      const transitionStart = sceneIndex === 3 ? 0.32 : 0.7;
-      const transitionProgress = sceneIndex === 4 ? 0 : smoothstep(transitionStart, 1, sceneProgress);
-      const localProgress = sceneIndex === 4 ? 1 : clamp(sceneProgress / transitionStart);
+      const scaled = renderedProgress >= 0.9999
+        ? journeyFrames.length - 1
+        : renderedProgress * (journeyFrames.length - 1);
+      const frameIndex = Math.min(journeyFrames.length - 1, Math.floor(scaled));
+      const nextIndex = Math.min(journeyFrames.length - 1, frameIndex + 1);
+      const localProgress = frameIndex === journeyFrames.length - 1 ? 1 : scaled - frameIndex;
+      const mix = frameIndex === nextIndex ? 0 : smoothstep(0.28, 0.94, localProgress);
+      const currentFrame = journeyFrames[frameIndex];
+      const nextFrame = journeyFrames[nextIndex];
+      const currentOffset = new THREE.Vector2(...currentFrame.offsetStart)
+        .lerp(new THREE.Vector2(...currentFrame.offsetEnd), smoothstep(0, 1, localProgress));
+      currentOffset.x += pointer.x * 0.0025;
+      currentOffset.y += pointer.y * 0.0018;
+      const nextOffset = new THREE.Vector2(...nextFrame.offsetStart);
+      nextOffset.x += pointer.x * 0.0025;
+      nextOffset.y += pointer.y * 0.0018;
 
-      scenes[sceneIndex].update(localProgress, pointer);
-      if (nextIndex !== sceneIndex) scenes[nextIndex].update(0, pointer);
+      material.uniforms.tFrom.value = textures[frameIndex];
+      material.uniforms.tTo.value = textures[nextIndex];
+      material.uniforms.uFromSize.value.copy(textureSize(textures[frameIndex]));
+      material.uniforms.uToSize.value.copy(textureSize(textures[nextIndex]));
+      material.uniforms.uFromOffset.value.copy(currentOffset);
+      material.uniforms.uToOffset.value.copy(nextOffset);
+      material.uniforms.uFocus.value
+        .set(...currentFrame.focus)
+        .lerp(new THREE.Vector2(...nextFrame.focus), mix);
+      material.uniforms.uFromScale.value = THREE.MathUtils.lerp(
+        currentFrame.scaleStart,
+        currentFrame.scaleEnd,
+        smoothstep(0, 1, localProgress),
+      );
+      material.uniforms.uToScale.value = nextFrame.scaleStart - (1 - mix) * 0.018;
+      material.uniforms.uMix.value = mix;
 
-      renderer.setRenderTarget(renderTargetA);
-      renderer.clear();
-      renderer.render(scenes[sceneIndex].scene, scenes[sceneIndex].camera);
-
-      renderer.setRenderTarget(renderTargetB);
-      renderer.clear();
-      renderer.render(scenes[nextIndex].scene, scenes[nextIndex].camera);
-
-      transition.material.uniforms.tFrom.value = renderTargetA.texture;
-      transition.material.uniforms.tTo.value = renderTargetB.texture;
-      transition.material.uniforms.uMix.value = transitionProgress;
-      transition.material.uniforms.uDirection.value = sceneIndex % 2;
-
-      renderer.setRenderTarget(null);
-      renderer.clear();
-      renderer.render(transition.scene, transition.camera);
-
-      if (firstFrame) {
-        firstFrame = false;
-        setReady(true);
-      }
+      renderer.render(scene, camera);
 
       const moving =
         Math.abs(renderedProgress - targetProgress) > 0.00008 ||
-        Math.abs(pointer.x - pointerTarget.x) > 0.001 ||
-        Math.abs(pointer.y - pointerTarget.y) > 0.001;
+        pointer.distanceTo(pointerTarget) > 0.001;
       if (moving) animationFrame = window.requestAnimationFrame(render);
     };
 
@@ -216,8 +397,30 @@ export default function ResearchScene({
       if (!animationFrame && visible && !disposed) animationFrame = window.requestAnimationFrame(render);
     };
 
+    const loader = new THREE.TextureLoader();
+    Promise.all(journeyFrames.map((frame) => loader.loadAsync(frame.src)))
+      .then((loadedTextures) => {
+        if (disposed) {
+          loadedTextures.forEach((texture) => texture.dispose());
+          return;
+        }
+        loadedTextures.forEach((texture) => {
+          texture.colorSpace = THREE.SRGBColorSpace;
+          texture.minFilter = THREE.LinearFilter;
+          texture.magFilter = THREE.LinearFilter;
+          texture.generateMipmaps = false;
+          textures.push(texture);
+        });
+        loaded = true;
+        setReady(true);
+        requestRender();
+      })
+      .catch(() => {
+        if (!disposed) setFallback(true);
+      });
+
     const lenis = new Lenis({
-      lerp: 0.1,
+      lerp: 0.095,
       smoothWheel: true,
       syncTouch: false,
       anchors: true,
@@ -250,8 +453,10 @@ export default function ResearchScene({
     observer.observe(track);
 
     const onPointerMove = (event: PointerEvent) => {
-      pointerTarget.x = (event.clientX / Math.max(1, window.innerWidth) - 0.5) * 2;
-      pointerTarget.y = -(event.clientY / Math.max(1, window.innerHeight) - 0.5) * 2;
+      pointerTarget.set(
+        (event.clientX / Math.max(1, window.innerWidth) - 0.5) * 2,
+        -(event.clientY / Math.max(1, window.innerHeight) - 0.5) * 2,
+      );
       requestRender();
     };
     const onResize = () => {
@@ -267,7 +472,6 @@ export default function ResearchScene({
     window.addEventListener("resize", onResize);
     canvas.addEventListener("webglcontextlost", onContextLost);
     resize();
-    requestRender();
 
     return () => {
       disposed = true;
@@ -280,10 +484,9 @@ export default function ResearchScene({
       window.removeEventListener("resize", onResize);
       canvas.removeEventListener("webglcontextlost", onContextLost);
       window.cancelAnimationFrame(animationFrame);
-      renderTargetA.dispose();
-      renderTargetB.dispose();
-      transition.dispose();
-      scenes.forEach((bundle) => bundle.dispose());
+      textures.forEach((texture) => texture.dispose());
+      geometry.dispose();
+      material.dispose();
       renderer.dispose();
       track.style.removeProperty("--hero-progress");
     };
@@ -307,7 +510,7 @@ export default function ResearchScene({
       {!fallback && !ready && (
         <div className="scene-loading" aria-live="polite">
           <i />
-          <span>{language === "en" ? "Building the AI stack" : "正在构建 AI 系统"}</span>
+          <span>{language === "en" ? "Loading the AI system" : "正在载入 AI 系统"}</span>
         </div>
       )}
       <div className="scene-atmosphere" aria-hidden="true" />
@@ -322,7 +525,9 @@ export default function ResearchScene({
           ))}
         </div>
       </div>
-      <div className="scene-source">GRID → CAMPUS → RACK → TRAY → PACKAGE → APPLICATION</div>
+      <div className="scene-source">
+        SPEC-DRIVEN MODEL · NVIDIA PUBLIC RA → NVL72 → TRAY → SILICON → APPLICATION
+      </div>
     </div>
   );
 }
