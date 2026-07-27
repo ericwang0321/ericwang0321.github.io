@@ -314,29 +314,56 @@ html[lang="zh-CN"] .hero-copy h1 {
 }
 
 .research-scene {
+  background: #f4f1e9;
   inset: 0;
+  overflow: hidden;
   pointer-events: none;
   position: absolute;
   z-index: 1;
 }
 
-.journey-frames,
-.journey-frame {
+.research-canvas {
+  display: block;
+  height: 100%;
   inset: 0;
+  opacity: 0;
   position: absolute;
+  transition: opacity 420ms ease;
+  width: 100%;
 }
 
-.journey-frames {
-  background: #f7f5ef;
-  overflow: hidden;
+.research-scene.is-ready .research-canvas {
+  opacity: 1;
 }
 
-.journey-frame {
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: cover;
-  transform-origin: 67% 51%;
-  will-change: opacity, transform, filter;
+.scene-loading {
+  align-items: center;
+  color: #657174;
+  display: flex;
+  font-size: 10px;
+  font-weight: 650;
+  gap: 11px;
+  letter-spacing: 0.08em;
+  position: absolute;
+  right: clamp(24px, 4.5vw, 72px);
+  text-transform: uppercase;
+  top: 96px;
+  z-index: 5;
+}
+
+.scene-loading i {
+  animation: scene-loading-spin 900ms linear infinite;
+  border: 1px solid rgba(34, 49, 53, 0.18);
+  border-radius: 50%;
+  border-top-color: var(--teal);
+  height: 13px;
+  width: 13px;
+}
+
+@keyframes scene-loading-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .scene-fallback {
@@ -358,7 +385,7 @@ html[lang="zh-CN"] .hero-copy h1 {
 }
 
 .scene-wash {
-  background: linear-gradient(180deg, rgba(247, 245, 239, 0.08), transparent 62%, rgba(247, 245, 239, 0.76) 100%);
+  background: linear-gradient(180deg, rgba(247, 245, 239, 0.04), transparent 66%, rgba(247, 245, 239, 0.34) 100%);
   inset: 0;
   position: absolute;
   z-index: 3;
@@ -1100,27 +1127,15 @@ html[lang="zh-CN"] .hero-copy h1 {
     margin-top: 24px;
   }
 
-  .scene-fallback,
-  .journey-frame {
+  .scene-fallback {
     background-position: 68% 82%;
     background-size: auto 72%;
-  }
-
-  .scene-fallback {
     opacity: 0.78;
   }
 
-  .journey-frame:nth-child(2) {
-    background-position: 61% 82%;
-  }
-
-  .journey-frame:nth-child(3),
-  .journey-frame:nth-child(4) {
-    background-position: 58% 82%;
-  }
-
-  .journey-frame:nth-child(5) {
-    background-position: 63% 82%;
+  .scene-loading {
+    right: 22px;
+    top: 90px;
   }
 
   .scene-status {

@@ -1,23 +1,17 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import Lenis from "lenis";
+import * as THREE from "three";
+import { createResearchScenes, createTransitionPass } from "./researchScene3d";
 
 type Language = "en" | "zh";
 
 type ResearchSceneProps = {
   language: Language;
   reducedMotionFallback?: string;
-};
-
-type FrameSpec = {
-  src: string;
-  alt: string;
-  fadeIn: [number, number];
-  fadeOut?: [number, number];
-  scale: [number, number];
-  x: [number, number];
-  y: [number, number];
-  revealOrigin: [number, number];
 };
 
 const phases = [
@@ -71,160 +65,180 @@ const phases = [
   },
 ];
 
-const frames: FrameSpec[] = [
-  {
-    src: "/hero-journey/01-grid-campus-v1.jpg",
-    alt: "AI data center campus with power and cooling infrastructure",
-    fadeIn: [0, 0],
-    fadeOut: [0.31, 0.312],
-    scale: [1, 1.16],
-    x: [0, -3.2],
-    y: [0, -1.2],
-    revealOrigin: [68, 50],
-  },
-  {
-    src: "/hero-journey/02-nvl72-rack-v1.jpg",
-    alt: "Full liquid-cooled AI rack cutaway",
-    fadeIn: [0.18, 0.31],
-    fadeOut: [0.52, 0.522],
-    scale: [0.97, 1.13],
-    x: [1.8, -2.4],
-    y: [0.6, -1],
-    revealOrigin: [69, 48],
-  },
-  {
-    src: "/hero-journey/03-compute-tray-v1.jpg",
-    alt: "Exploded liquid-cooled AI compute tray",
-    fadeIn: [0.39, 0.52],
-    fadeOut: [0.73, 0.732],
-    scale: [0.97, 1.17],
-    x: [2.2, -3.4],
-    y: [1.2, -1.8],
-    revealOrigin: [64, 54],
-  },
-  {
-    src: "/hero-journey/04-gpu-package-v1.jpg",
-    alt: "Exploded GPU, HBM and interposer package",
-    fadeIn: [0.6, 0.73],
-    fadeOut: [0.94, 0.942],
-    scale: [0.96, 1.2],
-    x: [2.4, -4.8],
-    y: [1.2, -2.2],
-    revealOrigin: [64, 50],
-  },
-  {
-    src: "/hero-journey/05-ai-application-v1.jpg",
-    alt: "Professional using an AI application",
-    fadeIn: [0.81, 0.94],
-    scale: [0.98, 1.035],
-    x: [1.5, 0],
-    y: [0.8, 0],
-    revealOrigin: [59, 48],
-  },
-];
-
 const clamp = (value: number, min = 0, max = 1) => Math.min(max, Math.max(min, value));
-
 const smoothstep = (start: number, end: number, value: number) => {
-  if (start === end) return value >= end ? 1 : 0;
-  const progress = clamp((value - start) / (end - start));
+  const progress = clamp((value - start) / Math.max(0.0001, end - start));
   return progress * progress * (3 - 2 * progress);
 };
-
-const lerp = (start: number, end: number, progress: number) => start + (end - start) * progress;
 
 export default function ResearchScene({
   language,
   reducedMotionFallback = "/hero-journey/01-grid-campus-v1.jpg",
 }: ResearchSceneProps) {
   const mountRef = useRef<HTMLDivElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const [activePhase, setActivePhase] = useState(0);
   const [fallback, setFallback] = useState(false);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     const mount = mountRef.current;
+    const canvas = canvasRef.current;
     const track = mount?.closest<HTMLElement>(".hero-section");
-    if (!mount || !track) return;
+    if (!mount || !canvas || !track) return;
 
     const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const useFallback = motionQuery.matches;
-    setFallback(useFallback);
-
-    if (useFallback) {
+    if (motionQuery.matches) {
+      queueMicrotask(() => setFallback(true));
       track.style.setProperty("--hero-progress", "0");
       return () => track.style.removeProperty("--hero-progress");
     }
 
-    const frameElements = Array.from(mount.querySelectorAll<HTMLElement>(".journey-frame"));
-    let animationFrame = 0;
-    let visible = true;
-    let previousPhase = -1;
+    let renderer: THREE.WebGLRenderer;
+    try {
+      renderer = new THREE.WebGLRenderer({
+        canvas,
+        antialias: window.innerWidth > 720,
+        alpha: false,
+        powerPreference: "high-performance",
+      });
+    } catch {
+      queueMicrotask(() => setFallback(true));
+      return;
+    }
+
+    gsap.registerPlugin(ScrollTrigger);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 0.98;
+    renderer.autoClear = true;
+
+    const scenes = createResearchScenes();
+    const transition = createTransitionPass();
+    const targetOptions: THREE.RenderTargetOptions = {
+      minFilter: THREE.LinearFilter,
+      magFilter: THREE.LinearFilter,
+      format: THREE.RGBAFormat,
+      type: THREE.UnsignedByteType,
+      depthBuffer: true,
+      stencilBuffer: false,
+    };
+    const renderTargetA = new THREE.WebGLRenderTarget(1, 1, targetOptions);
+    const renderTargetB = new THREE.WebGLRenderTarget(1, 1, targetOptions);
+
+    const pointerTarget = { x: 0, y: 0 };
+    const pointer = { x: 0, y: 0 };
     let targetProgress = 0;
     let renderedProgress = 0;
-    let measureProgress = true;
-    let lastFrameTime = 0;
+    let previousPhase = -1;
+    let previousTime = performance.now();
+    let animationFrame = 0;
+    let visible = true;
+    let disposed = false;
+    let firstFrame = true;
+
+    const resize = () => {
+      const width = Math.max(1, mount.clientWidth);
+      const height = Math.max(1, mount.clientHeight);
+      const mobile = width <= 720;
+      const pixelRatio = Math.min(window.devicePixelRatio || 1, mobile ? 1.1 : 1.5);
+      renderer.setPixelRatio(pixelRatio);
+      renderer.setSize(width, height, false);
+      renderTargetA.setSize(Math.round(width * pixelRatio), Math.round(height * pixelRatio));
+      renderTargetB.setSize(Math.round(width * pixelRatio), Math.round(height * pixelRatio));
+      scenes.forEach((bundle) => {
+        bundle.camera.aspect = width / height;
+        bundle.camera.fov = mobile ? 46 : 35;
+        bundle.camera.updateProjectionMatrix();
+      });
+      ScrollTrigger.refresh();
+    };
 
     const render = (time: number) => {
       animationFrame = 0;
-      if (!visible) return;
+      if (disposed || !visible) return;
 
-      if (measureProgress) {
-        const bounds = track.getBoundingClientRect();
-        const scrollable = Math.max(1, track.offsetHeight - window.innerHeight);
-        targetProgress = clamp(-bounds.top / scrollable);
-        measureProgress = false;
-      }
+      const deltaSeconds = Math.min(0.064, Math.max(0.001, (time - previousTime) / 1000));
+      previousTime = time;
+      renderedProgress = THREE.MathUtils.damp(renderedProgress, targetProgress, 10.5, deltaSeconds);
+      pointer.x = THREE.MathUtils.damp(pointer.x, pointerTarget.x, 7.5, deltaSeconds);
+      pointer.y = THREE.MathUtils.damp(pointer.y, pointerTarget.y, 7.5, deltaSeconds);
+      if (Math.abs(renderedProgress - targetProgress) < 0.00008) renderedProgress = targetProgress;
 
-      const elapsed = lastFrameTime ? Math.min(64, time - lastFrameTime) : 16.67;
-      const easing = 1 - Math.exp(-elapsed / 72);
-      renderedProgress += (targetProgress - renderedProgress) * easing;
-      if (Math.abs(targetProgress - renderedProgress) < 0.0001) renderedProgress = targetProgress;
-      lastFrameTime = time;
-      const progress = renderedProgress;
-      track.style.setProperty("--hero-progress", progress.toFixed(4));
-
-      frameElements.forEach((element, index) => {
-        const spec = frames[index];
-        const incoming = index === 0 ? 1 : smoothstep(spec.fadeIn[0], spec.fadeIn[1], progress);
-        const outgoing = spec.fadeOut ? 1 - smoothstep(spec.fadeOut[0], spec.fadeOut[1], progress) : 1;
-        const opacity = incoming > 0.001 ? outgoing : 0;
-        const localProgress = clamp((progress - spec.fadeIn[0]) / (1 - spec.fadeIn[0]));
-        const easedProgress = smoothstep(0, 1, localProgress);
-        const scale = lerp(spec.scale[0], spec.scale[1], easedProgress);
-        const x = lerp(spec.x[0], spec.x[1], easedProgress);
-        const y = lerp(spec.y[0], spec.y[1], easedProgress);
-        const depth = Math.max(0, 1 - incoming);
-        const maskCenter = incoming * 125 - 12.5;
-        const maskSolid = clamp(maskCenter - 9, 0, 100);
-        const maskSoft = clamp(maskCenter + 9, 0, 100);
-        const needsMask = index > 0 && incoming < 0.999;
-        const mask = needsMask
-          ? `radial-gradient(circle farthest-corner at ${spec.revealOrigin[0]}% ${spec.revealOrigin[1]}%, #000 0%, #000 ${maskSolid.toFixed(2)}%, transparent ${maskSoft.toFixed(2)}%, transparent 100%)`
-          : "none";
-
-        element.style.opacity = opacity.toFixed(4);
-        element.style.transform = `translate3d(${x.toFixed(3)}%, ${y.toFixed(3)}%, 0) scale(${scale.toFixed(4)})`;
-        element.style.filter = `blur(${(depth * 1.4).toFixed(2)}px) saturate(${(0.92 + opacity * 0.08).toFixed(3)})`;
-        element.style.maskImage = mask;
-        element.style.webkitMaskImage = mask;
-        element.style.visibility = opacity < 0.002 ? "hidden" : "visible";
-      });
-
-      const phaseIndex = Math.min(phases.length - 1, Math.floor(progress * phases.length));
+      track.style.setProperty("--hero-progress", renderedProgress.toFixed(4));
+      const phaseIndex = Math.min(phases.length - 1, Math.floor(renderedProgress * phases.length));
       if (phaseIndex !== previousPhase) {
         previousPhase = phaseIndex;
         setActivePhase(phaseIndex);
       }
 
-      if (renderedProgress !== targetProgress) {
-        animationFrame = window.requestAnimationFrame(render);
+      const scaled = renderedProgress >= 0.9999 ? 4 : renderedProgress * 4;
+      const sceneIndex = Math.min(4, Math.floor(scaled));
+      const sceneProgress = sceneIndex === 4 ? 1 : scaled - sceneIndex;
+      const nextIndex = Math.min(4, sceneIndex + 1);
+      const transitionStart = sceneIndex === 3 ? 0.32 : 0.7;
+      const transitionProgress = sceneIndex === 4 ? 0 : smoothstep(transitionStart, 1, sceneProgress);
+      const localProgress = sceneIndex === 4 ? 1 : clamp(sceneProgress / transitionStart);
+
+      scenes[sceneIndex].update(localProgress, pointer);
+      if (nextIndex !== sceneIndex) scenes[nextIndex].update(0, pointer);
+
+      renderer.setRenderTarget(renderTargetA);
+      renderer.clear();
+      renderer.render(scenes[sceneIndex].scene, scenes[sceneIndex].camera);
+
+      renderer.setRenderTarget(renderTargetB);
+      renderer.clear();
+      renderer.render(scenes[nextIndex].scene, scenes[nextIndex].camera);
+
+      transition.material.uniforms.tFrom.value = renderTargetA.texture;
+      transition.material.uniforms.tTo.value = renderTargetB.texture;
+      transition.material.uniforms.uMix.value = transitionProgress;
+      transition.material.uniforms.uDirection.value = sceneIndex % 2;
+
+      renderer.setRenderTarget(null);
+      renderer.clear();
+      renderer.render(transition.scene, transition.camera);
+
+      if (firstFrame) {
+        firstFrame = false;
+        setReady(true);
       }
+
+      const moving =
+        Math.abs(renderedProgress - targetProgress) > 0.00008 ||
+        Math.abs(pointer.x - pointerTarget.x) > 0.001 ||
+        Math.abs(pointer.y - pointerTarget.y) > 0.001;
+      if (moving) animationFrame = window.requestAnimationFrame(render);
     };
 
     const requestRender = () => {
-      measureProgress = true;
-      if (!animationFrame) animationFrame = window.requestAnimationFrame(render);
+      if (!animationFrame && visible && !disposed) animationFrame = window.requestAnimationFrame(render);
     };
+
+    const lenis = new Lenis({
+      lerp: 0.1,
+      smoothWheel: true,
+      syncTouch: false,
+      anchors: true,
+    });
+    const onLenisScroll = () => ScrollTrigger.update();
+    lenis.on("scroll", onLenisScroll);
+    const ticker = (seconds: number) => lenis.raf(seconds * 1000);
+    gsap.ticker.add(ticker);
+    gsap.ticker.lagSmoothing(0);
+
+    const scrollTrigger = ScrollTrigger.create({
+      trigger: track,
+      start: "top top",
+      end: "bottom bottom",
+      scrub: true,
+      invalidateOnRefresh: true,
+      onUpdate: (self) => {
+        targetProgress = self.progress;
+        requestRender();
+      },
+    });
 
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -233,17 +247,44 @@ export default function ResearchScene({
       },
       { rootMargin: "20% 0px" },
     );
-
     observer.observe(track);
-    window.addEventListener("scroll", requestRender, { passive: true });
-    window.addEventListener("resize", requestRender);
+
+    const onPointerMove = (event: PointerEvent) => {
+      pointerTarget.x = (event.clientX / Math.max(1, window.innerWidth) - 0.5) * 2;
+      pointerTarget.y = -(event.clientY / Math.max(1, window.innerHeight) - 0.5) * 2;
+      requestRender();
+    };
+    const onResize = () => {
+      resize();
+      requestRender();
+    };
+    const onContextLost = (event: Event) => {
+      event.preventDefault();
+      setFallback(true);
+    };
+
+    window.addEventListener("pointermove", onPointerMove, { passive: true });
+    window.addEventListener("resize", onResize);
+    canvas.addEventListener("webglcontextlost", onContextLost);
+    resize();
     requestRender();
 
     return () => {
+      disposed = true;
       observer.disconnect();
-      window.removeEventListener("scroll", requestRender);
-      window.removeEventListener("resize", requestRender);
+      scrollTrigger.kill();
+      lenis.off("scroll", onLenisScroll);
+      lenis.destroy();
+      gsap.ticker.remove(ticker);
+      window.removeEventListener("pointermove", onPointerMove);
+      window.removeEventListener("resize", onResize);
+      canvas.removeEventListener("webglcontextlost", onContextLost);
       window.cancelAnimationFrame(animationFrame);
+      renderTargetA.dispose();
+      renderTargetB.dispose();
+      transition.dispose();
+      scenes.forEach((bundle) => bundle.dispose());
+      renderer.dispose();
       track.style.removeProperty("--hero-progress");
     };
   }, []);
@@ -251,26 +292,24 @@ export default function ResearchScene({
   const phase = phases[activePhase];
 
   return (
-    <div className={fallback ? "research-scene is-fallback" : "research-scene"} ref={mountRef}>
-      <div className="journey-frames" aria-hidden="true">
-        {fallback ? (
-          <div className="scene-fallback" style={{ backgroundImage: `url(${reducedMotionFallback})` }} />
-        ) : (
-          frames.map((frame, index) => (
-            <div
-              className="journey-frame"
-              key={frame.src}
-              style={{
-                backgroundImage: `url(${frame.src})`,
-                opacity: index === 0 ? 1 : 0,
-                zIndex: index + 1,
-              }}
-              role="img"
-              aria-label={frame.alt}
-            />
-          ))
-        )}
-      </div>
+    <div
+      className={`research-scene${fallback ? " is-fallback" : " is-webgl"}${ready ? " is-ready" : ""}`}
+      ref={mountRef}
+    >
+      <canvas className="research-canvas" ref={canvasRef} aria-hidden="true" />
+      {fallback && (
+        <div
+          className="scene-fallback"
+          style={{ backgroundImage: `url(${reducedMotionFallback})` }}
+          aria-hidden="true"
+        />
+      )}
+      {!fallback && !ready && (
+        <div className="scene-loading" aria-live="polite">
+          <i />
+          <span>{language === "en" ? "Building the AI stack" : "正在构建 AI 系统"}</span>
+        </div>
+      )}
       <div className="scene-atmosphere" aria-hidden="true" />
       <div className="scene-wash" aria-hidden="true" />
       <div className="scene-status" aria-live="polite">
