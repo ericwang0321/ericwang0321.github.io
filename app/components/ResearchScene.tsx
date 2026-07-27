@@ -75,7 +75,7 @@ const phases = [
 
 const journeyFrames: JourneyFrame[] = [
   {
-    src: "/hero-journey/01-grid-campus-v1.avif",
+    src: "/hero-journey/01-grid-campus-v1.jpg",
     focus: [0.72, 0.47],
     offsetStart: [0, 0],
     offsetEnd: [0.018, -0.006],
@@ -83,7 +83,7 @@ const journeyFrames: JourneyFrame[] = [
     scaleEnd: 1.11,
   },
   {
-    src: "/hero-journey/06-campus-rack-bridge-v2.avif",
+    src: "/hero-journey/06-campus-rack-bridge-v2.jpg",
     focus: [0.7, 0.47],
     offsetStart: [0.008, 0],
     offsetEnd: [0.018, -0.004],
@@ -91,7 +91,7 @@ const journeyFrames: JourneyFrame[] = [
     scaleEnd: 1.105,
   },
   {
-    src: "/hero-journey/07-rack-close-v2.avif",
+    src: "/hero-journey/07-rack-close-v2.jpg",
     focus: [0.68, 0.49],
     offsetStart: [0.008, 0],
     offsetEnd: [0.018, -0.004],
@@ -99,7 +99,7 @@ const journeyFrames: JourneyFrame[] = [
     scaleEnd: 1.115,
   },
   {
-    src: "/hero-journey/02-nvl72-rack-v1.avif",
+    src: "/hero-journey/02-nvl72-rack-v1.jpg",
     focus: [0.64, 0.5],
     offsetStart: [0.004, 0],
     offsetEnd: [0.014, -0.003],
@@ -107,7 +107,7 @@ const journeyFrames: JourneyFrame[] = [
     scaleEnd: 1.105,
   },
   {
-    src: "/hero-journey/08-rack-tray-extract-v2.avif",
+    src: "/hero-journey/08-rack-tray-extract-v2.jpg",
     focus: [0.62, 0.54],
     offsetStart: [0.004, 0],
     offsetEnd: [0.016, -0.004],
@@ -115,7 +115,7 @@ const journeyFrames: JourneyFrame[] = [
     scaleEnd: 1.115,
   },
   {
-    src: "/hero-journey/03-compute-tray-v1.avif",
+    src: "/hero-journey/03-compute-tray-v1.jpg",
     focus: [0.66, 0.5],
     offsetStart: [0.004, 0],
     offsetEnd: [0.015, -0.004],
@@ -123,7 +123,7 @@ const journeyFrames: JourneyFrame[] = [
     scaleEnd: 1.115,
   },
   {
-    src: "/hero-journey/09-tray-gpu-macro-v2.avif",
+    src: "/hero-journey/09-tray-gpu-macro-v2.jpg",
     focus: [0.57, 0.48],
     offsetStart: [0, 0],
     offsetEnd: [0.01, -0.005],
@@ -131,7 +131,7 @@ const journeyFrames: JourneyFrame[] = [
     scaleEnd: 1.12,
   },
   {
-    src: "/hero-journey/04-gpu-package-v1.avif",
+    src: "/hero-journey/04-gpu-package-v1.jpg",
     focus: [0.66, 0.48],
     offsetStart: [0.004, 0],
     offsetEnd: [0.014, -0.004],
@@ -139,7 +139,7 @@ const journeyFrames: JourneyFrame[] = [
     scaleEnd: 1.115,
   },
   {
-    src: "/hero-journey/10-chip-app-bridge-v2.avif",
+    src: "/hero-journey/10-chip-app-bridge-v2.jpg",
     focus: [0.64, 0.53],
     offsetStart: [0.004, 0],
     offsetEnd: [0.014, -0.004],
@@ -147,7 +147,7 @@ const journeyFrames: JourneyFrame[] = [
     scaleEnd: 1.105,
   },
   {
-    src: "/hero-journey/05-ai-application-v1.avif",
+    src: "/hero-journey/05-ai-application-v1.jpg",
     focus: [0.64, 0.49],
     offsetStart: [0.004, 0],
     offsetEnd: [0.012, -0.003],
@@ -202,40 +202,53 @@ const fragmentShader = `
     return clamp(mapped, vec2(0.001), vec2(0.999));
   }
 
-  vec4 softSample(sampler2D image, vec2 uv, float blurAmount) {
-    vec2 pixel = blurAmount / max(uResolution, vec2(1.0));
-    vec4 color = texture2D(image, uv) * 0.44;
-    color += texture2D(image, clamp(uv + vec2(pixel.x, 0.0), 0.001, 0.999)) * 0.14;
-    color += texture2D(image, clamp(uv - vec2(pixel.x, 0.0), 0.001, 0.999)) * 0.14;
-    color += texture2D(image, clamp(uv + vec2(0.0, pixel.y), 0.001, 0.999)) * 0.14;
-    color += texture2D(image, clamp(uv - vec2(0.0, pixel.y), 0.001, 0.999)) * 0.14;
+  vec2 zoomAroundFocus(vec2 uv, vec2 focus, float zoom) {
+    return focus + (uv - focus) / max(zoom, 0.001);
+  }
+
+  vec4 focusMotionSample(sampler2D image, vec2 uv, vec2 focusUv, float blurAmount) {
+    if (blurAmount < 0.01) {
+      return texture2D(image, uv);
+    }
+    vec2 trail = (uv - focusUv) * blurAmount * 0.0035;
+    vec4 color = texture2D(image, uv) * 0.14;
+    color += texture2D(image, clamp(uv - trail, 0.001, 0.999)) * 0.02;
+    color += texture2D(image, clamp(uv - trail * 0.8333, 0.001, 0.999)) * 0.04;
+    color += texture2D(image, clamp(uv - trail * 0.6667, 0.001, 0.999)) * 0.06;
+    color += texture2D(image, clamp(uv - trail * 0.5, 0.001, 0.999)) * 0.08;
+    color += texture2D(image, clamp(uv - trail * 0.3333, 0.001, 0.999)) * 0.10;
+    color += texture2D(image, clamp(uv - trail * 0.1667, 0.001, 0.999)) * 0.13;
+    color += texture2D(image, clamp(uv + trail * 0.1667, 0.001, 0.999)) * 0.13;
+    color += texture2D(image, clamp(uv + trail * 0.3333, 0.001, 0.999)) * 0.10;
+    color += texture2D(image, clamp(uv + trail * 0.5, 0.001, 0.999)) * 0.08;
+    color += texture2D(image, clamp(uv + trail * 0.6667, 0.001, 0.999)) * 0.06;
+    color += texture2D(image, clamp(uv + trail * 0.8333, 0.001, 0.999)) * 0.04;
+    color += texture2D(image, clamp(uv + trail, 0.001, 0.999)) * 0.02;
     return color;
   }
 
   void main() {
     float eased = uMix * uMix * (3.0 - 2.0 * uMix);
     float energy = sin(eased * 3.14159265);
-    float aspect = uResolution.x / max(uResolution.y, 1.0);
-    vec2 radial = vUv - uFocus;
-    radial.x *= aspect;
-    float distanceFromFocus = length(radial);
-    vec2 direction = distanceFromFocus > 0.0001 ? normalize(radial) : vec2(0.0);
-    direction.x /= max(aspect, 0.001);
 
-    vec2 fromUv = coverUv(vUv, uFromSize, uFromScale, uFromOffset);
-    vec2 toUv = coverUv(vUv, uToSize, uToScale, uToOffset);
-    fromUv = clamp(fromUv + direction * eased * 0.012, 0.001, 0.999);
-    toUv = clamp(toUv - direction * (1.0 - eased) * 0.016, 0.001, 0.999);
+    float fromZoom = mix(1.0, 1.18, eased);
+    float toZoom = mix(0.96, 1.0, eased);
+    vec2 fromViewportUv = zoomAroundFocus(vUv, uFocus, fromZoom);
+    vec2 toViewportUv = zoomAroundFocus(vUv, uFocus, toZoom);
+    vec2 fromUv = coverUv(fromViewportUv, uFromSize, uFromScale, uFromOffset);
+    vec2 toUv = coverUv(toViewportUv, uToSize, uToScale, uToOffset);
+    vec2 fromFocusUv = coverUv(uFocus, uFromSize, uFromScale, uFromOffset);
+    vec2 toFocusUv = coverUv(uFocus, uToSize, uToScale, uToOffset);
 
-    float blurAmount = energy * 2.25;
-    vec4 fromColor = softSample(tFrom, fromUv, blurAmount);
-    vec4 toColor = softSample(tTo, toUv, blurAmount);
-    float spatialLead = (0.55 - distanceFromFocus) * 0.15;
-    float blend = smoothstep(0.05, 0.95, eased + spatialLead);
-    vec4 color = mix(fromColor, toColor, blend);
+    float blurAmount = pow(energy, 0.82) * 14.0;
+    vec4 fromColor = focusMotionSample(tFrom, fromUv, fromFocusUv, blurAmount);
+    vec4 toColor = focusMotionSample(tTo, toUv, toFocusUv, blurAmount);
+    float lensCut = step(0.5, eased);
+    vec4 color = mix(fromColor, toColor, lensCut);
 
     vec3 warmVeil = vec3(0.965, 0.952, 0.925);
-    color.rgb = mix(color.rgb, warmVeil, energy * 0.045);
+    float veil = pow(energy, 3.0) * 0.94;
+    color.rgb = mix(color.rgb, warmVeil, veil);
     gl_FragColor = color;
   }
 `;
@@ -357,7 +370,7 @@ export default function ResearchScene({
       const frameIndex = Math.min(journeyFrames.length - 1, Math.floor(scaled));
       const nextIndex = Math.min(journeyFrames.length - 1, frameIndex + 1);
       const localProgress = frameIndex === journeyFrames.length - 1 ? 1 : scaled - frameIndex;
-      const mix = frameIndex === nextIndex ? 0 : smoothstep(0.28, 0.94, localProgress);
+      const mix = frameIndex === nextIndex ? 0 : smoothstep(0.52, 0.86, localProgress);
       const resolveTextureIndex = (requestedIndex: number) => {
         for (let distance = 0; distance < journeyFrames.length; distance += 1) {
           const previousIndex = requestedIndex - distance;
@@ -414,13 +427,7 @@ export default function ResearchScene({
 
     const loader = new THREE.TextureLoader();
     const loadTexture = async (index: number) => {
-      const source = journeyFrames[index].src;
-      let texture: THREE.Texture;
-      try {
-        texture = await loader.loadAsync(source);
-      } catch {
-        texture = await loader.loadAsync(source.replace(/\.avif$/, ".jpg"));
-      }
+      const texture = await loader.loadAsync(journeyFrames[index].src);
       if (disposed) {
         texture.dispose();
         return;
@@ -529,9 +536,7 @@ export default function ResearchScene({
     >
       <div
         className="scene-poster"
-        style={{
-          backgroundImage: `image-set(url("/hero-journey/01-grid-campus-v1.avif") type("image/avif"), url("${reducedMotionFallback}") type("image/jpeg"))`,
-        }}
+        style={{ backgroundImage: `url("${reducedMotionFallback}")` }}
         aria-hidden="true"
       />
       <canvas className="research-canvas" ref={canvasRef} aria-hidden="true" />
