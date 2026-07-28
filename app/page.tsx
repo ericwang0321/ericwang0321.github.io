@@ -64,7 +64,6 @@ const copy = {
       en: "An interpretable single-index framework under equal-opportunity constraints, with theoretical fairness guarantees and evaluation across seven benchmark datasets.",
       zh: "在机会均等约束下构建可解释单指数模型，并给出公平性理论保证，在七个基准数据集上完成验证。",
     },
-    authors: { en: "Yidong Wang · Meng Ding · Jinhui Xu · Di Wang", zh: "王逸东 · 丁萌 · 徐金辉 · 王迪" },
     doi: { en: "DOI", zh: "DOI" },
     source: { en: "Open source", zh: "开放原文" },
     citation: { en: "BibTeX", zh: "BibTeX" },
@@ -250,12 +249,6 @@ const portfolioEntries: PortfolioEntry[] = [
   },
 ];
 
-const proofPoints = [
-  { value: "500+", label: copy.proof.monitored },
-  { value: "~90%", label: copy.proof.faster },
-  { value: "1", label: copy.proof.paper },
-];
-
 const timeline = [
   {
     period: "2026",
@@ -346,7 +339,7 @@ export default function Home() {
       <div className="academic-layout">
         <aside className="profile-sidebar" aria-label="Profile">
           <div className="profile-avatar" aria-hidden="true">EW</div>
-          <h1>Eric Wang <span>王逸东</span></h1>
+          <h1>Eric Wang</h1>
           <p className="profile-tagline">
             {language === "en" ? "AI Infrastructure × Markets" : "AI 基础设施 × 资本市场"}
           </p>
@@ -371,7 +364,7 @@ export default function Home() {
             {language === "en" ? (
               <>
                 <p>
-                  Hi, I am <strong>Eric Wang</strong> (Chinese name: 王逸东). I work at the intersection of
+                  Hi, I am <strong>Eric Wang</strong>. I work at the intersection of
                   <strong> AI infrastructure</strong>, <strong>public markets</strong>, and quantitative research.
                   My work follows the AI value chain from power and silicon to systems, applications, and market signals.
                 </p>
@@ -385,7 +378,7 @@ export default function Home() {
             ) : (
               <>
                 <p>
-                  你好，我是<strong>王逸东（Eric Wang）</strong>。我的研究聚焦于
+                  你好，我是 <strong>Eric Wang</strong>。我的研究聚焦于
                   <strong> AI 基础设施</strong>、<strong>资本市场</strong>与量化研究的交叉领域，
                   沿着电力、芯片、系统、应用到市场信号研究完整的 AI 产业链。
                 </p>
@@ -399,36 +392,41 @@ export default function Home() {
             )}
           </section>
 
-          <section id="highlights" className="content-section">
-            <h2>{language === "en" ? "Highlights" : "亮点"}</h2>
-            <ul className="highlight-list">
-              {proofPoints.map((item) => (
-                <li key={item.value}>
-                  <strong>{item.value}</strong> {t(item.label, language)}
-                </li>
-              ))}
-            </ul>
-          </section>
-
           <section id="publication" className="content-section">
             <h2>{language === "en" ? "Publication" : "论文"}</h2>
-            <article className="publication-entry">
-              <h3>
-                <a href="https://doi.org/10.1145/3690646" target="_blank" rel="noreferrer">
-                  Fair Single Index Model
-                </a>
-              </h3>
-              <p><strong>Yidong Wang</strong>, Meng Ding, Jinhui Xu, Di Wang</p>
-              <p><em>ACM Transactions on Knowledge Discovery from Data</em>, 2024.</p>
-              <ul>
-                <li>{t(copy.publication.abstract, language)}</li>
-              </ul>
-              <div className="inline-links">
-                <a href="https://doi.org/10.1145/3690646" target="_blank" rel="noreferrer">DOI</a>
-                <a href="https://repository.kaust.edu.sa/items/9b87637c-4279-4a0c-a64f-0d29b5acc2c1" target="_blank" rel="noreferrer">KAUST</a>
-                <a href="/papers/fair-single-index-model.bib" download>BibTeX</a>
-              </div>
-            </article>
+            <div className="publication-feature">
+              <figure className="publication-figure">
+                <Image
+                  src="/papers/fair-single-index-model-figure-1.jpg"
+                  alt="Fairness-accuracy tradeoffs for FSIM and baseline models on the Arrhythmia and Compas datasets"
+                  width={398}
+                  height={500}
+                  sizes="(max-width: 720px) calc(100vw - 36px), 250px"
+                />
+                <figcaption>
+                  {language === "en"
+                    ? "Figure 1 · Fairness-accuracy tradeoffs on Arrhythmia and Compas."
+                    : "图 1 · Arrhythmia 与 Compas 数据集上的公平性—准确率权衡。"}
+                </figcaption>
+              </figure>
+              <article className="publication-entry">
+                <h3>
+                  <a href="https://doi.org/10.1145/3690646" target="_blank" rel="noreferrer">
+                    Fair Single Index Model
+                  </a>
+                </h3>
+                <p><strong>Yidong Wang</strong>, Meng Ding, Jinhui Xu, Di Wang</p>
+                <p><em>ACM Transactions on Knowledge Discovery from Data</em>, 2024.</p>
+                <ul>
+                  <li>{t(copy.publication.abstract, language)}</li>
+                </ul>
+                <div className="inline-links">
+                  <a href="https://doi.org/10.1145/3690646" target="_blank" rel="noreferrer">DOI</a>
+                  <a href="https://repository.kaust.edu.sa/items/9b87637c-4279-4a0c-a64f-0d29b5acc2c1" target="_blank" rel="noreferrer">KAUST</a>
+                  <a href="/papers/fair-single-index-model.bib" download>BibTeX</a>
+                </div>
+              </article>
+            </div>
           </section>
 
           <section id="research" className="content-section">
