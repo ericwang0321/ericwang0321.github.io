@@ -27,9 +27,12 @@ const officialOutstandingStudentProof =
 
 const copy = {
   nav: {
+    about: { en: "About", zh: "关于" },
     research: { en: "Research", zh: "研究" },
     publication: { en: "Publication", zh: "论文" },
+    honors: { en: "Honors", zh: "荣誉" },
     experience: { en: "Experience", zh: "经历" },
+    education: { en: "Education", zh: "教育" },
     usage: { en: "Usage", zh: "用量" },
     contact: { en: "Contact", zh: "联系" },
   },
@@ -302,7 +305,6 @@ function t(value: Localized, language: Language) {
 
 export default function Home() {
   const [language, setLanguage] = useState<Language>("en");
-  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     const saved = window.localStorage.getItem("portfolio-language");
@@ -316,215 +318,197 @@ export default function Home() {
     document.documentElement.lang = language === "zh" ? "zh-CN" : "en";
   }, [language]);
 
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => entries.forEach((entry) => {
-        if (entry.isIntersecting) entry.target.classList.add("is-visible");
-      }),
-      { threshold: 0.12 },
-    );
-    document.querySelectorAll("[data-reveal]").forEach((element) => observer.observe(element));
-    return () => observer.disconnect();
-  }, []);
-
   return (
-    <main className="site-shell">
-      <header className="site-header">
-        <a className="wordmark" href="#top" aria-label="Eric Wang home">
-          <strong>EW</strong>
-          <span>Eric Wang</span>
-        </a>
-
-        <button
-          className="menu-button"
-          type="button"
-          aria-expanded={menuOpen}
-          aria-controls="site-navigation"
-          onClick={() => setMenuOpen((open) => !open)}
-        >
-          <span /><span />
-          <b>{menuOpen ? "Close" : "Menu"}</b>
-        </button>
-
-        <nav id="site-navigation" className={menuOpen ? "nav-links is-open" : "nav-links"} aria-label="Primary navigation">
-          <a href="#research" onClick={() => setMenuOpen(false)}>{t(copy.nav.research, language)}</a>
-          <a href="#publication" onClick={() => setMenuOpen(false)}>{t(copy.nav.publication, language)}</a>
-          <a href="#experience" onClick={() => setMenuOpen(false)}>{t(copy.nav.experience, language)}</a>
-          <a href="/codex-usage/" onClick={() => setMenuOpen(false)}>{t(copy.nav.usage, language)}</a>
-          <a href="#contact" onClick={() => setMenuOpen(false)}>{t(copy.nav.contact, language)}</a>
-        </nav>
-
-        <button
-          className="language-toggle"
-          type="button"
-          onClick={() => setLanguage((current) => (current === "en" ? "zh" : "en"))}
-          aria-label={language === "en" ? "切换至中文" : "Switch to English"}
-        >
-          <span className={language === "en" ? "active" : ""}>EN</span>
-          <i />
-          <span className={language === "zh" ? "active" : ""}>中</span>
-        </button>
+    <main className="academic-site" id="top">
+      <header className="academic-header">
+        <div className="header-inner">
+          <a className="header-brand" href="#top">Eric Wang&apos;s Page</a>
+          <nav className="header-nav" aria-label="Primary navigation">
+            <a href="#about">{t(copy.nav.about, language)}</a>
+            <a href="#publication">{t(copy.nav.publication, language)}</a>
+            <a href="#research">{t(copy.nav.research, language)}</a>
+            <a href="#honors">{t(copy.nav.honors, language)}</a>
+            <a href="#experience">{t(copy.nav.experience, language)}</a>
+            <a href="#education">{t(copy.nav.education, language)}</a>
+            <a href="/codex-usage/">{t(copy.nav.usage, language)}</a>
+          </nav>
+          <button
+            className="plain-language-toggle"
+            type="button"
+            onClick={() => setLanguage((current) => (current === "en" ? "zh" : "en"))}
+            aria-label={language === "en" ? "切换至中文" : "Switch to English"}
+          >
+            {language === "en" ? "中文" : "EN"}
+          </button>
+        </div>
       </header>
 
-      <section id="top" className="hero-section">
-        <div className="hero-sticky">
-          <div className="hero-system-map" aria-hidden="true">
-            <span><i>01</i> GRID + POWER</span>
-            <span><i>02</i> COMPUTE</span>
-            <span><i>03</i> MEMORY + NETWORK</span>
-            <span><i>04</i> AI APPLICATIONS</span>
-            <span><i>05</i> MARKETS</span>
-          </div>
-          <div className="hero-copy">
-            <p className="hero-name">Eric Wang <span>王逸东</span></p>
-            <h1>
-              <span>{t(copy.hero.titleA, language)}</span>
-              <span className="hero-accent">{t(copy.hero.titleB, language)}</span>
-            </h1>
-            <p className="hero-subtitle">{t(copy.hero.subtitle, language)}</p>
-            <a className="primary-link" href="#research">
-              {t(copy.hero.explore, language)} <span>↘</span>
-            </a>
-            <small>{t(copy.hero.descriptor, language)}</small>
-          </div>
-        </div>
-      </section>
+      <div className="academic-layout">
+        <aside className="profile-sidebar" aria-label="Profile">
+          <div className="profile-avatar" aria-hidden="true">EW</div>
+          <h1>Eric Wang <span>王逸东</span></h1>
+          <p className="profile-tagline">
+            {language === "en" ? "AI Infrastructure × Markets" : "AI 基础设施 × 资本市场"}
+          </p>
+          <p className="profile-quote">
+            {language === "en" ? "From silicon to systems to signals." : "从芯片、系统到市场信号。"}
+          </p>
+          <ul className="profile-facts">
+            <li><span aria-hidden="true">●</span> Hong Kong / Singapore</li>
+            <li><span aria-hidden="true">◆</span> AI &amp; Equity Research</li>
+          </ul>
+          <nav className="profile-links" aria-label="Profile links">
+            <a href="mailto:wangyidong020321@gmail.com">Email</a>
+            <a href="https://www.linkedin.com/in/eric-wangyidong/" target="_blank" rel="noreferrer">LinkedIn</a>
+            <a href="https://github.com/ericwang0321" target="_blank" rel="noreferrer">GitHub</a>
+            <a href="/codex-usage/">Codex Usage</a>
+          </nav>
+        </aside>
 
-      <section id="research" className="section research-section">
-        <div className="section-heading" data-reveal>
-          <p className="section-label">01 · {t(copy.research.label, language)}</p>
-          <h2>{t(copy.research.title, language)}</h2>
-        </div>
+        <div className="academic-content">
+          <section id="about" className="content-section">
+            <h2>{language === "en" ? "About Me" : "关于我"}</h2>
+            {language === "en" ? (
+              <>
+                <p>
+                  Hi, I am <strong>Eric Wang</strong> (Chinese name: 王逸东). I work at the intersection of
+                  <strong> AI infrastructure</strong>, <strong>public markets</strong>, and quantitative research.
+                  My work follows the AI value chain from power and silicon to systems, applications, and market signals.
+                </p>
+                <p>My current research interests include:</p>
+                <ul>
+                  <li>AI compute, memory, networking, power, and cooling supply chains</li>
+                  <li>Inference economics, agent systems, and model deployment</li>
+                  <li>Data-driven equity research and market-monitoring systems</li>
+                </ul>
+              </>
+            ) : (
+              <>
+                <p>
+                  你好，我是<strong>王逸东（Eric Wang）</strong>。我的研究聚焦于
+                  <strong> AI 基础设施</strong>、<strong>资本市场</strong>与量化研究的交叉领域，
+                  沿着电力、芯片、系统、应用到市场信号研究完整的 AI 产业链。
+                </p>
+                <p>目前主要关注：</p>
+                <ul>
+                  <li>AI 算力、内存、网络、电力与液冷产业链</li>
+                  <li>推理经济性、Agent 系统与模型部署</li>
+                  <li>数据驱动的股票研究与市场监控系统</li>
+                </ul>
+              </>
+            )}
+          </section>
 
-        <div className="portfolio-heading" data-reveal>
-          <p>{language === "en" ? "ARTICLES · BLOGS · VISUAL DECKS" : "文章 · 博客 · 视觉讲解"}</p>
-          <span>{t(copy.research.count, language)}</span>
-        </div>
+          <section id="highlights" className="content-section">
+            <h2>{language === "en" ? "Highlights" : "亮点"}</h2>
+            <ul className="highlight-list">
+              {proofPoints.map((item) => (
+                <li key={item.value}>
+                  <strong>{item.value}</strong> {t(item.label, language)}
+                </li>
+              ))}
+            </ul>
+          </section>
 
-        <div className="portfolio-feed">
-          {portfolioEntries.map((item) => (
-            <a
-              className="portfolio-row"
-              href={item.href}
-              key={item.number}
-              data-reveal
-            >
-              <div className="portfolio-thumb">
-                <Image
-                  src={item.image}
-                  alt=""
-                  fill
-                  sizes="(max-width: 700px) calc(100vw - 40px), 240px"
-                  style={{ objectPosition: item.imagePosition ?? "center" }}
-                />
-                <span>{item.number}</span>
-                <small>{item.kind === "deck" ? (language === "en" ? "WEB DECK" : "网页讲解") : (language === "en" ? "ARTICLE" : "文章")}</small>
+          <section id="publication" className="content-section">
+            <h2>{language === "en" ? "Publication" : "论文"}</h2>
+            <article className="publication-entry">
+              <h3>
+                <a href="https://doi.org/10.1145/3690646" target="_blank" rel="noreferrer">
+                  Fair Single Index Model
+                </a>
+              </h3>
+              <p><strong>Yidong Wang</strong>, Meng Ding, Jinhui Xu, Di Wang</p>
+              <p><em>ACM Transactions on Knowledge Discovery from Data</em>, 2024.</p>
+              <ul>
+                <li>{t(copy.publication.abstract, language)}</li>
+              </ul>
+              <div className="inline-links">
+                <a href="https://doi.org/10.1145/3690646" target="_blank" rel="noreferrer">DOI</a>
+                <a href="https://repository.kaust.edu.sa/items/9b87637c-4279-4a0c-a64f-0d29b5acc2c1" target="_blank" rel="noreferrer">KAUST</a>
+                <a href="/papers/fair-single-index-model.bib" download>BibTeX</a>
               </div>
-              <div className="portfolio-copy">
-                <div className="portfolio-meta">
-                  <p>{t(item.sourceType, language)}</p>
-                  <small>{t(item.meta, language)}</small>
-                </div>
-                <h3>{t(item.title, language)}</h3>
-                <p className="portfolio-excerpt">{t(item.excerpt, language)}</p>
-              </div>
-              <span className="portfolio-arrow" aria-hidden="true">↗</span>
-            </a>
-          ))}
-        </div>
-      </section>
+            </article>
+          </section>
 
-      <section className="proof-strip" aria-label="Selected outcomes">
-        {proofPoints.map((item) => (
-          <div key={item.value} data-reveal>
-            <strong>{item.value}</strong>
-            <span>{t(item.label, language)}</span>
-          </div>
-        ))}
-      </section>
-
-      <section id="publication" className="section publication-section">
-        <div className="publication-layout" data-reveal>
-          <div className="publication-copy">
-            <p className="section-label">02 · {t(copy.publication.label, language)}</p>
-            <p className="publication-meta">ACM TKDD · DOI 10.1145/3690646</p>
-            <h2>{t(copy.publication.title, language)}</h2>
-            <p className="publication-journal">{t(copy.publication.journal, language)}</p>
-            <p className="publication-abstract">{t(copy.publication.abstract, language)}</p>
-            <p className="publication-authors">{t(copy.publication.authors, language)}</p>
-            <div className="publication-actions">
-              <a href="https://doi.org/10.1145/3690646" target="_blank" rel="noreferrer">{t(copy.publication.doi, language)} ↗</a>
-              <a href="https://repository.kaust.edu.sa/items/9b87637c-4279-4a0c-a64f-0d29b5acc2c1" target="_blank" rel="noreferrer">{t(copy.publication.source, language)} ↗</a>
-              <a href="/papers/fair-single-index-model.bib" download>{t(copy.publication.citation, language)} ↓</a>
+          <section id="research" className="content-section">
+            <div className="simple-section-heading">
+              <h2>{language === "en" ? "Selected Research" : "精选研究"}</h2>
+              <span>{portfolioEntries.length} {language === "en" ? "works" : "项成果"}</span>
             </div>
-          </div>
-          <div className="paper-visual" aria-hidden="true">
-            <div className="paper-shadow" />
-            <div className="paper-cover">
-              <span>ACM</span>
-              <small>TRANSACTIONS ON KNOWLEDGE<br />DISCOVERY FROM DATA</small>
-              <i />
-              <strong>FAIR<br />SINGLE<br />INDEX<br />MODEL</strong>
-              <b>233</b>
+            <div className="research-list">
+              {portfolioEntries.map((item) => (
+                <article className="research-row" key={item.number}>
+                  <a className="research-thumbnail" href={item.href} tabIndex={-1} aria-hidden="true">
+                    <Image
+                      src={item.image}
+                      alt=""
+                      fill
+                      sizes="(max-width: 720px) calc(100vw - 40px), 210px"
+                      style={{ objectPosition: item.imagePosition ?? "center" }}
+                    />
+                  </a>
+                  <div className="research-copy">
+                    <p className="research-meta">{t(item.sourceType, language)} · {t(item.meta, language)}</p>
+                    <h3><a href={item.href}>{t(item.title, language)}</a></h3>
+                    <p>{t(item.excerpt, language)}</p>
+                  </div>
+                </article>
+              ))}
             </div>
-          </div>
+          </section>
+
+          <section id="honors" className="content-section">
+            <h2>{language === "en" ? "Honors and Awards" : "荣誉与奖项"}</h2>
+            <ul className="dated-list">
+              <li>
+                <time>2023</time>
+                <span>
+                  Faculty Outstanding Student, The Hong Kong Polytechnic University ·{" "}
+                  <a href={officialOutstandingStudentProof} target="_blank" rel="noreferrer">
+                    {t(copy.experience.evidence, language)}
+                  </a>
+                </span>
+              </li>
+            </ul>
+          </section>
+
+          <section id="experience" className="content-section">
+            <h2>{language === "en" ? "Experience" : "经历"}</h2>
+            <div className="plain-timeline">
+              {timeline.map((item) => (
+                <article key={`${item.period}-${item.organization.en}`}>
+                  <time>{item.period}</time>
+                  <div>
+                    <h3>{t(item.organization, language)}</h3>
+                    <p><strong>{t(item.role, language)}</strong></p>
+                    <p>{t(item.detail, language)}</p>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </section>
+
+          <section id="education" className="content-section">
+            <h2>{language === "en" ? "Education" : "教育"}</h2>
+            <div className="plain-timeline">
+              {education.map((item) => (
+                <article key={item.school.en}>
+                  <time>{item.year}</time>
+                  <div>
+                    <h3>{t(item.school, language)}</h3>
+                    <p>{t(item.degree, language)}</p>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </section>
         </div>
-      </section>
+      </div>
 
-      <section id="experience" className="section experience-section">
-        <div className="section-heading" data-reveal>
-          <p className="section-label">03 · {t(copy.experience.label, language)}</p>
-          <h2>{t(copy.experience.title, language)}</h2>
-        </div>
-
-        <div className="experience-layout">
-          <div className="timeline" data-reveal>
-            {timeline.map((item) => (
-              <article key={`${item.period}-${item.organization.en}`}>
-                <span>{item.period}</span>
-                <div>
-                  <p>{t(item.role, language)}</p>
-                  <h3>{t(item.organization, language)}</h3>
-                  <small>{t(item.detail, language)}</small>
-                </div>
-              </article>
-            ))}
-          </div>
-
-          <aside className="education-panel" data-reveal>
-            <p className="section-label">{t(copy.experience.education, language)}</p>
-            {education.map((item) => (
-              <div className="education-item" key={item.school.en}>
-                <span>{item.year}</span>
-                <h3>{t(item.school, language)}</h3>
-                <p>{t(item.degree, language)}</p>
-              </div>
-            ))}
-            <a className="award-link" href={officialOutstandingStudentProof} target="_blank" rel="noreferrer">
-              <span>Faculty Outstanding Student · 2023</span>
-              <small>{t(copy.experience.evidence, language)} ↗</small>
-            </a>
-          </aside>
-        </div>
-      </section>
-
-      <section id="contact" className="section contact-section">
-        <div className="contact-copy" data-reveal>
-          <p className="section-label">04 · {t(copy.contact.label, language)}</p>
-          <h2>{t(copy.contact.title, language)}</h2>
-          <p>{t(copy.contact.body, language)}</p>
-          <div className="contact-links">
-            <a href="mailto:wangyidong020321@gmail.com">Email ↗</a>
-            <a href="https://www.linkedin.com/in/eric-wangyidong/" target="_blank" rel="noreferrer">LinkedIn ↗</a>
-            <a href="https://github.com/ericwang0321" target="_blank" rel="noreferrer">GitHub ↗</a>
-          </div>
-        </div>
-      </section>
-
-      <footer className="site-footer">
-        <span>Eric Wang · 王逸东</span>
-        <p>© {new Date().getFullYear()} · Hong Kong / Singapore</p>
-        <a href="#top">Back to top ↑</a>
+      <footer className="academic-footer">
+        <p>© {new Date().getFullYear()} Eric Wang · Hong Kong / Singapore</p>
+        <a href="#top">{language === "en" ? "Back to top" : "返回顶部"} ↑</a>
       </footer>
     </main>
   );
