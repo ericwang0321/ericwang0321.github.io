@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import ResearchScene from "./components/ResearchScene";
 
 type Language = "en" | "zh";
 
@@ -93,7 +92,7 @@ const portfolioEntries: PortfolioEntry[] = [
     href: "/research/ai-chain/",
     meta: { en: "Interactive HTML · 2026", zh: "交互式 HTML · 2026" },
     sourceType: { en: "AI VALUE CHAIN", zh: "AI 产业链" },
-    image: "/research/ai-chain/image2_diagrams/01-ai-value-chain-loop.png",
+    image: "/hero-journey/01-grid-campus-v1.jpg",
     kind: "article",
   },
   {
@@ -106,7 +105,7 @@ const portfolioEntries: PortfolioEntry[] = [
     href: "/research/ai-infrastructure.html",
     meta: { en: "Interactive HTML · 2026", zh: "交互式 HTML · 2026" },
     sourceType: { en: "AI INFRASTRUCTURE", zh: "AI 基础设施" },
-    image: "/research/ai-chain/image2_diagrams/02-gpu-server-cutaway.png",
+    image: "/hero-journey/06-campus-rack-bridge-v2.jpg",
     kind: "article",
   },
   {
@@ -119,7 +118,7 @@ const portfolioEntries: PortfolioEntry[] = [
     href: "/research/ai-inference/",
     meta: { en: "Interactive HTML · 2026", zh: "交互式 HTML · 2026" },
     sourceType: { en: "AI INFERENCE", zh: "AI 推理" },
-    image: "/research-thumbnails/ai-inference.png",
+    image: "/hero-journey/10-chip-app-bridge-v2.jpg",
     kind: "article",
   },
   {
@@ -132,7 +131,7 @@ const portfolioEntries: PortfolioEntry[] = [
     href: "/research/ai-gtm.html",
     meta: { en: "Interactive HTML · Jul 2026", zh: "交互式 HTML · 2026 年 7 月" },
     sourceType: { en: "GO-TO-MARKET", zh: "商业化路径" },
-    image: "/research-thumbnails/ai-gtm.png",
+    image: "/hero-journey/05-ai-application-v1.jpg",
     kind: "article",
   },
   {
@@ -161,7 +160,7 @@ const portfolioEntries: PortfolioEntry[] = [
     href: "/research/memory-hbm/",
     meta: { en: "Source blog · Jun 2026", zh: "原文博客 · 2026 年 6 月" },
     sourceType: { en: "MEMORY & HBM", zh: "内存与 HBM" },
-    image: "/research/memory-hbm/assets/source_figures/S01_p018_global_memory_market_size.png",
+    image: "/hero-journey/04-gpu-package-v1.jpg",
     kind: "article",
   },
   {
@@ -174,7 +173,7 @@ const portfolioEntries: PortfolioEntry[] = [
     href: "/research/llm-inference-optimization/",
     meta: { en: "Source blog · Jul 2026", zh: "原文博客 · 2026 年 7 月" },
     sourceType: { en: "LLM INFERENCE", zh: "LLM 推理" },
-    image: "/research/llm-inference-optimization/media/image1.png",
+    image: "/hero-journey/09-tray-gpu-macro-v2.jpg",
     kind: "article",
   },
   {
@@ -187,7 +186,7 @@ const portfolioEntries: PortfolioEntry[] = [
     href: "/research/kimi-k3/",
     meta: { en: "Source blog · Jul 2026", zh: "原文博客 · 2026 年 7 月" },
     sourceType: { en: "MODEL × HARDWARE", zh: "模型 × 硬件" },
-    image: "/research/kimi-k3/media/image1.png",
+    image: "/hero-journey/03-compute-tray-v1.jpg",
     kind: "article",
   },
   {
@@ -367,7 +366,13 @@ export default function Home() {
 
       <section id="top" className="hero-section">
         <div className="hero-sticky">
-          <ResearchScene language={language} />
+          <div className="hero-system-map" aria-hidden="true">
+            <span><i>01</i> GRID + POWER</span>
+            <span><i>02</i> COMPUTE</span>
+            <span><i>03</i> MEMORY + NETWORK</span>
+            <span><i>04</i> AI APPLICATIONS</span>
+            <span><i>05</i> MARKETS</span>
+          </div>
           <div className="hero-copy">
             <p className="hero-name">Eric Wang <span>王逸东</span></p>
             <h1>
