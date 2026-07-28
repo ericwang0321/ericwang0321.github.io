@@ -1,0 +1,509 @@
+<h1 id="executive-summary"><strong>Executive Summary</strong></h1>
+<p>This report answers a deceptively simple question: after you type a
+message and hit Enter, what actually happens inside the serving system
+of a Large Language Model (LLM) — and what tricks do engineers use to
+make the answer come out faster? No deep-learning background is assumed.
+Every technique is explained the same way: what problem it attacks, why
+it works, and what it costs.</p>
+<p><strong>First, a map that anchors everything.</strong> One request
+makes six stops: prompt input, tokenization, a parallel reading pass
+(prefill), the KV cache, word-by-word generation (decode), and streaming
+the output. Each stop is starved of a different resource — some of raw
+compute, some of memory capacity, some of memory bandwidth — so each
+calls for a different playbook. To classify any optimization, first ask
+which stop it targets.</p>
+<p><strong>The report's central reorganization: every technique is
+sorted by whether it revolves around the KV cache.</strong> The KV cache
+is the model's "reading notes" — intermediate results parked in GPU
+memory to avoid recomputation — and under real concurrency it outweighs
+the model itself, capping how many users one card can serve. The first
+family (Part II) works on those notes directly: take fewer notes (GQA,
+KV quantization, eviction), store them more tidily (PagedAttention), or
+share one copy among many readers (prefix caching, copy-on-write). The
+second family (Part III) never touches the notes; it attacks other
+bottlenecks — the attention computation itself (FlashAttention), the
+cost of hauling weights (weight quantization, continuous batching,
+speculative decoding), and cross-phase interference at the system level
+(prefill/decode disaggregation).</p>
+<p><strong>One grade-school division runs through the whole
+story.</strong> A Graphics Processing Unit (GPU) has exactly two
+budgets: how much math it can do per second (compute) and how many bytes
+it can move from memory per second (bandwidth). During decode, producing
+each word requires streaming the entire set of model weights out of
+memory while performing a comically small amount of math — compute
+utilization falls below 1%, and nearly all the time goes to moving data.
+Every decode-side acceleration is therefore one of three moves: move
+less (quantization), amortize one trip across many users (batching), or
+earn more words per trip (speculative decoding).</p>
+<p><strong>Stacked together, the gains are measured in orders of
+magnitude.</strong> PagedAttention cuts memory waste from 60–80% to
+under 4%; continuous batching lifts throughput by several times up to an
+order of magnitude; quantization doubles to quadruples the decode speed
+ceiling; speculative decoding multiplies it by 2–3× when drafts land.
+Each turns a different screw, they compose cleanly, and together they
+are why the cost of serving open models has collapsed in recent
+years.</p>
+<p>Structure: Part I covers the minimum background — the six stops and
+the two-phase split. Part II walks through the six KV-cache-related
+techniques; Part III the six unrelated ones. Part IV compresses
+everything into a one-page cheat sheet. Every technique carries its
+diagram from the original talk.</p>
+<h1 id="part-i-foundations-the-journey-of-a-prompt"><strong>Part I —
+Foundations: The Journey of a Prompt</strong></h1>
+<h2 id="the-big-picture-one-request-six-stops"><strong>1.1 The big
+picture: one request, six stops</strong></h2>
+<p>Picture the inference engine as an assembly line. Your question is
+first chopped into "tokens" (the model's basic units, roughly half a
+word to a word each). The model then reads the whole question in one
+parallel pass (prefill), parks the by-products of that reading in GPU
+memory (the KV cache), and starts writing the answer one token at a time
+(decode), pushing each token to your screen the moment it is born
+(streaming). Only the middle four stops burn GPU money; the first and
+last are ordinary CPU (Central Processing Unit) and network work and
+almost never the bottleneck.</p>
+<p><img
+src="/research/llm-inference-optimization/media/image1.png"
+style="width:6.25in;height:3.52083in" /></p>
+<p><em>Figure 1. One request, six stops. Every stop hits a different
+bottleneck — compute, memory capacity, or memory bandwidth — and calls
+for a different playbook.</em></p>
+<h2
+id="self-attention-and-qkv-where-the-kv-cache-comes-from"><strong>1.2
+Self-attention and Q/K/V: where the KV cache comes from</strong></h2>
+<p>The Transformer's core mechanism is self-attention: every token
+"looks around" and absorbs information from related words in the
+sentence. Concretely, each token computes three small vectors — Q
+(Query: what am I looking for?), K (Key: what am I?), and V (Value: what
+content do I carry?). In "The kitten chased its ball," the word "its"
+dots its Q against every token's K, finds "kitten" most relevant, and
+absorbs kitten's V — the pronoun resolves itself.</p>
+<p><img
+src="/research/llm-inference-optimization/media/image2.png"
+style="width:6.25in;height:3.52083in" /></p>
+<p><em>Figure 2. Q/K/V in one worked example: "its" spends 66% of its
+attention on "kitten." The setup for later: K and V never change once
+computed, yet every new token needs all of them again.</em></p>
+<p>Hold on to the foreshadowing in that figure: once computed, a token's
+K and V never change — yet every future token needs all of them again.
+Compute once, store, reuse: the stored notes are the KV (Key-Value)
+cache, the protagonist of this report's first family of techniques.</p>
+<h2 id="two-phases-prefill-reads-decode-writes"><strong>1.3 Two phases:
+prefill reads, decode writes</strong></h2>
+<p>The same model serving the same request runs in two phases with
+opposite personalities. Prefill is "reading the whole question at once":
+the prompt's hundreds or thousands of tokens are processed in parallel,
+the GPU's arithmetic units run flat out, and the phase is compute-bound.
+It determines how long you stare at a blank screen — a metric called
+TTFT (Time To First Token). Decode is "writing the answer word by word":
+each token depends on the previous one, so it is inherently serial; each
+step does little math but must haul the weights and the KV cache out of
+memory, making it memory-bandwidth-bound. It sets the speed at which
+words drip out — TPOT (Time Per Output Token).</p>
+<p><img
+src="/research/llm-inference-optimization/media/image3.png"
+style="width:6.25in;height:3.52083in" /></p>
+<p><em>Figure 3. Two faces of one model: prefill burns FLOPs in
+parallel; decode burns bytes in serial. This split is the key to every
+optimization that follows.</em></p>
+<h2 id="the-gpus-two-budgets-flops-and-bytes"><strong>1.4 The GPU's two
+budgets: FLOPs and bytes</strong></h2>
+<p>An A100 GPU performs 312 TFLOPS (Tera Floating-point Operations Per
+Second) of half-precision math, but its HBM (High Bandwidth Memory)
+moves only 2 TB/s. Divide the two and you get roughly 156: every byte
+fetched from memory should be matched by ~156 operations to keep the
+machine busy. Prefill delivers about 2,000 operations per byte —
+comfortably compute-bound. Decode delivers about 2 — the arithmetic
+units idle 99% of the time waiting for deliveries. You paid for a
+supercomputer and are using its memory bus. Every "why does this work?"
+in this report comes back to this ledger.</p>
+<p>(For the A100:</p>
+<p>Compute capacity: about 312 trillion operations per second</p>
+<p>Memory bandwidth: about 2 trillion bytes per second)</p>
+<p><img
+src="/research/llm-inference-optimization/media/image4.png"
+style="width:6.25in;height:3.52083in" /></p>
+<p><em>Figure 4. The GPU's two budgets. The first question for any
+inference optimization: which budget is this step actually
+burning?</em></p>
+<h1
+id="part-ii-family-one-techniques-that-optimize-the-kv-cache"><strong>Part
+II — Family One: Techniques That Optimize the KV Cache</strong></h1>
+<p>The six techniques in this part share one target: the reading notes
+that grow with every generated token and multiply with every concurrent
+user. There are only three strategies: store the notes more tidily
+(2.3), take fewer of them (2.4, 2.6), and share one copy among many
+readers (2.5, 2.6). Everything in this part is labeled KV-cache-related,
+in the text and in the final cheat sheet.</p>
+<h2 id="the-kv-cache-itself-trading-memory-for-compute"><strong>2.1 The
+KV cache itself: trading memory for compute</strong></h2>
+<p>Start with why the cache must exist. Generating token #100 requires
+the K and V of all 99 tokens before it; token #101 needs all 100.
+Recomputing from scratch each step makes total work grow with the square
+of the length — each token slower than the last. Store the computed K/V
+instead, and each step only computes vectors for the single newest token
+— a textbook space-for-time trade. The bill arrives immediately: the
+notes grow with every generated token, and every concurrent user carries
+their own copy.</p>
+<p><img
+src="/research/llm-inference-optimization/media/image5.png"
+style="width:6.25in;height:3.52083in" /></p>
+<p><em>Figure 5. Without the cache (left), every step re-derives the
+whole prefix — quadratic total work. With it (right), each step computes
+only the newcomer. The price: K/V squat in GPU memory.</em></p>
+<h2 id="doing-the-arithmetic-the-kv-cache-is-a-memory-hog"><strong>2.2
+Doing the arithmetic: the KV cache is a memory hog</strong></h2>
+<p>It is nothing like the "small cache" its name suggests. For
+Llama-2-7B, each token's K/V occupies 512 KB; a 4,000-token conversation
+costs about 2 GB. On an 80 GB A100, after loading 14 GB of weights,
+roughly 30 such concurrent requests fill the card — the KV cache claims
+about 60 GB, more than four times the weights. This arithmetic is the
+reason this part exists: the KV that fits equals the batch you can run
+equals the throughput you get. Managing the KV cache is managing the
+machine's capacity ceiling.</p>
+<p><img
+src="/research/llm-inference-optimization/media/image6.png"
+style="width:6.25in;height:3.52083in" /></p>
+<p><em>Figure 6. An 80 GB card's real allocation: 14 GB of weights, ~60
+GB of KV cache. Under concurrency, the notes outweigh the
+textbook.</em></p>
+<h2 id="pagedattention-an-operating-system-for-gpu-memory"><strong>2.3
+PagedAttention: an operating system for GPU memory</strong></h2>
+<p>How the cache was stored used to be the biggest source of waste.
+Early systems reserved one contiguous slab per request, sized for the
+worst case — like a hotel that blocks an entire floor per guest because
+it doesn't know how long anyone will stay. Real requests use a fraction
+of the reservation; the vLLM paper measured that in prior systems only
+20–40% of KV memory held real data. The rest was fragmentation.</p>
+<p><img
+src="/research/llm-inference-optimization/media/image7.png"
+style="width:6.25in;height:3.52083in" /></p>
+<p><em>Figure 7. The legacy recipe — reserve max-length slabs per
+request. Three requests, vast tracts of memory locked but never
+written.</em></p>
+<p>vLLM's PagedAttention lifts virtual-memory paging from the Operating
+System (OS) playbook wholesale: each request's KV is chopped into fixed
+blocks of 16 tokens; blocks live scattered across physical memory; a
+block table records the mapping; a new token just grabs any free block —
+nothing moves, nothing is reserved. Waste fell from 60–80% to under 4%,
+the same card fits 2–4× more requests, and throughput rises in step.
+Just as important, block-level bookkeeping unlocks block-level sharing —
+prefix caching and copy-on-write below both build on this foundation.
+The catch: the attention kernel must gather blocks by hopping through
+the table, which is precisely the custom kernel PagedAttention
+ships.</p>
+<p><img
+src="/research/llm-inference-optimization/media/image8.png"
+style="width:6.25in;height:3.52083in" /></p>
+<p><em>Figure 8. PagedAttention's one-to-one borrowing from OS paging:
+logically contiguous, physically scattered, translated by a block table.
+Waste drops below 4%.</em></p>
+<h2 id="mqa-gqa-take-fewer-notes-by-design"><strong>2.4 MQA / GQA: take
+fewer notes by design</strong></h2>
+<p>Attention is "multi-headed": the model runs dozens of small
+attentions (heads), each watching from its own angle. Standard MHA
+(Multi-Head Attention) gives every head its own K/V set — dozens of
+copies of the notes. MQA (Multi-Query Attention) goes to the extreme:
+all heads share one K/V set, dividing the cache by the head count. GQA
+(Grouped-Query Attention) takes the middle road: heads share K/V in
+small groups. Llama-3-70B ships with GQA — 64 query heads over 8 KV
+groups — cutting its KV cache by 8× at essentially no quality cost. Two
+things to note: this is decided at training time and cashed in for free
+at inference; and it shrinks K/V storage and traffic only — the Q-side
+compute is unchanged.</p>
+<p><img
+src="/research/llm-inference-optimization/media/image9.png"
+style="width:6.25in;height:3.52083in" /></p>
+<p><em>Figure 9. MHA, GQA, MQA: the more heads share K/V, the smaller
+the cache (1× → 1/4 → 1/8). GQA is today's mainstream choice for open
+models.</em></p>
+<h2 id="prefix-caching-pay-for-the-prompt-once"><strong>2.5 Prefix
+caching: pay for the prompt once</strong></h2>
+<p>Production traffic has a pattern: huge numbers of requests begin
+identically — the same system prompt, the same document, the same chat
+history. And prefill's output is exactly "the first token plus the
+prefix's KV"; identical input produces bit-identical KV, safe to reuse
+outright. So engines cache computed KV in blocks, match incoming
+requests block-by-block (hashing or a radix tree), mount the hits
+directly, and run prefill only on the unseen tail. A 2,000-token system
+prompt plus a 100-token question: on a hit, prefill work divides by 20
+and TTFT collapses. SGLang's RadixAttention and vLLM's APC (Automatic
+Prefix Caching) are the flagship implementations; multi-turn chat and
+agent workloads benefit most.</p>
+<p><img
+src="/research/llm-inference-optimization/media/image10.png"
+style="width:6.25in;height:3.52083in" /></p>
+<p><em>Figure 10. Request B shares request A's 2,000-token prefix,
+reuses its cached KV block-by-block, and pays only for its own 120 new
+tokens.</em></p>
+<h2 id="more-tricks-kv-quantization-eviction-and-sharing"><strong>2.6
+More tricks: KV quantization, eviction, and sharing</strong></h2>
+<p>Paging solved "where to put it." Three more moves solve "how much to
+keep" and "how many copies." First, KV quantization: store K/V values in
+FP8 or INT8 (8-bit Integer) instead of FP16 (16-bit Floating Point) —
+twice the notes per gigabyte, doubling the batch or the context, with
+small accuracy impact (K is touchier than V; per-channel scales calm it
+down). Second, windowing and eviction: Mistral's sliding window keeps
+only the most recent 4,000 tokens; StreamingLLM found the first few
+"sink tokens" must stay or the model destabilizes; H2O and friends evict
+entries that attention rarely looks at. Third, sharing with CoW
+(Copy-on-Write): when sampling several answers to one prompt in
+parallel, the prompt's KV is stored once; a fork copies only the block
+table, and whoever writes copies just that one block — the same trick an
+OS uses to fork processes, once again riding on the paging
+foundation.</p>
+<p><img
+src="/research/llm-inference-optimization/media/image11.png"
+style="width:6.25in;height:3.52083in" /></p>
+<p><em>Figure 11. Three moves, one goal: make every byte of KV in scarce
+GPU memory earn its keep — pack more, keep less, share copies.</em></p>
+<h1
+id="part-iii-family-two-techniques-unrelated-to-the-kv-cache"><strong>Part
+III — Family Two: Techniques Unrelated to the KV Cache</strong></h1>
+<p>The techniques in this part never touch the reading notes (KV). Their
+targets are different bottlenecks: the attention computation's
+intermediate matrix (3.2), the weight-hauling that dominates decode
+(3.3–3.5), and the system-level interference between the two phases
+(3.6). Everything here is labeled KV-cache-unrelated.</p>
+<h2
+id="the-arithmetic-first-decode-time-weight-loading-time"><strong>3.1
+The arithmetic first: decode time ≈ weight-loading time</strong></h2>
+<p>This one division underpins the next three techniques. For a single
+request generating one token on a 7B model in FP16: moving 14 GB of
+weights at 2 TB/s takes ≈ 7 ms, while the step's math — 14 GFLOPs at 312
+TFLOPS — takes ≈ 0.045 ms, 150× less, fully hidden under the data
+movement. The single-stream ceiling is therefore bandwidth ÷ model bytes
+≈ 143 tokens/s; compute never enters the equation. Three ways out follow
+immediately: ① shrink the weights so there is less to move
+(quantization); ② let one trip serve many requests (continuous
+batching); ③ earn several tokens per trip (speculative decoding).</p>
+<p><img
+src="/research/llm-inference-optimization/media/image12.png"
+style="width:6.25in;height:3.52083in" /></p>
+<p><em>Figure 12. Grade-school arithmetic: 7 ms of moving, 0.045 ms of
+math. Decode is a logistics problem, and each of the next three
+techniques attacks it from a different side.</em></p>
+<h2
+id="flashattention-keep-the-middle-matrix-off-main-memory"><strong>3.2
+FlashAttention: keep the middle matrix off main memory</strong></h2>
+<p>Attention carries a quadratic "long-context tax": n tokens each
+scoring against n tokens produces an n×n matrix — 10× the context means
+100× this cost. Worse, the naïve implementation writes that huge matrix
+to slow HBM and reads it back twice. FlashAttention's move is "do the
+work in the fast workshop": the GPU die carries a small amount of SRAM
+(Static Random-Access Memory) — only ~20 MB, but nearly 10× faster than
+HBM. It slices Q, K, V into small tiles, streams them through SRAM,
+computes each tile's attention and weighted sum on-chip with an "online
+softmax" that fixes up normalization on the fly, and writes back only
+the final output. Memory drops from O(n²) to O(n), attention speeds up
+2–4×, and the result is exact — no approximation anywhere. It is now
+standard in every serving engine. Note the classification: it optimizes
+the attention computation, not the storage or management of the KV
+cache.</p>
+<p><img
+src="/research/llm-inference-optimization/media/image13.png"
+style="width:6.25in;height:3.52083in" /></p>
+<p><em>Figure 13. FlashAttention: small tiles visit the SRAM workbench;
+only true outputs return to HBM. The n×n matrix exists logically but is
+never materialized.</em></p>
+<h2 id="continuous-batching-keep-every-seat-taken"><strong>3.3
+Continuous batching: keep every seat taken</strong></h2>
+<p>The weights get hauled every step regardless — extra diners eat
+almost free. Feed one weight-load to 100 users and the math-per-byte
+improves 100-fold. Naïve static batching has a fatal flaw: a batch
+disbands only when its longest member finishes, so early finishers leave
+seats idle. Continuous batching (pioneered by the Orca system) schedules
+at token granularity: after every single step, finished requests leave
+and queued requests join immediately — the table is always full.
+Throughput rises by several times up to an order of magnitude, and it is
+now default behavior in every major engine. It schedules requests and
+never touches how KV is stored, so it belongs to this family — but how
+large a batch it can seat is capped by Part II's KV capacity. This is
+where the two families shake hands.</p>
+<p><img
+src="/research/llm-inference-optimization/media/image14.png"
+style="width:6.25in;height:3.52083in" /></p>
+<p><em>Figure 14. Static batching (top): early finishers idle.
+Continuous batching (bottom): token-level scheduling refills every free
+seat, every step.</em></p>
+<h2 id="weight-quantization-swap-in-a-coarser-ruler"><strong>3.4 Weight
+quantization: swap in a coarser ruler</strong></h2>
+<p>Quantization records the same range of values with chunkier tick
+marks: FP16 spends 2 bytes per number, INT8 one byte, INT4 half a byte —
+like measuring height with a centimeter ruler instead of millimeters:
+slightly lossy, drastically smaller. Since Section 3.1 established
+decode time ≈ weight bytes ÷ bandwidth, halving the bytes nearly doubles
+the speed: 14 GB (FP16) ≈ 143 tokens/s, 7 GB (INT8) ≈ 286, 3.5 GB (INT4)
+≈ 570. There is a bonus gift: the freed memory goes straight to the KV
+cache, feeding bigger batches. The craft lives in handling outliers — a
+few huge values inflate the scale factor and squash everyone else —
+which is exactly what GPTQ, AWQ (Activation-aware Weight Quantization),
+and SmoothQuant solve with per-group scales and calibration data. Mind
+the classification: compressing weights is KV-unrelated and lives here;
+the same trick applied to K/V (Section 2.6) is KV-related. Same hammer,
+different nail, different family.</p>
+<p><img
+src="/research/llm-inference-optimization/media/image15.png"
+style="width:6.25in;height:3.52083in" /></p>
+<p><em>Figure 15. Quantization in one picture: same value range, coarser
+ticks. 0.83 is stored as the integer 17 and scaled back to 0.85 on use —
+the gap is "quantization noise."</em></p>
+<h2
+id="speculative-decoding-the-intern-drafts-the-author-reviews"><strong>3.5
+Speculative decoding: the intern drafts, the author
+reviews</strong></h2>
+<p>That same logistics ledger can be squeezed once more: for the big
+model, verifying k tokens costs about the same as generating one,
+because either way the weights stream through memory exactly once.
+Speculative decoding pairs two models: a small "draft model" (say 1B
+parameters) rattles off 5 candidate tokens; the big model (say 70B)
+reviews all 5 in a single parallel pass — everything correct is kept,
+and from the first slip onward it rewrites (the correction comes free
+from the verification pass). A typical round banks 3–4 tokens for the
+price of one heavy pass, cutting latency to roughly a third. And it is
+mathematically lossless: with the proper acceptance rule, the output
+distribution is identical to the big model generating alone. Drafts come
+from many places — a separate small model, self-drafting heads like
+Medusa and EAGLE, even free n-gram "copying" from the prompt — but the
+boundary never moves: it borrows decode's idle compute, so it evaporates
+at large batch sizes where compute is already saturated, and it wastes
+drafts on freewheeling creative text where acceptance is low.</p>
+<p><img
+src="/research/llm-inference-optimization/media/image16.png"
+style="width:6.25in;height:3.52083in" /></p>
+<p><em>Figure 16. One round: draft 5, verify 3, correct 1 — four tokens
+banked in a single heavy pass, roughly a 3× speedup on this
+stretch.</em></p>
+<h2
+id="chunked-prefill-and-pd-disaggregation-specialists-at-work"><strong>3.6
+Chunked prefill and P/D disaggregation: specialists at
+work</strong></h2>
+<p>The last bottleneck is at the system level. Prefill and decode have
+opposite appetites (one eats compute, the other bandwidth), and crammed
+onto the same GPU they trip over each other: one long document's prefill
+runs for hundreds of milliseconds, during which every user mid-decode
+freezes — a TPOT spike. The gentle mitigation is chunked prefill: slice
+long prefills into chunks and interleave them with decode steps; the
+spikes flatten, but both phases still share the silicon. The radical fix
+is P/D disaggregation (Prefill/Decode disaggregation): split into two
+GPU pools — a prefill pool configured compute-first and tuned for TTFT,
+and a decode pool configured bandwidth-and-memory-first and tuned for
+steady TPOT — with the computed KV handed over through NVLink or RDMA
+(Remote Direct Memory Access) interconnects. DistServe, Moonshot Kimi's
+Mooncake, and the disaggregated modes of vLLM/SGLang have made this the
+new normal at scale. It ships KV across a wire, but what it optimizes is
+the scheduling problem of cross-phase interference, not KV storage
+itself — hence its place in this family.</p>
+<p><img
+src="/research/llm-inference-optimization/media/image17.png"
+style="width:6.25in;height:3.52083in" /></p>
+<p><em>Figure 17. P/D disaggregation: each pool picks its own hardware,
+parallelism, and batching; KV is handed over via high-speed
+interconnect. Long prefills never stall anyone's decode again.</em></p>
+<h1 id="part-iv-wrap-up-the-one-page-cheat-sheet"><strong>Part IV —
+Wrap-Up: The One-Page Cheat Sheet</strong></h1>
+<p>The whole pipeline compresses to one rule: first ask whether a step
+is compute-bound or memory-bound, then match the medicine — if compute
+is the wall, compute less or schedule around it (FlashAttention, chunked
+prefill, P/D disaggregation); if capacity is the wall, manage and shrink
+the KV (all of Part II); if bandwidth is the wall, move less, amortize,
+and earn more per trip (quantization, batching, speculation). The table
+below walks the six stops and labels each technique's family.</p>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr>
+<th><strong>Stop</strong></th>
+<th><strong>Bottleneck</strong></th>
+<th><strong>Key techniques</strong></th>
+<th><strong>Family</strong></th>
+<th><strong>Improves</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Tokenize</td>
+<td>almost none (CPU)</td>
+<td>vocabulary design, prefix planning</td>
+<td>—</td>
+<td>cost</td>
+</tr>
+<tr>
+<td>Prefill</td>
+<td>compute</td>
+<td>FlashAttention / chunked prefill</td>
+<td>KV-unrelated</td>
+<td>TTFT</td>
+</tr>
+<tr>
+<td>Prefill</td>
+<td>repeated work</td>
+<td>prefix caching / GQA·MQA</td>
+<td>KV-related</td>
+<td>TTFT, memory</td>
+</tr>
+<tr>
+<td>KV Cache</td>
+<td>memory capacity</td>
+<td>PagedAttention / KV quant / eviction / CoW sharing</td>
+<td>KV-related</td>
+<td>throughput (batch cap)</td>
+</tr>
+<tr>
+<td>Decode</td>
+<td>memory bandwidth</td>
+<td>continuous batching / weight quant / speculation</td>
+<td>KV-unrelated</td>
+<td>TPOT, throughput</td>
+</tr>
+<tr>
+<td>System</td>
+<td>phase interference</td>
+<td>P/D disaggregation (DistServe / Mooncake)</td>
+<td>KV-unrelated</td>
+<td>stable TTFT &amp; TPOT</td>
+</tr>
+</tbody>
+</table>
+<p>The relationship between the two families fits in one sentence:
+KV-cache-related techniques set how many guests one card can seat
+(capacity), while KV-unrelated techniques set how fast each guest is
+served (speed) — and continuous batching stands exactly at their
+intersection, since how large a table it can seat depends on how
+frugally the KV is managed. Engineering-wise they are orthogonal, and
+mature engines (vLLM, SGLang, TensorRT-LLM) stack all of them at
+once.</p>
+<h1 id="sources"><strong>Sources</strong></h1>
+<ol type="1">
+<li><p>Internal tech talk "LLM Inference: The Journey of a Prompt"
+(LLM_Inference_Optimization_EN.pptx, 30 slides, 2026) — the direct
+source of all content and diagrams in this report, including the A100
+figures, Llama KV sizes, and the quantization speed ledger</p></li>
+<li><p>KV cache &amp; PagedAttention: Kwon, Li et al., "Efficient Memory
+Management for Large Language Model Serving with PagedAttention", SOSP
+2023 (the vLLM paper; 20–40% effective occupancy, &lt;4% waste)</p></li>
+<li><p>Continuous batching: Yu et al., "Orca: A Distributed Serving
+System for Transformer-Based Generative Models", OSDI 2022</p></li>
+<li><p>FlashAttention: Dao et al., arXiv:2205.14135 and successors
+FlashAttention-2/3; tiling and online softmax</p></li>
+<li><p>GQA: Ainslie et al., arXiv:2305.13245; MQA: Shazeer,
+arXiv:1911.02150; Llama-3's use of GQA per Meta's model card</p></li>
+<li><p>Prefix caching: SGLang RadixAttention (NeurIPS 2024); vLLM
+Automatic Prefix Caching documentation</p></li>
+<li><p>KV eviction &amp; windowing: StreamingLLM (sink tokens,
+arXiv:2309.17453); H2O (arXiv:2306.14048); Mistral sliding-window
+attention (mistral.ai model card)</p></li>
+<li><p>Quantization: GPTQ (arXiv:2210.17323), AWQ (arXiv:2306.00978),
+SmoothQuant (arXiv:2211.10438)</p></li>
+<li><p>Speculative decoding: Leviathan et al., arXiv:2211.17192; Chen et
+al., arXiv:2302.01318; Medusa (arXiv:2401.10774), EAGLE
+(SafeAILab)</p></li>
+<li><p>P/D disaggregation: DistServe (arXiv:2401.09670); Mooncake
+(arXiv:2407.00079, FAST 2025 best paper); vLLM/SGLang disaggregated-mode
+docs</p></li>
+</ol>

@@ -1,0 +1,489 @@
+<p>生成日期：2026-06-25<br />
+主资料：本目录 8 份 PDF；公司历史财务用 Yahoo Finance
+公开数据补充。<br />
+阅读提示：所有金额如未特别说明均为原来源货币和原来源口径；不同卖方的 TAM
+预测不直接加总。</p>
+<h2 id="1-核心结论">1. 核心结论</h2>
+<p>内存市场正在从一个“消费电子周期品”变成“AI 基础设施瓶颈资产”。JPMorgan
+将 2026E/2027E/2028E memory revenue 预测上修到
+US$936.3bn/US$1,363.6bn/US$1,691.3bn，原因是 GPU 以外的 CPU
+orchestration、server DDR/LPDDR、HBM、enterprise SSD
+都在同时拉动需求。[S01 p.18] Goldman Sachs 的框架更聚焦 HBM，预计 HBM
+TAM 从 2026E 的 US$55.8bn 升至 2027E 的 US$116.3bn、2028E 的
+US$168.4bn。[S02 p.13]</p>
+<p>产品上，最重要的分层是 HBM、server DDR/LPDDR、NAND/eSSD，而不是传统的
+DRAM/NAND 二分法。HBM 解决 AI training 和高端 accelerator 的带宽瓶颈，GS
+预计 ASIC 占 HBM demand 的比例从 2026E 的 33% 升至 2028E 的 39%。[S02
+p.13] Server DDR/LPDDR 则被 AI CPU、headnode、推理编排和 agentic AI
+拉动；JPM 预计 FY27E/FY28E AI CPU DRAM demand 为 11mn/17mn GB，占 total
+market demand 的 19%/24%。[S01 p.1] NAND 的核心增量是 enterprise
+SSD，JPM 预计 eSSD 2026E 超过 500EB，占 total NAND bit demand 的
+43%，未来两年超过 1,100EB，CAGR +52%。[S01 p.2]</p>
+<p>公司上，DRAM/HBM 是 Samsung、SK Hynix、Micron 三强；NAND 还包括
+Kioxia、SanDisk/Western Digital、YMTC。GS 预计 Hynix/Samsung/Micron 在
+HBM 的 2026E 份额为 44%/33%/23%，2028E 为 42%/37%/21%。[S02 p.14]
+国信引用 IDC 的 1Q26 DRAM share 为 Samsung 32.5%、Micron 22.3%、SK Hynix
+18.5%、CXMT 7.5%；NAND share 为 Samsung 38.7%、SK Hynix 29.1%、Kioxia
+14.4%、SanDisk 14.0%、Micron 13.9%、YMTC 6.8%。[S07 p.20]</p>
+<p><img
+src="/research/memory-hbm/assets/source_figures/S01_p018_global_memory_market_size.png"
+alt="Global memory TAM" /></p>
+<p>Source: S01 p.18, JPM Global Memory Model.</p>
+<h2 id="2-内存用在哪里产品-x-应用-x-公司模型">2. 内存用在哪里：产品 x
+应用 x 公司模型</h2>
+<table>
+<thead>
+<tr>
+<th>产品类别</th>
+<th>主要用途</th>
+<th>需求驱动</th>
+<th>主要公司</th>
+<th>可量化指标</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>HBM</td>
+<td>GPU/ASIC accelerator 旁边的高带宽显存，用于 training 和高性能
+inference</td>
+<td>模型规模、GPU/ASIC 出货、HBM3E/HBM4/HBM4E 迭代</td>
+<td>SK Hynix、Samsung、Micron</td>
+<td>GS HBM TAM 2026E/2027E/2028E 为
+US$55.8bn/US$116.3bn/US$168.4bn。[S02 p.13]</td>
+</tr>
+<tr>
+<td>Server DDR5/LPDDR5X</td>
+<td>CPU headnode、standalone AI CPU、推理 orchestration、KV/cache
+管理</td>
+<td>CPU:GPU ratio 变化、agentic AI、server memory density 提升</td>
+<td>Samsung、SK Hynix、Micron、CXMT</td>
+<td>JPM 预计 AI CPU DRAM demand FY27E/FY28E 为 11mn/17mn GB。[S01
+p.1]</td>
+</tr>
+<tr>
+<td>Conventional DRAM</td>
+<td>PC、手机、传统服务器、工控、汽车、消费电子</td>
+<td>周期复苏、DDR4/DDR5 迁移、国产替代</td>
+<td>Samsung、SK Hynix、Micron、CXMT、Nanya、Winbond</td>
+<td>GS 预计 2026E/2027E/2028E DRAM S/D 为 -5.0%/-5.9%/-3.9%。[S02
+p.10]</td>
+</tr>
+<tr>
+<td>NAND / eSSD</td>
+<td>AI inference 存储、KV cache offloading、enterprise SSD、client
+SSD、手机存储</td>
+<td>inference 扩容、QLC 替代 HDD、SSD 容量提升</td>
+<td>Samsung、SK Hynix/Solidigm、Kioxia、SanDisk、Micron、YMTC</td>
+<td>JPM 预计 eSSD value TAM 未来两年可超过 US$300bn。[S01 p.2]</td>
+</tr>
+<tr>
+<td>HBF / high-speed NAND</td>
+<td>介于 HBM 和外置 SSD 之间的高带宽、较低成本、大容量缓存层</td>
+<td>长上下文、RAG、读多写少 inference</td>
+<td>NAND 原厂和先进封装生态</td>
+<td>国信称 HBF 单堆栈容量可达 HBM 的 8 倍以上，采用 12-16 层 3D NAND TSV
+堆叠。[S07 p.16]</td>
+</tr>
+<tr>
+<td>外置企业存储/AFA</td>
+<td>企业阵列、传统 IT 存储、部分 AI inference 后端</td>
+<td>企业 IT、AFA 迁移、价格传导</td>
+<td>NetApp、Pure Storage、Dell、HPE 等系统厂</td>
+<td>Barclays 预计 storage market 2026E/2027E 为
+US$93.6bn/US$97.1bn。[S03 p.3]</td>
+</tr>
+</tbody>
+</table>
+<p>这个模型的重点是：AI 训练直接拉 HBM，AI 推理同时拉 server DRAM 和
+eSSD。国信引用 CFM 称 2026 年服务器 NAND bit demand 占比 37%、服务器
+DRAM 占比超过 50%；服务器 NAND demand 同比增长 60% 以上，服务器 DRAM
+demand 增长约 45%。[S07 p.7]</p>
+<p><img
+src="/research/memory-hbm/assets/source_figures/S07_p007_server_memory_demand_mix.png"
+alt="Server memory demand" /></p>
+<p>Source: S07 p.7, CFM data compiled by Guosen.</p>
+<h2 id="3-tam-与预测不要混同四种口径">3. TAM
+与预测：不要混同四种口径</h2>
+<table>
+<thead>
+<tr>
+<th>口径</th>
+<th style="text-align: right;">2026E</th>
+<th style="text-align: right;">2027E</th>
+<th style="text-align: right;">2028E</th>
+<th style="text-align: right;">2030E</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>JPM memory revenue</td>
+<td style="text-align: right;">US$936.3bn</td>
+<td style="text-align: right;">US$1,363.6bn</td>
+<td style="text-align: right;">US$1,691.3bn</td>
+<td style="text-align: right;">未给</td>
+<td>DRAM+NAND broader memory revenue model。[S01 p.18]</td>
+</tr>
+<tr>
+<td>JPM DRAM revenue</td>
+<td style="text-align: right;">US$636.0bn</td>
+<td style="text-align: right;">US$970.0bn</td>
+<td style="text-align: right;">US$1,236.8bn</td>
+<td style="text-align: right;">未给</td>
+<td>8Gb equivalent supply-demand model。[S01 p.18, p.28]</td>
+</tr>
+<tr>
+<td>JPM NAND revenue</td>
+<td style="text-align: right;">US$300.3bn</td>
+<td style="text-align: right;">US$393.6bn</td>
+<td style="text-align: right;">US$454.5bn</td>
+<td style="text-align: right;">未给</td>
+<td>256Gb equivalent supply-demand model。[S01 p.18, p.31]</td>
+</tr>
+<tr>
+<td>GS HBM TAM</td>
+<td style="text-align: right;">US$55.8bn</td>
+<td style="text-align: right;">US$116.3bn</td>
+<td style="text-align: right;">US$168.4bn</td>
+<td style="text-align: right;">未给</td>
+<td>HBM demand x ASP model。[S02 p.13]</td>
+</tr>
+<tr>
+<td>锦研全球存储芯片</td>
+<td style="text-align: right;">US$496.5bn</td>
+<td style="text-align: right;">US$564.0bn</td>
+<td style="text-align: right;">US$639.2bn</td>
+<td style="text-align: right;">US$770.8bn</td>
+<td>中国报告二次整理口径，低于 JPM 2026E-2028E 口径。[S04 p.5]</td>
+</tr>
+<tr>
+<td>锦研中国存储芯片</td>
+<td style="text-align: right;">US$152.0bn</td>
+<td style="text-align: right;">US$170.0bn</td>
+<td style="text-align: right;">US$192.0bn</td>
+<td style="text-align: right;">US$229.4bn</td>
+<td>中国市场口径。[S04 p.5]</td>
+</tr>
+<tr>
+<td>GS global server market</td>
+<td style="text-align: right;">未给</td>
+<td style="text-align: right;">未给</td>
+<td style="text-align: right;">未给</td>
+<td style="text-align: right;">US$1.4tn</td>
+<td>650 Group server revenue forecast，traditional + accelerated
+servers。[S05 p.1]</td>
+</tr>
+<tr>
+<td>Barclays storage market</td>
+<td style="text-align: right;">US$93.6bn</td>
+<td style="text-align: right;">US$97.1bn</td>
+<td style="text-align: right;">未给</td>
+<td style="text-align: right;">未给</td>
+<td>外置/企业 storage，不是芯片 TAM。[S03 p.3]</td>
+</tr>
+</tbody>
+</table>
+<p>最可操作的建模方式是把 TAM 拆成三层：</p>
+<ol type="1">
+<li><strong>芯片收入层</strong>：DRAM、NAND、HBM。JPM 的 2026E
+DRAM/NAND/HBM revenue 分别是 US$636.0bn/US$300.3bn/US$64.9bn。[S01
+p.18]</li>
+<li><strong>应用需求层</strong>：AI server、traditional
+server、mobile、PC、auto/industrial。国信/CFM 给出 2026 年服务器 DRAM
+占比超过 50%、服务器 NAND bit 占比 37%。[S07 p.7]</li>
+<li><strong>系统层</strong>：server、storage array、AI server
+BOM。GS/650 Group 预计 2030E server market US$1.4tn，其中 accelerated
+servers US$1.2tn、traditional servers US$164bn。[S05 p.1]</li>
+</ol>
+<p><img src="/research/memory-hbm/assets/source_figures/S05_p001_server_primer_summary.png"
+alt="Server market and BOM" /></p>
+<p>Source: S05 p.1, GS server primer summary.</p>
+<h2 id="4-为什么这一轮不只是周期涨价">4. 为什么这一轮不只是周期涨价</h2>
+<p>供给侧短缺是真实的，但需求结构变化更关键。GS 预计 2026E/2027E/2028E
+DRAM industry S/D 为 -5.0%/-5.9%/-3.9%，NAND S/D 为
+-4.4%/-4.6%/-3.0%，HBM S/D 为 -5.4%/-6.0%/-4.3%。[S02 p.10-p.13]
+这意味着传统 DRAM、NAND、HBM 同时偏紧，而不只是某一个产品短缺。</p>
+<p>需求端的变化有三条线：</p>
+<table>
+<thead>
+<tr>
+<th>变化</th>
+<th>机制</th>
+<th>数据证据</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GPU/ASIC 拉 HBM</td>
+<td>HBM 与 accelerator 绑定，ASIC 需求占比上升</td>
+<td>GS 预计 ASIC HBM demand share 从 2026E 的 33% 升到 2028E 的
+39%。[S02 p.13]</td>
+</tr>
+<tr>
+<td>CPU 拉 server DRAM</td>
+<td>AI orchestration、API execution、state management 需要 CPU
+memory</td>
+<td>JPM 预计 CPU-to-GPU ratio 从 2023 年 5.4:1 到 2025 年 3.2:1，再到
+2028E 的 2.4:1，推动 FY27E-FY28E server-grade DDR/LPDDR5 bit demand 上修
+20%-22%。[S01 p.1]</td>
+</tr>
+<tr>
+<td>Inference 拉 eSSD/NAND</td>
+<td>KV cache offloading、RAG、长上下文和高并发需要高容量低成本存储</td>
+<td>JPM 预计 eSSD 2026E 超过 500EB，未来两年超过 1,100EB，CAGR
++52%。[S01 p.2]</td>
+</tr>
+</tbody>
+</table>
+<p><img
+src="/research/memory-hbm/assets/source_figures/S01_p016_hbm_tam_customer_breakdown.png"
+alt="HBM TAM and customer mix" /></p>
+<p>Source: S01 p.16, JPM HBM TAM and customer breakdown.</p>
+<h2 id="5-公司格局谁占多少">5. 公司格局：谁占多少</h2>
+<h3 id="51-hbm">5.1 HBM</h3>
+<p>HBM 是本轮最核心的利润池之一。GS 预计 HBM TAM 2026E/2027E/2028E 为
+US$55.8bn/US$116.3bn/US$168.4bn，且 2027E 同比增长 108%。[S02 p.13]</p>
+<table>
+<thead>
+<tr>
+<th>公司</th>
+<th style="text-align: right;">2026E HBM revenue</th>
+<th style="text-align: right;">2026E share</th>
+<th style="text-align: right;">2027E HBM revenue</th>
+<th style="text-align: right;">2027E share</th>
+<th style="text-align: right;">2028E share</th>
+<th>Citation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>SK Hynix</td>
+<td style="text-align: right;">US$24.5bn</td>
+<td style="text-align: right;">44%</td>
+<td style="text-align: right;">US$47.2bn</td>
+<td style="text-align: right;">41%</td>
+<td style="text-align: right;">42%</td>
+<td>[S02 p.14]</td>
+</tr>
+<tr>
+<td>Samsung</td>
+<td style="text-align: right;">US$18.4bn</td>
+<td style="text-align: right;">33%</td>
+<td style="text-align: right;">US$43.8bn</td>
+<td style="text-align: right;">38%</td>
+<td style="text-align: right;">37%</td>
+<td>[S02 p.14]</td>
+</tr>
+<tr>
+<td>Micron</td>
+<td style="text-align: right;">US$12.9bn</td>
+<td style="text-align: right;">23%</td>
+<td style="text-align: right;">US$25.2bn</td>
+<td style="text-align: right;">22%</td>
+<td style="text-align: right;">21%</td>
+<td>[S02 p.14]</td>
+</tr>
+</tbody>
+</table>
+<p>Bloomberg Intelligence 的表述偏利润端：SK Hynix 和 Samsung HBM
+operating margin 到 2028 年可达 50%-60%；SK Hynix DRAM business
+operating margin 2026 年可达 70%。[S08 p.1]</p>
+<p><img src="/research/memory-hbm/assets/source_figures/S02_p014_hbm_revenue_share.png"
+alt="HBM revenue share" /></p>
+<p>Source: S02 p.14, GS HBM revenue by company and market share.</p>
+<h3 id="52-dram">5.2 DRAM</h3>
+<p>DRAM 仍是三强市场，但 CXMT 开始进入全球份额表。国信引用 IDC 的 1Q26
+DRAM share 为 Samsung 32.5%、Micron 22.3%、SK Hynix 18.5%、CXMT
+7.5%、Nanya 1.6%、Winbond 0.5%。[S07 p.20] Bloomberg/Gartner 的 3Q25
+volume basis 则为 Samsung 35.9%、SK Hynix 29.0%、Micron 22.4%，三家合计
+87.2%。[S08 p.17]
+两组数据口径和时间点不同，方向一致：头部集中，但中国供应份额上升。</p>
+<p>JPM 对中国 DRAM 更偏中期：预计中国 DRAM volume share 从 2025 年 6%
+升至 2026E-2028E 的 8%-11%，但 value share 到 CY28E 只有
+10%，说明产品结构仍偏传统/低价值段。[S01 p.2]</p>
+<h3 id="53-nand">5.3 NAND</h3>
+<p>NAND 比 DRAM 更分散。国信/IDC 的 1Q26 NAND share 为 Samsung 38.7%、SK
+Hynix 29.1%、Kioxia 14.4%、SanDisk 14.0%、Micron 13.9%、YMTC 6.8%。[S07
+p.20] Bloomberg/Gartner 的另一组 volume basis 口径为 Samsung 26.2%、SK
+Hynix+Solidigm 20.8%、Kioxia 17.8%、Sandisk 和 Micron 为 low-teens。[S08
+p.17] 差异很大，说明 NAND 份额表要特别注意“bit / volume / revenue /
+quarter / Solidigm 是否并表”的口径。</p>
+<p>JPM 对中国 NAND 的中期预测是：NAND volume share 从 2025 年 12% 到
+2026E-2028E 的 12%-16%，CY28E value share 约 12%。[S01 p.2]</p>
+<p><img src="/research/memory-hbm/assets/source_figures/S07_p020_ymtc_cxmt_share_profit.png"
+alt="Domestic share" /></p>
+<p>Source: S07 p.20, IDC and Wind data compiled by Guosen.</p>
+<h2 id="6-公司营收变化">6. 公司营收变化</h2>
+<table>
+<thead>
+<tr>
+<th>公司</th>
+<th>业务暴露</th>
+<th>历史营收变化</th>
+<th>PDF 中的 forward / mix 信息</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Samsung Electronics</td>
+<td>DRAM、NAND、HBM、foundry、mobile/display 等综合集团</td>
+<td>Yahoo Finance：FY2022/FY2023/FY2024/FY2025 revenue 为
+KRW302.231tn/KRW258.935tn/KRW300.871tn/KRW333.606tn。[YF: 005930.KS
+income_stmt, retrieved 2026-06-25]</td>
+<td>GS 预计 Samsung HBM revenue 2026E/2027E/2028E 为
+US$18.4bn/US$43.8bn/US$62.7bn。[S02 p.14]</td>
+</tr>
+<tr>
+<td>SK Hynix</td>
+<td>DRAM/HBM 为主，NAND/Solidigm/eSSD 增量</td>
+<td>Yahoo Finance：FY2022/FY2023/FY2024/FY2025 revenue 为
+KRW44.622tn/KRW32.766tn/KRW66.193tn/KRW97.147tn。[YF: 000660.KS
+income_stmt, retrieved 2026-06-25]</td>
+<td>GS 预计 SK Hynix HBM revenue 2026E/2027E/2028E 为
+US$24.5bn/US$47.2bn/US$70.2bn。[S02 p.14]</td>
+</tr>
+<tr>
+<td>Micron</td>
+<td>DRAM、HBM、NAND、data center/mobile/client/auto embedded</td>
+<td>Yahoo Finance：FY2022/FY2023/FY2024/FY2025 revenue 为
+US$30.758bn/US$15.540bn/US$25.111bn/US$37.378bn。[YF: MU income_stmt,
+retrieved 2026-06-25]</td>
+<td>GS 预计 Micron HBM share 2026E/2027E/2028E 为 23%/22%/21%；Bloomberg
+Intelligence 估计 Micron CY2025 HBM revenue 约 US$6.9bn。[S02 p.14; S08
+p.6]</td>
+</tr>
+<tr>
+<td>Kioxia</td>
+<td>NAND、SSD、BiCS FLASH</td>
+<td>Yahoo Finance：FY2024/FY2025/FY2026 revenue 为
+JPY1.077tn/JPY1.706tn/JPY2.338tn。[YF: 285A.T income_stmt, retrieved
+2026-06-25]</td>
+<td>国信/IDC 1Q26 NAND share 为 14.4%；Bloomberg/Gartner 另一口径为
+17.8%。[S07 p.20; S08 p.17]</td>
+</tr>
+<tr>
+<td>SanDisk</td>
+<td>NAND flash products、SSD、embedded/removable storage</td>
+<td>Yahoo Finance：FY2023/FY2024/FY2025 revenue 为
+US$6.086bn/US$6.663bn/US$7.355bn；profile 显示 Sandisk Corporation
+incorporated in 2024。[YF: SNDK income_stmt and stock_info, retrieved
+2026-06-25]</td>
+<td>国信/IDC 1Q26 NAND share 为 14.0%；Bloomberg/Gartner 另一口径称
+SanDisk 为 low-teens share。[S07 p.20; S08 p.17]</td>
+</tr>
+<tr>
+<td>Western Digital</td>
+<td>2025 后更偏 HDD/data storage，NAND 口径受 SanDisk 分拆影响</td>
+<td>Yahoo Finance：FY2022/FY2023/FY2024/FY2025 revenue 为
+US$18.793bn/US$6.255bn/US$6.317bn/US$9.520bn。[YF: WDC income_stmt,
+retrieved 2026-06-25]</td>
+<td>S05 用 Western Digital/SanDisk 作为 NAND 主要供应商之一，S08 将
+Sandisk 作为 NAND low-teens player。[S05 p.25; S08 p.17]</td>
+</tr>
+<tr>
+<td>YMTC</td>
+<td>NAND/3D NAND，国产替代</td>
+<td>未找到公开上市公司 Yahoo 财务口径；报告中不写未核验营收</td>
+<td>国信/IDC：YMTC NAND share 从 4Q25 的 5.1% 升至 1Q26 的 6.8%；JPM
+预计中国 NAND volume share 2026E-2028E 为 12%-16%。[S07 p.20; S01
+p.2]</td>
+</tr>
+<tr>
+<td>CXMT</td>
+<td>DRAM，国产替代</td>
+<td>未找到公开上市公司 Yahoo 财务口径；国信/Wind 图显示 2022-1Q26
+营收和利润连续提升，但图中文字抽取不完整，正文只引用 1Q26 profit</td>
+<td>国信/IDC：CXMT DRAM share 从 4Q25 的 6.4% 升至 1Q26 的 7.5%；1Q26
+归母净利润 247.62 亿元。[S07 p.20]</td>
+</tr>
+</tbody>
+</table>
+<h2 id="7-服务器-bom为什么内存变成系统约束">7. 服务器
+BOM：为什么内存变成系统约束</h2>
+<p>传统 CPU server 的 BOM 对内存/存储更敏感。GS 的例子中，dual CPU
+general server 总成本 US$6,678，ASP US$8,000，OEM gross margin 17%；其中
+RAM 1TB 成本 US$267，占 BOM 4%，storage 12 x 512GB SSD 成本 US$1,800，占
+BOM 27%。[S05 p.14] 但 GS 同时指出，DRAM/NAND 传统上约占 traditional
+server BOM 的 30%，在 2026/2027 涨价预期下，某些配置中 memory 可超过 BOM
+的 60%。[S05 p.1, p.14, p.24]</p>
+<p>AI server 的直接 BOM 更被 GPU 主导。GS 的 H100 DGX server 例子中，GPU
+baseboard 成本 US$206,780，占 BOM 86%；RAM 2TB 占 0.8%，storage 占
+1.2%，总成本 US$241,114，ASP US$265,000，OEM gross margin 9%。[S05 p.18]
+这意味着 AI server 对 HBM 的经济暴露很多时候已经包含在 GPU/accelerator
+价格中，而 traditional server 对外采 DRAM/NAND 价格更敏感。</p>
+<p><img src="/research/memory-hbm/assets/source_figures/S05_p014_traditional_server_bom.png"
+alt="Traditional server BOM" /></p>
+<p>Source: S05 p.14, GS traditional server BOM.</p>
+<p><img src="/research/memory-hbm/assets/source_figures/S05_p018_ai_server_bom.png"
+alt="AI server BOM" /></p>
+<p>Source: S05 p.18, GS AI server BOM.</p>
+<h2 id="8-投资和产业含义">8. 投资和产业含义</h2>
+<p>第一，HBM 的价值不仅是收入，而是产能机会成本。GS 认为 HBM consumes
+3-4x more wafer capacity versus conventional DRAM，并因此限制
+conventional memory supply growth。[S02 p.5] JPM 也预计 60% 的新增 DRAM
+WSPM 会分配给 HBM，导致 conventional DRAM 更紧。[S01 p.2]</p>
+<p>第二，eSSD 是被低估的 NAND 增量。JPM 预计 eSSD 2026E 超过
+500EB，未来两年超过 1,100EB，value TAM 未来两年可能超过 US$300bn。[S01
+p.2] GS 同时预计 eSSD demand 2026E/2027E 增长 66%/31%，达到全球 NAND
+demand 的 38%/42%。[S02 p.11]</p>
+<p>第三，国产厂商的机会主要在份额窗口，而不是立即抢走高端利润池。JPM
+预计中国 DRAM/NAND volume share 到 2026E-2028E 分别为 8%-11%/12%-16%，但
+value share 到 CY28E 只有 10%/12%。[S01 p.2]
+这意味着国产替代的第一阶段更像“传统/利基产品填补 + 本土客户导入”，高端
+HBM/HBM4E/enterprise SSD 仍需要技术和客户认证。</p>
+<p>第四，系统厂的压力和芯片厂的利润是同一枚硬币。GS 指出 server vendors
+可能无法完全满足 backlog/demand，并且 Dell 等 server vendor 有 2026
+年涨价超过 50% 的报道；这对芯片厂是 ASP 和 LTA 支撑，对 OEM
+是毛利和需求弹性的挑战。[S05 p.25]</p>
+<h2 id="9-风险与需要继续跟踪的问题">9. 风险与需要继续跟踪的问题</h2>
+<table>
+<thead>
+<tr>
+<th>风险/问题</th>
+<th>为什么重要</th>
+<th>监控指标</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CSP capex 是否继续上修</td>
+<td>JPM 预计 AI memory share within CSP capex 2026E 为 52%，并升至 70%
+以上；如果 CSP capex 不跟上，memory value share 会承压。[S06 p.2]</td>
+<td>hyperscaler capex guidance、AI revenue、GPU/ASIC order</td>
+</tr>
+<tr>
+<td>LTA 是否落地</td>
+<td>LTA 是卖方认为估值框架重估的关键，但 JPM 6/24 update 也提到 May 后
+LTA announcements 偏安静。[S06 p.1]</td>
+<td>HBM/DDR5/eSSD long-term agreements、prepayment、volume
+commitment</td>
+</tr>
+<tr>
+<td>HBM ASP 弹性</td>
+<td>JPM 认为 25%-30% like-for-like ASP increase 更合理，而 buyside
+高预期可到 70%-100%。[S06 p.4]</td>
+<td>HBM3E/HBM4 pricing、GPU BOM、customer pushback</td>
+</tr>
+<tr>
+<td>中国供给扩张</td>
+<td>JPM 预计 China DRAM capacity 2026 年底约 300K wfpm，占 DRAM capacity
+14%；但认为对国际高端 HBM 和 US hyperscaler server memory 冲击有限。[S06
+p.3]</td>
+<td>CXMT/YMTC capacity、export controls、server-grade qualification</td>
+</tr>
+<tr>
+<td>外置 storage 未充分吃到 AI</td>
+<td>Barclays 预计 2022-2027 storage/server/DC switching CAGR 分别为
+8%/46%/28%，说明外置 storage 尚未像 server 那样吃到 AI growth。[S03
+p.2-p.3]</td>
+<td>AFA/eSSD adoption、enterprise inference、Pure/NetApp/Dell
+guidance</td>
+</tr>
+</tbody>
+</table>
+<h2 id="10-citation-notes">10. Citation Notes</h2>
+<p>PDF citation 格式为 <code>[Sxx p.yy]</code>，对应
+<code>01_source_digest.md</code> 的 source map。截图均在
+<code>assets/source_figures/</code> 下，可直接在 Markdown
+预览中打开。Yahoo Finance 数据为 2026-06-25 通过 MCP
+拉取的公开财务表，未进行汇率换算。</p>

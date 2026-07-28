@@ -11,24 +11,16 @@ type Localized = {
   zh: string;
 };
 
-type ResearchItem = {
+type PortfolioEntry = {
   number: string;
   title: Localized;
-  category: Localized;
+  excerpt: Localized;
   href: string;
-  year: string;
-  tier: "featured" | "compact";
-  image?: string;
-};
-
-type SystemWork = {
-  number: string;
-  title: Localized;
-  category: Localized;
   meta: Localized;
-  href: string;
+  sourceType: Localized;
   image: string;
   kind: "deck" | "article";
+  imagePosition?: string;
 };
 
 const officialOutstandingStudentProof =
@@ -50,15 +42,8 @@ const copy = {
   },
   research: {
     label: { en: "Selected research", zh: "精选研究" },
-    title: { en: "Mapping the systems behind intelligence.", zh: "拆解智能背后的系统。" },
-    open: { en: "Open research", zh: "打开研究" },
-    more: { en: "More from the archive", zh: "更多研究档案" },
-    systemsLabel: { en: "AI agents & model systems", zh: "AI Agent 与模型系统" },
-    systemsTitle: { en: "From reasoning patterns to secure execution.", zh: "从推理模式到安全执行环境。" },
-    systemsBody: {
-      en: "Original visual explainers and long-form technical work on agents, harnesses, sandboxes and model-to-hardware deployment.",
-      zh: "围绕 Agent、Harness、Sandbox 与模型硬件部署的原创视觉讲解和长篇技术研究。",
-    },
+    title: { en: "Original work, in its original words.", zh: "原始作品，保留原文。" },
+    count: { en: "12 original works", zh: "12 项原创成果" },
   },
   proof: {
     monitored: { en: "HK equities monitored", zh: "港股自动监控" },
@@ -97,122 +82,168 @@ const copy = {
   },
 };
 
-const researchItems: ResearchItem[] = [
+const portfolioEntries: PortfolioEntry[] = [
   {
     number: "01",
-    title: { en: "The Closed-Loop AI Value Chain", zh: "AI 全产业链闭环地图" },
-    category: { en: "Interactive atlas", zh: "交互图谱" },
+    title: { en: "Interactive AI Value Chain Loop", zh: "AI 全产业链闭环交互信息图" },
+    excerpt: {
+      en: "Start from who pays for AI, then trace the demand signal through applications, models, compute infrastructure, semiconductor manufacturing, and finally power and data-center resources.",
+      zh: "从“谁为 AI 付费”开始，沿着应用需求、模型服务、算力基础设施、半导体制造、能源和数据中心资源逐层下钻。",
+    },
     href: "/research/ai-chain/",
-    year: "2026",
-    tier: "featured",
+    meta: { en: "Interactive HTML · 2026", zh: "交互式 HTML · 2026" },
+    sourceType: { en: "AI VALUE CHAIN", zh: "AI 产业链" },
     image: "/research/ai-chain/image2_diagrams/01-ai-value-chain-loop.png",
+    kind: "article",
   },
   {
     number: "02",
-    title: { en: "AI Infrastructure Knowledge Atlas", zh: "AI 基建知识图谱" },
-    category: { en: "Technical systems", zh: "技术系统" },
+    title: { en: "AI Infrastructure Knowledge Map", zh: "AI 基建专有知识可视化" },
+    excerpt: {
+      en: "Think of AI infrastructure as an engineering chain: power enters the site, GPUs and servers turn electricity into compute, cooling removes the heat, and networking connects GPUs into clusters.",
+      zh: "把 AI 基建看成一条工程链：电力进来，GPU/服务器把电变成算力，散热系统把热带走，网络把 GPU 连成集群。",
+    },
     href: "/research/ai-infrastructure.html",
-    year: "2026",
-    tier: "featured",
+    meta: { en: "Interactive HTML · 2026", zh: "交互式 HTML · 2026" },
+    sourceType: { en: "AI INFRASTRUCTURE", zh: "AI 基础设施" },
     image: "/research/ai-chain/image2_diagrams/02-gpu-server-cutaway.png",
-  },
-  {
-    number: "07",
-    title: { en: "Memory, HBM & the AI Bottleneck", zh: "内存、HBM 与 AI 系统瓶颈" },
-    category: { en: "Industry research", zh: "行业研究" },
-    href: "/research/memory-hbm/",
-    year: "2026",
-    tier: "featured",
-    image: "/research/ai-chain/image2_diagrams/03-gpu-hbm-cowos-package.png",
-  },
-  {
-    number: "08",
-    title: { en: "Optical Interconnects & CPO", zh: "光互联与 CPO 产业链" },
-    category: { en: "Investment framework", zh: "投资框架" },
-    href: "/research/optical-cpo/",
-    year: "2026",
-    tier: "featured",
-    image: "/research/ai-chain/image2_diagrams/06-cpo-vs-pluggable-optics.png",
+    kind: "article",
   },
   {
     number: "03",
-    title: { en: "AI Inference Companies", zh: "AI 推理公司深度解析" },
-    category: { en: "Company landscape", zh: "公司图谱" },
+    title: { en: "AI Inference, From First Principles to Business Value", zh: "AI 推理公司深度解析：原理 → 生意 → 价值" },
+    excerpt: {
+      en: "Fireworks, Together, and Baseten are all solving the same equation: more tokens per second out of the same GPU.",
+      zh: "Fireworks · Together · Baseten 三家公司做的事，本质上都是同一道数学题：让同一块 GPU 每秒产出更多 token。",
+    },
     href: "/research/ai-inference/",
-    year: "2026",
-    tier: "compact",
+    meta: { en: "Interactive HTML · 2026", zh: "交互式 HTML · 2026" },
+    sourceType: { en: "AI INFERENCE", zh: "AI 推理" },
+    image: "/research-thumbnails/ai-inference.png",
+    kind: "article",
   },
   {
     number: "04",
-    title: { en: "How 14 AI Companies Go to Market", zh: "14 家 AI 公司的 GTM 策略" },
-    category: { en: "Go-to-market", zh: "商业化路径" },
+    title: { en: "GTM Strategy Research: 14 AI Companies", zh: "14 家 AI 公司 GTM 策略研究（合并版）" },
+    excerpt: {
+      en: "The takeaway up front: GTM for AI companies isn't a question of whether to hire salespeople — it's about matching acquisition and delivery friction to deal size.",
+      zh: '结论先行：AI 公司的 GTM 不是"要不要销售"，而是让获客与交付的摩擦匹配客单价。',
+    },
     href: "/research/ai-gtm.html",
-    year: "2026",
-    tier: "compact",
+    meta: { en: "Interactive HTML · Jul 2026", zh: "交互式 HTML · 2026 年 7 月" },
+    sourceType: { en: "GO-TO-MARKET", zh: "商业化路径" },
+    image: "/research-thumbnails/ai-gtm.png",
+    kind: "article",
   },
   {
     number: "05",
-    title: { en: "The Companies That Feed AI", zh: "给 AI“喂饭”的三家公司" },
-    category: { en: "AI data layer", zh: "AI 数据层" },
+    title: { en: "The Companies That Feed AI", zh: "给 AI「喂饭」的三家公司" },
+    excerpt: {
+      en: "Model capability comes from data — and the most valuable data comes from people.",
+      zh: "大模型的能力来自数据，而最贵的数据来自人。",
+    },
     href: "/research/ai-data-layer.html",
-    year: "2026",
-    tier: "compact",
+    meta: { en: "Interactive HTML · 2026", zh: "交互式 HTML · 2026" },
+    sourceType: { en: "AI DATA LAYER", zh: "AI 数据层" },
+    image: "/research-thumbnails/ai-data-layer.png",
+    kind: "article",
   },
   {
     number: "06",
-    title: { en: "Voice AI: Full Stack & 33 Companies", zh: "Voice AI 全技术路径与 33 家公司" },
-    category: { en: "Application stack", zh: "应用技术栈" },
-    href: "/research/voice-ai/",
-    year: "2026",
-    tier: "compact",
+    title: {
+      en: "内存市场全景研究：AI 推理与 HBM 驱动的产品、应用与公司格局",
+      zh: "内存市场全景研究：AI 推理与 HBM 驱动的产品、应用与公司格局",
+    },
+    excerpt: {
+      en: "内存市场正在从一个“消费电子周期品”变成“AI 基础设施瓶颈资产”。",
+      zh: "内存市场正在从一个“消费电子周期品”变成“AI 基础设施瓶颈资产”。",
+    },
+    href: "/research/memory-hbm/",
+    meta: { en: "Source blog · Jun 2026", zh: "原文博客 · 2026 年 6 月" },
+    sourceType: { en: "MEMORY & HBM", zh: "内存与 HBM" },
+    image: "/research/memory-hbm/assets/source_figures/S01_p018_global_memory_market_size.png",
+    kind: "article",
   },
-];
-
-const systemWorks: SystemWork[] = [
+  {
+    number: "07",
+    title: { en: "LLM INFERENCE OPTIMIZATION, ILLUSTRATED", zh: "LLM INFERENCE OPTIMIZATION, ILLUSTRATED" },
+    excerpt: {
+      en: "The journey of a prompt, and the two families of techniques that make it fast: optimizations built around the KV cache, and optimizations that have nothing to do with it.",
+      zh: "The journey of a prompt, and the two families of techniques that make it fast: optimizations built around the KV cache, and optimizations that have nothing to do with it.",
+    },
+    href: "/research/llm-inference-optimization/",
+    meta: { en: "Source blog · Jul 2026", zh: "原文博客 · 2026 年 7 月" },
+    sourceType: { en: "LLM INFERENCE", zh: "LLM 推理" },
+    image: "/research/llm-inference-optimization/media/image1.png",
+    kind: "article",
+  },
+  {
+    number: "08",
+    title: { en: "Kimi K3: Architecture, Precision and Hardware Deployment", zh: "Kimi K3: Architecture, Precision and Hardware Deployment" },
+    excerpt: {
+      en: "How text enters the model → how the model computes → where the data is stored → why low precision saves HBM → why some GPUs or TPUs can run the model more easily than others.",
+      zh: "How text enters the model → how the model computes → where the data is stored → why low precision saves HBM → why some GPUs or TPUs can run the model more easily than others.",
+    },
+    href: "/research/kimi-k3/",
+    meta: { en: "Source blog · Jul 2026", zh: "原文博客 · 2026 年 7 月" },
+    sourceType: { en: "MODEL × HARDWARE", zh: "模型 × 硬件" },
+    image: "/research/kimi-k3/media/image1.png",
+    kind: "article",
+  },
   {
     number: "09",
-    title: { en: "The Three Layers of LLM Agents", zh: "LLM Agent 的三层结构" },
-    category: { en: "Agent architecture", zh: "Agent 架构" },
+    title: { en: "The Three Layers of LLM Agents", zh: "The Three Layers of LLM Agents" },
+    excerpt: {
+      en: "A field guide to what each layer answers — and how they stack, not compete.",
+      zh: "A field guide to what each layer answers — and how they stack, not compete.",
+    },
     meta: { en: "13-page visual deck", zh: "13 页视觉讲解" },
     href: "/library/llm-agent-three-layers/",
     image: "/readings/llm-agent-three-layers/page-01.avif",
+    sourceType: { en: "AGENT ARCHITECTURE", zh: "AGENT 架构" },
     kind: "deck",
   },
   {
     number: "10",
-    title: { en: "Agents & Harnesses", zh: "Agent 与 Harness" },
-    category: { en: "Agent systems", zh: "Agent 系统" },
+    title: { en: "Agents & Harnesses", zh: "Agents & Harnesses" },
+    excerpt: {
+      en: "The Layered Architecture, the Recurring Patterns, and What Endures.",
+      zh: "The Layered Architecture, the Recurring Patterns, and What Endures.",
+    },
     meta: { en: "19-page visual deck", zh: "19 页视觉讲解" },
     href: "/library/agent-harness/",
     image: "/readings/agent-harness/page-01.avif",
+    sourceType: { en: "AGENT SYSTEMS", zh: "AGENT 系统" },
     kind: "deck",
   },
   {
     number: "11",
-    title: { en: "Sandbox, Docker & Virtual Machines", zh: "Agent Sandbox 架构" },
-    category: { en: "Secure execution", zh: "安全执行环境" },
+    title: { en: "Sandbox, Docker & Virtual Machines", zh: "Sandbox, Docker & Virtual Machines" },
+    excerpt: {
+      en: "How they really fit together for AI Agents.",
+      zh: "How they really fit together for AI Agents.",
+    },
     meta: { en: "11-page visual deck", zh: "11 页视觉讲解" },
     href: "/library/agent-sandbox/",
     image: "/readings/agent-sandbox/page-01.avif",
+    sourceType: { en: "SECURE EXECUTION", zh: "安全执行环境" },
     kind: "deck",
   },
   {
     number: "12",
-    title: { en: "Kimi K3: Architecture to Real Hardware", zh: "Kimi K3 架构与硬件部署" },
-    category: { en: "Model × hardware", zh: "模型 × 硬件" },
+    title: {
+      en: "Kimi K3: From Model Architecture and Numerical Precision to Real Hardware Deployment",
+      zh: "Kimi K3: From Model Architecture and Numerical Precision to Real Hardware Deployment",
+    },
+    excerpt: {
+      en: "Layered Architecture Relationships · Per-Platform Deployment Cost Estimates · Training Time Projections",
+      zh: "Layered Architecture Relationships · Per-Platform Deployment Cost Estimates · Training Time Projections",
+    },
     meta: { en: "42-page visual deck", zh: "42 页视觉讲解" },
     href: "/library/kimi-k3-deployment/",
     image: "/readings/kimi-k3-deployment/page-01.avif",
+    sourceType: { en: "MODEL × HARDWARE", zh: "模型 × 硬件" },
     kind: "deck",
-  },
-  {
-    number: "13",
-    title: { en: "Kimi K3: From Model Architecture to Real Hardware", zh: "Kimi K3：从模型架构到真实硬件" },
-    category: { en: "Long-form technical article", zh: "长篇技术文章" },
-    meta: { en: "10,000+ words · 7 architecture figures", zh: "10,000+ 词 · 7 张架构图" },
-    href: "/research/kimi-k3/",
-    image: "/readings/kimi-k3-deployment/page-03.avif",
-    kind: "article",
   },
 ];
 
@@ -296,9 +327,6 @@ export default function Home() {
     return () => observer.disconnect();
   }, []);
 
-  const featuredResearch = researchItems.filter((item) => item.tier === "featured");
-  const compactResearch = researchItems.filter((item) => item.tier === "compact");
-
   return (
     <main className="site-shell">
       <header className="site-header">
@@ -361,72 +389,39 @@ export default function Home() {
           <h2>{t(copy.research.title, language)}</h2>
         </div>
 
-        <div className="featured-grid">
-          {featuredResearch.map((item) => (
-            <a className="featured-card" href={item.href} target="_blank" rel="noreferrer" key={item.number} data-reveal>
-              <div className="featured-image">
-                <Image
-                  src={item.image ?? ""}
-                  alt={t(item.title, language)}
-                  fill
-                  sizes="(max-width: 760px) 100vw, 50vw"
-                />
-                <span>{item.number}</span>
-              </div>
-              <div className="featured-copy">
-                <p>{t(item.category, language)}</p>
-                <h3>{t(item.title, language)}</h3>
-                <span aria-label={t(copy.research.open, language)}>↗</span>
-              </div>
-            </a>
-          ))}
+        <div className="portfolio-heading" data-reveal>
+          <p>{language === "en" ? "ARTICLES · BLOGS · VISUAL DECKS" : "文章 · 博客 · 视觉讲解"}</p>
+          <span>{t(copy.research.count, language)}</span>
         </div>
 
-        <div className="archive-heading" data-reveal>
-          <p>{t(copy.research.more, language)}</p>
-          <span>04 / 08</span>
-        </div>
-        <div className="compact-grid">
-          {compactResearch.map((item) => (
-            <a className="compact-card" href={item.href} target="_blank" rel="noreferrer" key={item.number} data-reveal>
-              <div><span>{item.number}</span><small>{item.year}</small></div>
-              <p>{t(item.category, language)}</p>
-              <h3>{t(item.title, language)}</h3>
-              <b aria-hidden="true">↗</b>
-            </a>
-          ))}
-        </div>
-
-        <div className="systems-heading" data-reveal>
-          <div>
-            <p>{t(copy.research.systemsLabel, language)}</p>
-            <h3>{t(copy.research.systemsTitle, language)}</h3>
-          </div>
-          <p>{t(copy.research.systemsBody, language)}</p>
-          <span>05 / NEW</span>
-        </div>
-
-        <div className="system-work-grid">
-          {systemWorks.map((item) => (
+        <div className="portfolio-feed">
+          {portfolioEntries.map((item) => (
             <a
-              className={`system-work-card${item.kind === "article" ? " is-article" : ""}`}
+              className="portfolio-row"
               href={item.href}
-              target="_blank"
-              rel="noreferrer"
               key={item.number}
               data-reveal
             >
-              <div className="system-work-image">
-                <Image src={item.image} alt={t(item.title, language)} fill sizes={item.kind === "article" ? "100vw" : "(max-width: 820px) 100vw, 50vw"} />
+              <div className="portfolio-thumb">
+                <Image
+                  src={item.image}
+                  alt=""
+                  fill
+                  sizes="(max-width: 700px) calc(100vw - 40px), 240px"
+                  style={{ objectPosition: item.imagePosition ?? "center" }}
+                />
                 <span>{item.number}</span>
-                <small>{item.kind === "article" ? (language === "en" ? "ARTICLE" : "文章") : (language === "en" ? "WEB DECK" : "网页讲解")}</small>
+                <small>{item.kind === "deck" ? (language === "en" ? "WEB DECK" : "网页讲解") : (language === "en" ? "ARTICLE" : "文章")}</small>
               </div>
-              <div className="system-work-copy">
-                <p>{t(item.category, language)}</p>
+              <div className="portfolio-copy">
+                <div className="portfolio-meta">
+                  <p>{t(item.sourceType, language)}</p>
+                  <small>{t(item.meta, language)}</small>
+                </div>
                 <h3>{t(item.title, language)}</h3>
-                <small>{t(item.meta, language)}</small>
-                <b aria-hidden="true">↗</b>
+                <p className="portfolio-excerpt">{t(item.excerpt, language)}</p>
               </div>
+              <span className="portfolio-arrow" aria-hidden="true">↗</span>
             </a>
           ))}
         </div>

@@ -1,0 +1,1010 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 推理公司深度解析 · Inference Deep Dive</title>
+<style>
+  :root {
+    --blue: #4472C4;
+    --blue-dark: #2f549c;
+    --blue-deep: #1e3a6e;
+    --blue-light: #e8eefa;
+    --blue-lighter: #f4f7fd;
+    --ink: #1f2a44;
+    --ink-soft: #55618a;
+    --line: #d7e0f2;
+    --white: #ffffff;
+    --green: #2e9e6b;
+    --amber: #c98a1e;
+    --red: #c0504d;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "PingFang SC", "Microsoft YaHei", "Segoe UI", -apple-system, sans-serif;
+    background: var(--blue-lighter);
+    color: var(--ink);
+    line-height: 1.65;
+  }
+  body.lang-zh .en { display: none !important; }
+  body.lang-en .zh { display: none !important; }
+
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px 64px; }
+
+  /* Header */
+  header {
+    background: linear-gradient(135deg, var(--blue-deep) 0%, var(--blue) 75%, #5a86d6 100%);
+    color: var(--white);
+    padding: 44px 24px 48px;
+  }
+  .header-inner { max-width: 1080px; margin: 0 auto; }
+  .header-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; }
+  header h1 { font-size: 29px; font-weight: 700; letter-spacing: 0.5px; }
+  header p.sub { margin-top: 10px; font-size: 14.5px; opacity: 0.92; max-width: 760px; }
+  .lang-btn {
+    background: rgba(255,255,255,0.16);
+    border: 1px solid rgba(255,255,255,0.55);
+    color: var(--white); padding: 8px 18px; border-radius: 999px;
+    font-size: 14px; cursor: pointer; transition: background .2s; flex-shrink: 0;
+  }
+  .lang-btn:hover { background: rgba(255,255,255,0.3); }
+
+  /* TOC nav */
+  nav.toc { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 24px; }
+  nav.toc a {
+    color: var(--white); text-decoration: none; font-size: 13px;
+    background: rgba(255,255,255,0.14); border: 1px solid rgba(255,255,255,0.3);
+    padding: 5px 13px; border-radius: 999px;
+  }
+  nav.toc a:hover { background: rgba(255,255,255,0.3); }
+
+  /* Sections */
+  section { margin-top: 52px; scroll-margin-top: 20px; }
+  .part-tag {
+    display: inline-block; background: var(--blue); color: var(--white);
+    font-size: 12px; font-weight: 700; letter-spacing: 1.5px;
+    padding: 3px 12px; border-radius: 999px; margin-bottom: 10px;
+  }
+  .sec-title h2 { font-size: 23px; color: var(--blue-dark); }
+  .sec-lede { font-size: 14px; color: var(--ink-soft); margin: 8px 0 20px; max-width: 820px; }
+
+  h3.block-title { font-size: 16.5px; color: var(--blue-dark); margin: 26px 0 10px; display: flex; align-items: center; gap: 8px; }
+  h3.block-title .n {
+    background: var(--blue-light); color: var(--blue-dark); border: 1px solid var(--line);
+    width: 24px; height: 24px; border-radius: 50%; display: inline-flex;
+    align-items: center; justify-content: center; font-size: 12.5px; flex-shrink: 0;
+  }
+
+  .panel { background: var(--white); border: 1.5px solid var(--line); border-radius: 14px; padding: 20px 22px; }
+  .panel + .panel { margin-top: 14px; }
+  .panel p { font-size: 14px; }
+  .panel p + p { margin-top: 10px; }
+
+  .visual-figure {
+    margin: 14px 0 20px;
+    background: var(--white);
+    border: 1.5px solid var(--line);
+    border-radius: 14px;
+    padding: 8px;
+    box-shadow: 0 2px 10px rgba(68,114,196,0.08);
+  }
+  .visual-figure img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 10px;
+  }
+
+  .analogy {
+    background: var(--blue-light); border-left: 4px solid var(--blue);
+    border-radius: 0 10px 10px 0; padding: 12px 16px; font-size: 13.5px;
+    color: var(--ink); margin: 12px 0;
+  }
+  .analogy b:first-child { color: var(--blue-dark); }
+
+  .why-money {
+    background: #edf7f1; border: 1px solid #bfe3d0; border-left: 4px solid var(--green);
+    border-radius: 0 10px 10px 0; padding: 12px 16px; font-size: 13.5px; margin: 14px 0 0;
+  }
+  .why-money b:first-child { color: var(--green); }
+
+  /* diagrams */
+  .diagram { display: flex; align-items: stretch; gap: 0; flex-wrap: wrap; margin: 14px 0; }
+  .dg-box {
+    flex: 1; min-width: 140px; background: var(--white); border: 1.5px solid var(--line);
+    border-radius: 12px; padding: 13px 12px; text-align: center;
+  }
+  .dg-box.hl { border-color: var(--blue); background: var(--blue-light); }
+  .dg-box .t { font-weight: 700; font-size: 14px; color: var(--blue-dark); }
+  .dg-box .d { font-size: 12px; color: var(--ink-soft); margin-top: 5px; line-height: 1.5; }
+  .dg-arrow { display: flex; align-items: center; padding: 0 7px; color: var(--blue); font-size: 20px; font-weight: 700; }
+
+  /* token strip for decode illustration */
+  .tok-strip { display: flex; gap: 5px; flex-wrap: wrap; margin: 10px 0; align-items: center; }
+  .tok { background: var(--blue-light); border: 1px solid var(--line); color: var(--blue-dark); border-radius: 6px; padding: 2px 9px; font-size: 12.5px; font-family: monospace; }
+  .tok.new { background: var(--blue); color: var(--white); border-color: var(--blue); }
+  .tok.ghost { background: var(--white); border-style: dashed; color: var(--ink-soft); }
+  .tok-label { font-size: 12px; color: var(--ink-soft); }
+
+  /* KV bar */
+  .kvbar { display: flex; height: 34px; border-radius: 8px; overflow: hidden; border: 1.5px solid var(--line); margin: 10px 0 4px; font-size: 12px; color: var(--white); font-weight: 700; }
+  .kvbar > div { display: flex; align-items: center; justify-content: center; }
+  .kv-w { background: var(--blue-dark); }
+  .kv-c { background: #6d95d9; }
+  .kv-f { background: #cfdcf3; color: var(--blue-dark); }
+
+  details.deep {
+    margin: 12px 0; background: var(--blue-lighter); border: 1.5px dashed var(--blue);
+    border-radius: 10px; padding: 0;
+  }
+  details.deep summary {
+    cursor: pointer; padding: 10px 16px; font-size: 13.5px; font-weight: 700; color: var(--blue-dark);
+    list-style: none;
+  }
+  details.deep summary::before { content: "▸ "; }
+  details.deep[open] summary::before { content: "▾ "; }
+  details.deep .body { padding: 0 16px 14px; font-size: 13.5px; }
+  details.deep .body p + p { margin-top: 8px; }
+
+  /* company section header */
+  .co-head {
+    background: linear-gradient(120deg, var(--blue-dark), var(--blue));
+    color: var(--white); border-radius: 14px; padding: 20px 24px;
+    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;
+  }
+  .co-head h2 { font-size: 24px; }
+  .co-head .pos { font-size: 13.5px; opacity: 0.93; margin-top: 4px; }
+  .co-facts { display: flex; gap: 10px; flex-wrap: wrap; }
+  .co-fact { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); border-radius: 9px; padding: 6px 13px; font-size: 12.5px; text-align: center; }
+  .co-fact .v { font-weight: 800; font-size: 16px; display: block; }
+
+  .tech-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 14px; }
+  @media (max-width: 780px) { .tech-grid { grid-template-columns: 1fr; } }
+  .tech-card { background: var(--white); border: 1.5px solid var(--line); border-radius: 12px; padding: 16px 18px; }
+  .tech-card h4 { font-size: 14.5px; color: var(--blue-dark); margin-bottom: 8px; }
+  .tech-card p { font-size: 13.5px; }
+  .tech-card p + p { margin-top: 8px; }
+  .tech-card .tag { display:inline-block; font-size: 11px; background: var(--blue-light); color: var(--blue-dark); border: 1px solid var(--line); border-radius: 999px; padding: 1px 9px; margin-bottom: 8px; }
+
+  .biz-read {
+    margin-top: 16px; background: var(--white); border: 1.5px solid var(--line);
+    border-left: 5px solid var(--blue); border-radius: 12px; padding: 16px 18px; font-size: 13.5px;
+  }
+  .biz-read b.h { color: var(--blue-dark); display: block; margin-bottom: 6px; font-size: 14px; }
+
+  /* toolbox chips */
+  .toolbox { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 12px; margin-top: 6px; }
+  .tool { background: var(--white); border: 1.5px solid var(--line); border-radius: 12px; padding: 14px 16px; font-size: 13.5px; }
+  .tool b { color: var(--blue-dark); }
+  .tool .who { margin-top: 7px; font-size: 12px; color: var(--ink-soft); }
+
+  /* table */
+  table { width: 100%; border-collapse: collapse; background: var(--white); font-size: 13.5px; }
+  th, td { padding: 11px 13px; border: 1px solid var(--line); text-align: left; vertical-align: top; }
+  thead th { background: var(--blue); color: var(--white); }
+  tbody th { background: var(--blue-light); color: var(--blue-dark); width: 128px; font-size: 13px; }
+  tbody tr:nth-child(even) td { background: var(--blue-lighter); }
+  .table-scroll { overflow-x: auto; border-radius: 12px; box-shadow: 0 2px 10px rgba(68,114,196,0.08); }
+
+  /* valuation bars */
+  .vbar-row { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .vbar-name { width: 105px; font-size: 13.5px; font-weight: 700; color: var(--blue-dark); flex-shrink: 0; }
+  .vbar-track { flex: 1; background: var(--white); border: 1px solid var(--line); border-radius: 8px; height: 30px; overflow: hidden; }
+  .vbar-fill { height: 100%; background: linear-gradient(90deg, var(--blue), #6d95d9); display: flex; align-items: center; justify-content: flex-end; color: var(--white); font-size: 12.5px; font-weight: 700; padding-right: 10px; min-width: 76px; }
+  .vbar-fill.pending { background: repeating-linear-gradient(45deg, #8aa8e0, #8aa8e0 8px, #a5bce8 8px, #a5bce8 16px); }
+  .vbar-caption { font-size: 12px; color: var(--ink-soft); margin-top: 4px; }
+
+  /* duo panels */
+  .duo { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 760px) { .duo { grid-template-columns: 1fr; } }
+  .duo h3 { font-size: 15.5px; color: var(--blue-dark); margin-bottom: 10px; }
+  .item { display: flex; gap: 10px; margin-bottom: 9px; font-size: 13.5px; }
+  .item .ic { color: var(--blue); font-weight: 800; flex-shrink: 0; }
+
+  /* moat */
+  .moat-card { background: var(--white); border: 1.5px solid var(--line); border-radius: 14px; padding: 18px 20px; margin-bottom: 14px; }
+  .moat-card h3 { color: var(--blue-dark); font-size: 16.5px; margin-bottom: 10px; }
+  .moat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 760px) { .moat-grid { grid-template-columns: 1fr; } }
+  .moat-cell { border-radius: 10px; padding: 13px 14px; font-size: 13px; }
+  .moat-cell.strong { background: #edf7f1; border: 1px solid #bfe3d0; }
+  .moat-cell.threat { background: #fdf3ec; border: 1px solid #f0d8c0; }
+  .moat-cell .h { font-weight: 700; font-size: 12.5px; margin-bottom: 7px; }
+  .moat-cell.strong .h { color: var(--green); }
+  .moat-cell.threat .h { color: var(--amber); }
+  .moat-cell li { margin-left: 17px; margin-bottom: 5px; }
+
+  /* future */
+  .fut-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+  .fut { background: var(--white); border: 1.5px solid var(--line); border-radius: 14px; padding: 16px; }
+  .fut .icon { font-size: 22px; }
+  .fut h4 { font-size: 14.5px; color: var(--blue-dark); margin: 7px 0 5px; }
+  .fut p { font-size: 12.5px; color: var(--ink-soft); }
+  .risk-strip { margin-top: 16px; background: var(--white); border: 1.5px solid var(--line); border-left: 5px solid var(--red); border-radius: 12px; padding: 15px 17px; font-size: 13.5px; }
+  .risk-strip b { color: var(--red); }
+
+  footer { margin-top: 48px; font-size: 12px; color: var(--ink-soft); text-align: center; }
+</style>
+</head>
+<body class="lang-zh">
+
+<header>
+  <div class="header-inner">
+    <div class="header-top">
+      <div>
+        <h1>
+          <span class="zh">AI 推理公司深度解析：原理 → 生意 → 价值</span>
+          <span class="en">AI Inference, From First Principles to Business Value</span>
+        </h1>
+        <p class="sub">
+          <span class="zh">Fireworks · Together · Baseten 三家公司做的事，本质上都是同一道数学题：<b>让同一块 GPU 每秒产出更多 token</b>。这份材料先讲清底层原理，再逐家拆解它们各自的技术路线和生意逻辑。</span>
+          <span class="en">Fireworks, Together, and Baseten are all solving the same equation: <b>more tokens per second out of the same GPU</b>. This page builds the fundamentals first, then dissects each company's technical playbook and the business it creates.</span>
+        </p>
+      </div>
+      <button class="lang-btn" onclick="toggleLang()">
+        <span class="zh">EN · English</span>
+        <span class="en">中文 · Chinese</span>
+      </button>
+    </div>
+    <nav class="toc">
+      <a href="#p1"><span class="zh">01 推理原理入门</span><span class="en">01 Inference 101</span></a>
+      <a href="#p2">02 Fireworks AI</a>
+      <a href="#p3">03 Together AI</a>
+      <a href="#p4">04 Baseten</a>
+      <a href="#p5"><span class="zh">05 对比与估值</span><span class="en">05 Compare & Valuations</span></a>
+      <a href="#p6"><span class="zh">06 竞争壁垒</span><span class="en">06 Moats</span></a>
+      <a href="#p7"><span class="zh">07 未来</span><span class="en">07 Outlook</span></a>
+      <a href="#p8"><span class="zh">08 巨头会下场吗</span><span class="en">08 Will giants enter?</span></a>
+    </nav>
+  </div>
+</header>
+
+<div class="wrap">
+
+<!-- ============ PART 1: INFERENCE 101 ============ -->
+<section id="p1">
+  <span class="part-tag">PART 01</span>
+  <div class="sec-title"><h2><span class="zh">推理原理入门：不懂这四件事，就看不懂这三家公司</span><span class="en">Inference 101: four things you must know before the companies make sense</span></h2></div>
+  <p class="sec-lede">
+    <span class="zh">"推理（Inference）"就是让训练好的模型干活——你发一个问题，它生成回答。听起来简单，但在几十亿次请求的规模下，怎么跑得快、跑得省，是一门深到能撑起百亿美元公司的工程学。</span>
+    <span class="en">"Inference" simply means putting a trained model to work — you send a prompt, it generates an answer. Sounds trivial, but doing this fast and cheaply at billions-of-requests scale is engineering deep enough to support multi-billion-dollar companies.</span>
+  </p>
+
+  <h3 class="block-title"><span class="n">1</span><span class="zh">模型生成回答分两个阶段，瓶颈完全不同</span><span class="en">Generation has two phases — with completely different bottlenecks</span></h3>
+  <div class="panel">
+    <div class="diagram">
+      <div class="dg-box hl">
+        <div class="t">Prefill <span class="zh">预填充</span></div>
+        <div class="d"><span class="zh">一次性并行"读懂"你的整段提示词<br><b>瓶颈：计算力</b>（算力密集，GPU 很擅长）</span><span class="en">Reads your entire prompt in one parallel pass<br><b>Bottleneck: raw compute</b> (GPUs love this)</span></div>
+      </div>
+      <div class="dg-arrow">→</div>
+      <div class="dg-box hl">
+        <div class="t">Decode <span class="zh">解码</span></div>
+        <div class="d"><span class="zh">一个字一个字往外生成，每个字都依赖前一个字<br><b>瓶颈：显存带宽</b>（搬数据，GPU 常常在等）</span><span class="en">Generates one token at a time, each depending on the last<br><b>Bottleneck: memory bandwidth</b> (the GPU mostly waits)</span></div>
+      </div>
+    </div>
+    <div class="tok-strip">
+      <span class="tok-label"><span class="zh">Decode 每一步：</span><span class="en">Each decode step:</span></span>
+      <span class="tok">推理</span><span class="tok">is</span><span class="tok">the</span><span class="tok">new</span><span class="tok new">oil</span><span class="tok ghost">?</span>
+      <span class="tok-label"><span class="zh">← 每生成一个新词，都要把<b>全部模型权重</b>（几十至几百 GB）从显存搬进计算核心一遍</span><span class="en">← every new token requires streaming <b>all model weights</b> (tens to hundreds of GB) from memory into the compute cores — again</span></span>
+    </div>
+    <div class="analogy">
+      <span class="zh"><b>类比：</b>Prefill 像快速通读一篇文章，一目十行；Decode 像写回信，一个字一个字地写，而且<b>每写一个字都要把整部词典重新翻一遍</b>。所以 Decode 阶段 GPU 强大的计算单元大部分时间在"等数据"，利用率可能只有个位数百分比。<b>三家公司的核心技术，几乎都是围绕"别让 GPU 等"展开的。</b></span>
+      <span class="en"><b>Analogy:</b> prefill is skimming an essay in one glance; decode is writing a reply one word at a time — and <b>rereading the entire dictionary before each word</b>. During decode, the GPU's massive compute units mostly sit idle waiting for data; utilization can drop to single digits. <b>Nearly every technique these companies build boils down to "stop making the GPU wait."</b></span>
+    </div>
+  </div>
+  <figure class="visual-figure">
+    <img src="../generated_visuals/llm-prefill-decode-infographic.png" alt="模型生成回答分为 Prefill 和 Decode 两个阶段的可视化说明" loading="lazy">
+  </figure>
+
+  <h3 class="block-title"><span class="n">2</span><span class="zh">KV Cache：省下重复计算的"记忆"，但要吃掉海量显存</span><span class="en">The KV cache: memory that saves recomputation — and devours VRAM</span></h3>
+  <div class="panel">
+    <p>
+      <span class="zh">Transformer 的注意力机制要求：生成每个新词时，都要"回看"前面所有词。如果每一步都重新计算前文，成本会随长度平方级爆炸。解法是把每个词算过的中间结果（Key 和 Value 两组向量）<b>缓存起来</b>——这就是 KV Cache。之后每一步只需算新词、查缓存。</span>
+      <span class="en">Transformer attention requires each new token to "look back" at every token before it. Recomputing the past at every step would blow up quadratically with length. The fix: cache each token's intermediate results (its Key and Value vectors) — the <b>KV cache</b>. Every subsequent step only computes the new token and reads the cache.</span>
+    </p>
+    <p>
+      <span class="zh">代价是显存。GPU 显存里既要装模型权重，又要装每个并发请求的 KV Cache：</span>
+      <span class="en">The price is VRAM. GPU memory must hold both the model weights and a KV cache for every concurrent request:</span>
+    </p>
+    <div class="kvbar">
+      <div class="kv-w" style="width:46%"><span class="zh">模型权重（固定）</span><span class="en">Model weights (fixed)</span></div>
+      <div class="kv-c" style="width:38%">KV Cache × <span class="zh">并发请求数</span><span class="en">concurrent requests</span></div>
+      <div class="kv-f" style="width:16%"><span class="zh">剩余</span><span class="en">Free</span></div>
+    </div>
+    <p style="font-size:12.5px;color:var(--ink-soft)">
+      <span class="zh">对话越长、并发越多，KV Cache 越大——一个长上下文请求的缓存可达数 GB。缓存装不下 → 能同时服务的请求变少 → 单 GPU 产能下降。</span>
+      <span class="en">Longer conversations and more concurrency mean a bigger cache — a single long-context request can consume gigabytes. When the cache doesn't fit, fewer requests run concurrently, and per-GPU output collapses.</span>
+    </p>
+    <div class="why-money">
+      <span class="zh"><b>为什么这是钱：</b>KV Cache 直接决定一块 GPU 能同时服务多少人。谁能把 KV Cache 管理得更省（压缩、分页、复用），谁的单位成本就更低。后面你会看到，三家公司各有一套 KV Cache 的"抠门"办法。</span>
+      <span class="en"><b>Why this is money:</b> the KV cache directly caps how many users one GPU can serve at once. Whoever manages it most frugally — compressing, paging, reusing — wins on unit cost. Each of the three companies has its own bag of KV-cache tricks, as you'll see.</span>
+    </div>
+  </div>
+  <figure class="visual-figure">
+    <img src="../generated_visuals/kv-cache-memory-infographic.png" alt="KV Cache 如何节省重复计算但占用 GPU 显存的可视化说明" loading="lazy">
+  </figure>
+
+  <h3 class="block-title"><span class="n">3</span><span class="zh">生意的本质：一道除法题</span><span class="en">The business is one division problem</span></h3>
+  <div class="panel">
+    <div class="diagram">
+      <div class="dg-box"><div class="t"><span class="zh">成本（固定）</span><span class="en">Cost (fixed)</span></div><div class="d"><span class="zh">GPU 按小时计费，例如 H100 约 $2–3.5/小时——<b>不管你用没用满</b></span><span class="en">GPUs bill by the hour — say $2–3.5/hr for an H100 — <b>whether or not you keep them busy</b></span></div></div>
+      <div class="dg-arrow">÷</div>
+      <div class="dg-box"><div class="t"><span class="zh">产出（可优化）</span><span class="en">Output (optimizable)</span></div><div class="d"><span class="zh">这块 GPU 每小时产出多少 token</span><span class="en">Tokens produced per GPU-hour</span></div></div>
+      <div class="dg-arrow">=</div>
+      <div class="dg-box hl"><div class="t"><span class="zh">单位成本 → 毛利</span><span class="en">Unit cost → margin</span></div><div class="d"><span class="zh">优化让产出 ×3，成本即 ÷3。<b>技术优化直接等于毛利率</b></span><span class="en">3× the output = ⅓ the cost. <b>Optimization literally is the margin</b></span></div></div>
+    </div>
+    <p>
+      <span class="zh">这就是三家公司存在的根基：同样的开源模型、同样型号的 GPU，谁的工程做得深，谁就能在卖同样价格的 token 时赚钱，而对手在亏钱。客户视角同理：自建团队跑 vLLM 只能拿到"及格线"性能，专业玩家能做到 2–4 倍以上——外包反而更便宜。</span>
+      <span class="en">This is the entire reason these companies exist: same open model, same GPU SKU, but deeper engineering means you profit at a token price where competitors bleed. It's also the customer's math: an in-house team running vLLM gets baseline performance; specialists get 2–4×+ — so outsourcing is often cheaper than DIY.</span>
+    </p>
+  </div>
+
+  <h3 class="block-title"><span class="n">4</span><span class="zh">全行业共用的"优化工具箱"——先认识工具，再看各家怎么用</span><span class="en">The industry-wide optimization toolbox — learn the tools, then watch each company wield them</span></h3>
+  <div class="toolbox">
+    <div class="tool">
+      <b><span class="zh">① 内核优化（Kernel）</span><span class="en">① Custom kernels</span></b><br>
+      <span class="zh">重写 GPU 上执行注意力等计算的底层程序，减少数据搬运。代表作：FlashAttention。</span>
+      <span class="en">Rewrite the low-level GPU programs that execute attention etc., minimizing data movement. Poster child: FlashAttention.</span>
+      <div class="who"><span class="zh">主打者：Together（发明者在此）、Fireworks（自研 FireAttention）</span><span class="en">Champions: Together (the inventor works there), Fireworks (in-house FireAttention)</span></div>
+    </div>
+    <div class="tool">
+      <b><span class="zh">② 量化（Quantization）</span><span class="en">② Quantization</span></b><br>
+      <span class="zh">把模型数字从 16 位精度压到 8 位甚至 4 位（FP16→FP8→FP4）。数据量减半，搬运就快一倍——但压得不好会变"笨"，功夫在于压哪里、怎么压。</span>
+      <span class="en">Shrink the model's numbers from 16-bit to 8- or even 4-bit (FP16→FP8→FP4). Half the data means twice the speed — but careless compression makes the model dumber. The craft is knowing what to squeeze and how.</span>
+      <div class="who"><span class="zh">主打者：Fireworks（"无损量化"是其招牌）</span><span class="en">Champion: Fireworks ("quantization with no tradeoffs" is its calling card)</span></div>
+    </div>
+    <div class="tool">
+      <b><span class="zh">③ 连续批处理（Continuous batching）</span><span class="en">③ Continuous batching</span></b><br>
+      <span class="zh">把很多用户的请求"拼车"到同一块 GPU 上一起算，而且随到随上、算完即下，不等整批结束。</span>
+      <span class="en">Carpool many users' requests onto one GPU — and let riders hop on and off at every stop instead of waiting for the whole bus to finish its route.</span>
+      <div class="who"><span class="zh">三家都用；Baseten 在此之上做了大量调度工程</span><span class="en">All three use it; Baseten layers heavy scheduling engineering on top</span></div>
+    </div>
+    <div class="tool">
+      <b><span class="zh">④ 投机解码（Speculative decoding）</span><span class="en">④ Speculative decoding</span></b><br>
+      <span class="zh">让一个小模型先"抢答"多个词，大模型一次性批改。批改比逐字生成快得多，猜对越多提速越大。</span>
+      <span class="en">A small "draft" model blurts out several tokens ahead; the big model grades them all in a single pass. Grading beats generating — the more guesses land, the bigger the speedup.</span>
+      <div class="who"><span class="zh">主打者：Together（ATLAS 自适应投机器）、Fireworks（为客户定制 drafter）</span><span class="en">Champions: Together (ATLAS adaptive speculator), Fireworks (per-customer drafters)</span></div>
+    </div>
+    <div class="tool">
+      <b><span class="zh">⑤ 缓存复用（Prefix / prompt caching）</span><span class="en">⑤ Prefix / prompt caching</span></b><br>
+      <span class="zh">很多请求开头相同（如同一段系统提示词）。把这部分的 KV Cache 存下来复用，后续请求跳过重复的 Prefill。</span>
+      <span class="en">Many requests share the same opening (e.g., a system prompt). Cache that prefix's KV once and every later request skips the redundant prefill.</span>
+      <div class="who"><span class="zh">三家都有；Baseten 还做"KV 感知路由"</span><span class="en">All three; Baseten adds KV-aware routing</span></div>
+    </div>
+    <div class="tool">
+      <b><span class="zh">⑥ P/D 分离（Disaggregation）</span><span class="en">⑥ Prefill/decode disaggregation</span></b><br>
+      <span class="zh">Prefill 吃算力、Decode 吃带宽，硬件需求不同。把两个阶段拆到不同 GPU 池上，各自独立扩缩。</span>
+      <span class="en">Prefill burns compute, decode burns bandwidth — different hardware appetites. Split the two phases onto separate GPU pools that scale independently.</span>
+      <div class="who"><span class="zh">主打者：Fireworks（全栈按此架构重建）</span><span class="en">Champion: Fireworks (rebuilt its whole stack this way)</span></div>
+    </div>
+  </div>
+  <details class="deep">
+    <summary><span class="zh">小词典："负载"到底是什么意思？</span><span class="en">Mini-glossary: what exactly is a "workload"?</span></summary>
+    <div class="body">
+      <p><span class="zh"><b>负载 = 一个系统当下要干的活儿的总量。</b>一台 GPU 的负载，就是此刻压在它身上的请求——多少用户在同时等回答、每个请求有多长。"负载高"= 活儿多、机器忙不过来；"负载低"= 活儿少、机器闲着（但钱照烧——回忆那道除法题）。</span><span class="en"><b>Load = the total amount of work a system has on its plate right now.</b> A GPU's load is the requests currently pressing on it — how many users are waiting, and how long each request is. "High load" means too much work; "low load" means the machine idles (while the bill keeps running — recall the division problem).</span></p>
+      <p><span class="zh">三个常见变体：<b>负载均衡器</b>（load balancer）是把请求分给一堆 GPU 的"派单员"，别让有的累死、有的闲死——KV 感知路由就是个更聪明的派单员，派单时还记得你上次是哪个店员接待的。<b>工作负载</b>（workload）不光指量，还指<b>活儿长什么样</b>：编程助手是"短指令进、长代码出"，客服是"长历史进、短回复出"——同样一万个请求，形状不同，最优的优化方案完全不同（FireOptimizer、Engine Builder"量体裁衣"量的就是这个形状）。<b>"把负载调度到哪"</b>= 把活儿派到哪家云、哪个集群去干。一句话：<b>负载 = 活儿；负载均衡 = 分活儿；工作负载画像 = 活儿的长相。</b></span><span class="en">Three common variants: a <b>load balancer</b> is the dispatcher handing requests out across a fleet of GPUs so none burns out while others nap — KV-aware routing is just a smarter dispatcher who remembers which clerk served you last time. A <b>workload</b> describes not just the volume but <b>the shape of the work</b>: a coding copilot is "short instruction in, long code out," support chat is "long history in, short reply out" — ten thousand requests of different shapes call for completely different optimizations (that shape is what FireOptimizer and Engine Builder "tailor" to). <b>"Scheduling a workload"</b> = deciding which cloud and cluster gets the job. In one line: <b>load = the work; load balancing = dividing the work; a workload profile = the shape of the work.</b></span></p>
+    </div>
+  </details>
+  <details class="deep">
+    <summary><span class="zh">小词典：FP16 / FP8 / FP4 具体怎么理解？</span><span class="en">Mini-glossary: what do FP16 / FP8 / FP4 actually mean?</span></summary>
+    <div class="body">
+      <p><span class="zh"><b>FP = Floating Point（浮点数），计算机存"带小数的数"的格式；后面的数字是每个数占多少比特。</b>模型的本质是一大堆数字（权重）：70B 模型 = 700 亿个数。每个数用 FP16 存占 2 字节，FP8 减半到 1 字节，FP4 再减半。落到实处：同一个 70B 模型，FP16 约 <b>140 GB</b>、FP8 约 <b>70 GB</b>、FP4 约 <b>35 GB</b>——模型还是那个模型，只是每个数记得"糙"了一点。</span><span class="en"><b>FP = floating point — the computer's format for storing decimal numbers; the digit is how many bits each number takes.</b> A model is fundamentally a pile of numbers (weights): a 70B model is 70 billion of them. Each number takes 2 bytes in FP16, 1 byte in FP8, half a byte in FP4. Concretely: the same 70B model weighs ~<b>140 GB</b> in FP16, ~<b>70 GB</b> in FP8, ~<b>35 GB</b> in FP4 — same model, each number just recorded more coarsely.</span></p>
+      <p><span class="zh"><b>"糙"= 可表示的刻度变少。</b>FP16 有约 65,536 种取值刻度，FP8 只剩 <b>256 种</b>，FP4 只剩 <b>16 种</b>。类比调色板：6 万色的照片 → 256 色的 GIF → 16 支马克笔。原来 0.4173 和 0.4188 是两个数，FP4 之下可能被记成同一个值。<b>为什么变糙反而变快？</b>①Decode 的瓶颈是搬权重（原理课第 1 点），体积减半 = 搬运时间减半；②新 GPU 有专吃低精度的硬件单元（H100 原生 FP8、Blackwell 原生 FP4），同样的晶体管每秒算的低精度乘加翻倍。附赠：KV Cache 也减半，同显存塞下翻倍并发。<b>为什么敢压？</b>神经网络的"知识"冗余地摊在几百亿个参数上，单个数记糙点整体行为几乎不变——像 RAW 照片压成 JPEG，文件小 10 倍肉眼看不出。<b>为什么不能一刀切？</b>少数数字很金贵：数值特别大的离群点、MoE 的路由器、注意力关键层，16 个刻度罩不住——所以手艺是混合精度 + 校准：敏感层保高精度，皮实层大胆压，压完跑基准验证智商没掉。</span><span class="en"><b>"Coarser" = fewer representable notches.</b> FP16 offers ~65,536 distinct values; FP8 just <b>256</b>; FP4 only <b>16</b>. Think color palettes: a 65k-color photo → a 256-color GIF → a box of 16 markers. Where 0.4173 and 0.4188 were once different numbers, FP4 may record them identically. <b>Why does coarser mean faster?</b> (1) Decode is bottlenecked on hauling weights (Inference 101 §1) — half the bytes, half the hauling time; (2) new GPUs have dedicated low-precision units (H100 native FP8, Blackwell native FP4) that crunch twice the multiply-adds per second from the same transistors. Bonus: the KV cache halves too, doubling concurrency per GPU. <b>Why dare to squeeze?</b> A network's "knowledge" is spread redundantly across billions of parameters, so coarsening any one barely moves the whole — like compressing RAW to JPEG: a tenth the size, invisible to the eye. <b>Why not squeeze uniformly?</b> A few numbers are precious: extreme outliers, MoE routers, critical attention layers — 16 notches can't hold them. Hence the craft: mixed precision plus calibration — keep sensitive layers high-precision, squeeze the sturdy ones hard, then benchmark to confirm no IQ was lost.</span></p>
+      <p><span class="zh"><b>标准还是独家？分三层。</b>格式是<b>行业标准</b>（FP8 规范由 NVIDIA/Arm/Intel 联合制定，FP4 属 OCP Microscaling 标准），硬件照标准造，人人同一把刻度尺；基础压缩算法（GPTQ、AWQ、SmoothQuant 等）是<b>公开研究</b>，谁都能做出"能用"的量化版本；<b>独家的是手艺层</b>——逐模型的配方（哪层碰不得）、高效跑混合精度的自研内核（FireAttention 的 FP8 实现闭源）、批量化的质量验证流水线。类比：JPEG 标准人人可查，但"这张照片压到什么参数看不出差别"的手感和产线是各家的。另注意措辞：<b>"无损量化"是营销话术</b>——量化天然有损（刻度变少，信息必丢），实际承诺是"基准测试上测不出下降"，与 FlashAttention 那种逐位精确的真无损是两个级别的承诺。</span><span class="en"><b>Standard or proprietary? Three layers.</b> The formats are <b>industry standards</b> (the FP8 spec was jointly defined by NVIDIA/Arm/Intel; FP4 belongs to the OCP Microscaling family) — hardware implements them, and everyone shares the same ruler. The base algorithms (GPTQ, AWQ, SmoothQuant, etc.) are <b>public research</b> — anyone can produce a workable quantized model. <b>The proprietary part is the craft layer</b>: per-model recipes (which layers are untouchable), in-house kernels that run mixed precision fast (FireAttention's FP8 implementation is closed-source), and industrialized quality-validation pipelines. Analogy: the JPEG standard is public, but the eye for "how far this photo compresses before anyone notices" — and the production line behind it — belongs to each shop. One wording caution: <b>"lossless quantization" is marketing</b> — quantization is inherently lossy (fewer notches, information must go); the actual promise is "no measurable regression on benchmarks," a far weaker guarantee than FlashAttention's bit-for-bit exactness.</span></p>
+    </div>
+  </details>
+</section>
+
+<!-- ============ PART 2: FIREWORKS ============ -->
+<section id="p2">
+  <span class="part-tag">PART 02</span>
+  <div class="co-head">
+    <div>
+      <h2>Fireworks AI</h2>
+      <div class="pos"><span class="zh">技术路线：极致速度 + 按客户定制优化 · 轻资产</span><span class="en">Playbook: raw speed + per-customer optimization · asset-light</span></div>
+    </div>
+    <div class="co-facts">
+      <div class="co-fact"><span class="v">15T/<span class="zh">日</span><span class="en">day</span></span><span class="zh">token 处理量</span><span class="en">tokens served</span></div>
+      <div class="co-fact"><span class="v">~$800M</span><span class="zh">年化收入(估)</span><span class="en">ARR (est.)</span></div>
+      <div class="co-fact"><span class="v"><span class="zh">$40亿→传闻~$150亿</span><span class="en">$4B→~$15B talks</span></span><span class="zh">估值</span><span class="en">valuation</span></div>
+    </div>
+  </div>
+
+  <div class="panel" style="margin-top:14px">
+    <p>
+      <span class="zh"><b>出身决定打法。</b>创始人林俏（Lin Qiao）曾在 Meta 领导 PyTorch——全球使用最广的深度学习框架，团队核心成员多来自 Meta AI 基础设施部门。这批人过去的工作就是让模型在 Meta 十亿级用户的规模下高效运行，出来创业做的事一脉相承：<b>不训练模型，只把别人的模型跑到最快</b>，以 API 按 token 收费。</span>
+      <span class="en"><b>Origins dictate the strategy.</b> Founder Lin Qiao ran PyTorch at Meta — the world's most-used deep learning framework — and the core team came from Meta's AI infrastructure org, where the job was making models run efficiently for billions of users. The startup is the same job, productized: <b>train nothing, run other people's models faster than anyone</b>, and charge per token via API.</span>
+    </p>
+  </div>
+
+  <h3 class="block-title"><span class="n">A</span><span class="zh">FireAttention：从零重写的专有注意力内核</span><span class="en">FireAttention: a proprietary attention kernel, rewritten from scratch</span></h3>
+  <div class="panel">
+    <p>
+      <span class="zh">开源世界的默认推理引擎是 vLLM（伯克利出品），性能已经不错。Fireworks 认为"不错"不够，从零重写了注意力计算的 GPU 内核，称为 <b>FireAttention</b>。官方宣称配合 FP8 量化，速度可达 vLLM 的约 4 倍（自家基准，需打折看待，但第三方测评常年把它列入延迟最低梯队）。V2 版本利用 H100 的 FP8 硬件单元再提约 2 倍吞吐，并且同一套内核适配 NVIDIA 和 AMD MI300 两家硬件——多一个供应商，就多一分议价权。</span>
+      <span class="en">The open-source default is vLLM (from Berkeley), and it's decent. Fireworks decided decent wasn't the business, and rewrote the attention GPU kernel from scratch as <b>FireAttention</b>. The company claims ~4× vLLM with FP8 (its own benchmark — apply skepticism — though third-party tests consistently rank it in the lowest-latency tier). V2 exploits the H100's native FP8 units for roughly another 2× throughput, and the same kernel targets both NVIDIA and AMD MI300 — a second hardware supplier means bargaining power.</span>
+    </p>
+    <div class="analogy">
+      <span class="zh"><b>怎么理解"重写内核"：</b>内核（kernel）是 GPU 上真正执行计算的小程序。同一道数学题，笨的写法让数据在"仓库"（显存）和"工作台"（计算核心）之间来回跑无数趟；聪明的写法把计算切成小块、在工作台旁边的"小抽屉"（高速缓存 SRAM）里一口气做完。数学结果一模一样，耗时天差地别。</span>
+      <span class="en"><b>What "rewriting a kernel" means:</b> a kernel is the small program that actually executes math on the GPU. For the same equation, a naive kernel shuttles data endlessly between the warehouse (VRAM) and the workbench (compute cores); a smart one slices the work into tiles that finish entirely in the drawer next to the bench (on-chip SRAM). Identical math, wildly different time.</span>
+    </div>
+  </div>
+  <figure class="visual-figure">
+    <img src="generated/fireworks_part02/A_fireattention_kernel_hbm.png" alt="FireAttention 从零重写专有注意力内核的可视化说明" loading="lazy">
+  </figure>
+
+  <h3 class="block-title"><span class="n">B</span><span class="zh">"无损量化"：FP8/FP4 的艺术</span><span class="en">"Lossless" quantization: the art of FP8/FP4</span></h3>
+  <div class="panel">
+    <p>
+      <span class="zh">回顾工具箱②：量化把模型数字从 16 位压到 8 位/4 位，数据量减半再减半——Decode 阶段瓶颈是搬数据，所以直接提速。但风险是模型变笨。Fireworks 的功夫在于<b>不是一刀切地全压</b>：逐层分析哪些部分对精度敏感（比如 MoE 模型的路由器、注意力的关键环节），敏感处保留高精度，不敏感处大胆压缩，再用基准测试验证质量没掉。这套"手艺"按模型逐个调校，是纯软件的 know-how。</span>
+      <span class="en">Recall toolbox item ②: quantization halves (then halves again) the bits per number, from 16 down to 8 or 4 — and since decode is bottlenecked on data movement, that's a direct speedup. The risk is a dumber model. Fireworks' craft is <b>refusing to squeeze uniformly</b>: it profiles which layers are precision-sensitive (an MoE model's router, critical attention paths), keeps those in high precision, compresses aggressively elsewhere, then validates on benchmarks that quality held. This tuning is done per model — pure software know-how.</span>
+    </p>
+    <p>
+      <span class="zh"><b>KV Cache 也被量化</b>：把缓存里的 Key/Value 向量同样压到 FP8，同样的显存能装下近两倍的并发请求——回顾原理课第 2 点，这直接等于单 GPU 产能翻倍。</span>
+      <span class="en"><b>The KV cache gets quantized too</b>: storing Key/Value vectors in FP8 fits nearly twice the concurrent requests in the same VRAM — and per Inference 101 §2, that translates directly into doubled per-GPU capacity.</span>
+    </p>
+    <p>
+      <span class="zh"><b>哪些是标准、哪些是它独家的？</b>FP8/FP4 格式本身是行业标准，基础量化算法（GPTQ、AWQ 等）是公开研究——谁都能做出"能用"的版本。Fireworks 独家的是三样：逐模型的<b>压缩配方</b>（哪层碰不得，不外传）、高效执行混合精度的<b>自研内核</b>（知道"该用 FP8"和"写出跑得快的 FP8 内核"是两码事）、以及批量化的<b>质量验证流水线</b>。另外注意，"无损"是营销意义上的——量化天然有损，它承诺的是"基准测试上测不出下降"，与 FlashAttention 逐位精确的真无损是两个级别（详见 Part 01 小词典）。</span>
+      <span class="en"><b>What's standard here, and what's proprietary?</b> The FP8/FP4 formats are industry standards, and the base algorithms (GPTQ, AWQ, etc.) are public research — anyone can build a workable version. What's uniquely Fireworks is three things: per-model <b>compression recipes</b> (which layers are untouchable — never published), <b>in-house kernels</b> that execute mixed precision fast (knowing you should use FP8 and writing a fast FP8 kernel are different problems), and an industrialized <b>quality-validation pipeline</b>. Note also that "lossless" is marketing-lossless — quantization is inherently lossy; the actual promise is "no measurable benchmark regression," a weaker guarantee than FlashAttention's bit-for-bit exactness (see the Part 01 glossary).</span>
+    </p>
+  </div>
+  <figure class="visual-figure">
+    <img src="generated/fireworks_part02/B_lossless_quantization_hbm.png" alt="Fireworks 无损量化 FP8 和 FP4 的可视化说明" loading="lazy">
+  </figure>
+
+  <h3 class="block-title"><span class="n">C</span><span class="zh">P/D 分离架构：让两种工作各回各家</span><span class="en">Disaggregated serving: send the two workloads to separate homes</span></h3>
+  <div class="panel">
+    <p>
+      <span class="zh">传统做法是一块 GPU 既做 Prefill 又做 Decode。问题：一个用户发来超长文档触发大 Prefill 时，会把同 GPU 上所有人的逐字生成"卡住"（队头阻塞），表现为你的 AI 应用突然一顿一顿的。Fireworks 把整个服务栈按阶段拆开：<b>Prefill 有专属 GPU 池，Decode 有专属 GPU 池</b>，Prefill 算完把 KV Cache 移交给 Decode 池继续生成。两个池子按各自负载独立扩容，互不拖累。</span>
+      <span class="en">The traditional setup runs prefill and decode on the same GPU. The failure mode: one user's giant document triggers a heavy prefill that stalls everyone else's token-by-token generation on that GPU (head-of-line blocking) — your AI app suddenly stutters. Fireworks split the stack by phase: <b>a dedicated GPU pool for prefill, another for decode</b>, with the KV cache handed off between them. Each pool scales to its own load, and neither drags the other down.</span>
+    </p>
+    <div class="diagram">
+      <div class="dg-box"><div class="t"><span class="zh">请求进入</span><span class="en">Request in</span></div><div class="d"><span class="zh">长文档 / 短问题混合</span><span class="en">Mix of long docs & short prompts</span></div></div>
+      <div class="dg-arrow">→</div>
+      <div class="dg-box hl"><div class="t">Prefill <span class="zh">池</span><span class="en">pool</span></div><div class="d"><span class="zh">算力型 GPU 配置<br>吞吐优先</span><span class="en">Compute-heavy configs<br>throughput-first</span></div></div>
+      <div class="dg-arrow">→<br><span style="font-size:10px">KV</span></div>
+      <div class="dg-box hl"><div class="t">Decode <span class="zh">池</span><span class="en">pool</span></div><div class="d"><span class="zh">带宽型配置<br>延迟优先</span><span class="en">Bandwidth-heavy configs<br>latency-first</span></div></div>
+      <div class="dg-arrow">→</div>
+      <div class="dg-box"><div class="t"><span class="zh">流式输出</span><span class="en">Streamed output</span></div><div class="d"><span class="zh">稳定的逐字速度</span><span class="en">Steady tokens/sec</span></div></div>
+    </div>
+  </div>
+  <figure class="visual-figure">
+    <img src="generated/fireworks_part02/C_pd_disaggregation.png" alt="Fireworks P/D 分离架构的可视化说明" loading="lazy">
+  </figure>
+
+  <h3 class="block-title"><span class="n">D</span><span class="zh">FireOptimizer：为每个客户"私人订制"一套推理</span><span class="en">FireOptimizer: a bespoke inference setup per customer</span></h3>
+  <div class="panel">
+    <p>
+      <span class="zh">这是 Fireworks 商业上最聪明的一环。不同应用的流量长相完全不同——编程助手是"短指令进、长代码出"，客服是"长历史进、短回复出"。FireOptimizer 分析客户的真实流量，自动选量化方案、调批处理参数，最关键的是：<b>用客户自己的流量训练一个专属"抢答小模型"（drafter）用于投机解码</b>。</span>
+      <span class="en">This is Fireworks' shrewdest commercial move. Traffic shapes differ wildly by app — a coding copilot is "short instruction in, long code out"; support chat is "long history in, short reply out." FireOptimizer profiles the customer's real traffic, auto-selects quantization and batching settings, and crucially: <b>trains a dedicated draft model on that customer's own traffic for speculative decoding</b>.</span>
+    </p>
+    <p>
+      <span class="zh">回顾工具箱④：投机解码的提速幅度取决于小模型"猜中率"。一个见过你家流量的 drafter，猜你家用户的下一个词自然更准——猜中率越高，提速越猛。这形成一个飞轮：<b>客户用得越久 → drafter 越懂它 → 越快越便宜 → 越离不开</b>。技术优化在这里直接变成了客户粘性。</span>
+      <span class="en">Recall toolbox ④: speculative decoding's speedup depends on the draft model's hit rate. A drafter trained on your traffic predicts your users' next tokens far better — and higher acceptance means bigger speedups. That's a flywheel: <b>the longer a customer stays → the better the drafter knows them → the faster and cheaper it gets → the harder it is to leave.</b> Optimization becomes retention.</span>
+    </p>
+    <details class="deep">
+      <summary><span class="zh">再深一层：投机解码为什么能加速？"批改比写快"</span><span class="en">One level deeper: why does speculative decoding speed things up? Grading beats writing</span></summary>
+      <div class="body">
+        <p><span class="zh">大模型逐字生成时，每个字都要完整搬运一遍权重（原理课第 1 点）。但"验证"不一样：给它 5 个候选词，它可以<b>一次前向计算并行检查全部 5 个</b>——搬一次权重，干五份活。</span><span class="en">When the big model generates token by token, every token pays the full weight-streaming toll (Inference 101 §1). Verification is different: given 5 candidate tokens, the model can <b>check all 5 in a single parallel forward pass</b> — one toll, five tokens of work.</span></p>
+        <p><span class="zh">流程：小模型（快但一般聪明）连猜 5 个词 → 大模型一次批改 → 猜对的全收下，猜错处截断重来。数学上可以证明<b>最终输出的质量和大模型独立生成完全一致</b>——这是"免费加速"，不牺牲任何质量。猜中率 70–80% 时，整体常有 2–4 倍提速。</span><span class="en">The loop: a small, fast (but mediocre) model guesses 5 tokens ahead → the big model grades them in one pass → correct guesses are kept, and generation restarts at the first miss. Provably, <b>the final output is identical in quality to the big model generating alone</b> — it's a free lunch. At 70–80% acceptance, 2–4× end-to-end speedups are common.</span></p>
+      </div>
+    </details>
+    <details class="deep">
+      <summary><span class="zh">追问：drafter 要拿到客户数据才能训练？训多久？每个客户都训一遍不累吗？</span><span class="en">Follow-up: does the drafter need customer data first? How long to train? Isn't per-customer training a grind?</span></summary>
+      <div class="body">
+        <p><span class="zh"><b>① 要客户数据，但有冷启动过渡。</b>客户刚接入时先用按领域预置的通用 drafter（代码类、对话类各一套），第一天就有基础加速；等真实流量（提示词与生成结果，在服务协议授权内使用）积累够了，再做专门化。不是"没数据就没加速"，而是"数据越多，加速越猛"。</span><span class="en"><b>(1) Yes, it needs customer data — but there's a warm-up path.</b> New customers start on generic, domain-preset drafters (one for code, one for chat, etc.), getting baseline speedups from day one. Once enough real traffic accumulates (prompts and outputs, used within the service agreement), specialization kicks in. It's not "no data, no speedup" — it's "more data, more speedup."</span></p>
+        <p><span class="zh"><b>② 训练是小时级到一两天，且不是从零训。</b>drafter 只有主模型 1%–5% 的大小（几亿到十几亿参数），做法是拿预训练好的小模型在客户流量上<b>微调</b>——几块 GPU、成本大约几百到几千美元。业界还有更轻的路线（EAGLE、Medusa 等）：不训独立小模型，而是给主模型加几个轻量"预测头"，成本更低。（Fireworks 未公布确切时长，此为工程量级估算。）</span><span class="en"><b>(2) Training takes hours to a day or two, and it's never from scratch.</b> A drafter is 1–5% the size of the main model (hundreds of millions to a couple billion parameters); the recipe is <b>fine-tuning</b> a pre-trained small model on the customer's traffic — a few GPUs, roughly hundreds to a few thousand dollars. Even lighter routes exist (EAGLE, Medusa): instead of a separate model, bolt small "prediction heads" onto the main model. (Fireworks doesn't publish exact times; these are engineering-order estimates.)</span></p>
+        <p><span class="zh"><b>③ 工作量靠自动化 + 极端不对称的成本收益消化。</b>FireOptimizer 本质就是把"分析流量→微调→评测猜中率→上线"做成自动化流水线，新客户消耗的是 GPU 时而非工程师时。账也极好算：训一次几千美元，换来客户每天百万千万次请求上 2–4 倍提速——一次性小成本摊到持续的海量服务上，几乎可以忽略。所以实际策略大概率分层：大客户深度定制，中小客户共享领域级 drafter。定制越深的客户流量越大、回报越高、也越走不了——这正是它"商业上最聪明"的原因。</span><span class="en"><b>(3) The grind is absorbed by automation plus a wildly lopsided cost-benefit.</b> FireOptimizer is precisely the automation of "profile traffic → fine-tune → measure acceptance → ship" — onboarding a customer burns GPU-hours, not engineer-hours. And the math is absurdly favorable: a few thousand dollars of one-time training buys a 2–4× speedup on millions of daily requests, amortizing to nearly nothing. In practice the strategy is almost certainly tiered: deep customization for whales, shared domain drafters for everyone else. The deeper the customization, the bigger the traffic, the higher the return — and the harder it is to leave. Which is exactly why this is the shrewdest piece of the business.</span></p>
+      </div>
+    </details>
+  </div>
+  <figure class="visual-figure">
+    <img src="generated/fireworks_part02/D_fireoptimizer_custom_inference.png" alt="FireOptimizer 为每个客户私人订制推理优化的可视化说明" loading="lazy">
+  </figure>
+
+  <div class="biz-read">
+    <b class="h"><span class="zh">生意解读：这些技术如何变成商业价值</span><span class="en">Business read: how the tech becomes money</span></b>
+    <span class="zh">Fireworks 是<b>轻资产 + 纯软件溢价</b>模式：GPU 向云厂商租，利润来自"优化差价"（工具箱全套 + 定制化）。速度是它的品牌——Cursor、Perplexity 这类对首字延迟极度敏感的明星应用选它，又反过来成为最好的广告。软肋也在这里：内核优化的领先是"保鲜期资产"，开源引擎（vLLM/SGLang）每年都在缩小差距，所以它拼命把竞争从"跑分"引向"按客户定制"（FireOptimizer）——跑分会被追平，飞轮不容易。</span>
+    <span class="en">Fireworks is the <b>asset-light, pure-software-premium</b> model: GPUs are rented, profit comes from the optimization spread (the full toolbox plus customization). Speed is the brand — latency-obsessed flagship apps like Cursor and Perplexity choose it, and their logos become the best marketing. The soft spot is the same: kernel leads are perishable, and open-source engines (vLLM, SGLang) close the gap every year. Hence the push to shift the contest from benchmarks to per-customer optimization (FireOptimizer) — benchmarks get caught up to; flywheels don't.</span>
+  </div>
+</section>
+
+<!-- ============ PART 3: TOGETHER ============ -->
+<section id="p3">
+  <span class="part-tag">PART 03</span>
+  <div class="co-head">
+    <div>
+      <h2>Together AI</h2>
+      <div class="pos"><span class="zh">技术路线：科研驱动的算法领先 + 自建算力全栈 · 重资产</span><span class="en">Playbook: research-led algorithmic edge + owned full-stack compute · capital-heavy</span></div>
+    </div>
+    <div class="co-facts">
+      <div class="co-fact"><span class="v">$1.15B+</span><span class="zh">年化签约额</span><span class="en">annualized bookings</span></div>
+      <div class="co-fact"><span class="v">$8.3B</span><span class="zh">估值(2026.7)</span><span class="en">valuation (Jul '26)</span></div>
+      <div class="co-fact"><span class="v">GB200</span><span class="zh">自有Blackwell集群</span><span class="en">owned Blackwell fleets</span></div>
+    </div>
+  </div>
+
+  <div class="panel" style="margin-top:14px">
+    <p>
+      <span class="zh"><b>它的底牌是"论文还没发，我们已经用上了"。</b>首席科学家 Tri Dao 是 FlashAttention 的发明者——这是过去五年推理优化领域影响力最大的单项技术，如今几乎所有推理引擎（包括对手的）都构建在它之上。Together 的逻辑：把最强的系统研究者聚在一起，让最新算法先在自家生产环境落地，形成 6–12 个月的"抢跑期"；同时自建 GPU 集群，把算法优势叠加到硬件成本上。</span>
+      <span class="en"><b>Its trump card: "we run the paper before it's published."</b> Chief scientist Tri Dao invented FlashAttention — the single most influential inference optimization of the past five years, now foundational to virtually every serving engine, competitors' included. Together's thesis: concentrate the best systems researchers, land new algorithms in production first for a 6–12 month head start, and stack that algorithmic edge on top of owned GPU economics.</span>
+    </p>
+  </div>
+
+  <h3 class="block-title"><span class="n">A</span><span class="zh">FlashAttention：为什么"不改数学，只改搬运"能快 2–4 倍</span><span class="en">FlashAttention: same math, different data movement — and 2–4× faster</span></h3>
+  <div class="panel">
+    <p>
+      <span class="zh"><b>① 先补一课：注意力到底在算什么。</b>模型生成每个新词时，要回答一个问题："前文里哪些词和我现在要写的最相关？"做法是给前文<b>每个词打一个相关度分数</b>，再按分数加权，把前文信息汇总成一份"摘要"。前文 1000 个词就打 1000 个分；而 Prefill 阶段每个词都要对每个词打分——1000 × 1000 = <b>100 万个分数</b>，这就是那张"N×N 得分表"。文本长度翻倍，表变 4 倍大（平方级）。</span>
+      <span class="en"><b>① First, the missing lesson: what attention actually computes.</b> To write each new token, the model asks: "which earlier words matter most for what I'm about to say?" It <b>scores every previous token for relevance</b>, then blends the past into a weighted summary. A 1,000-token context means 1,000 scores per token — and during prefill, every token scores every other token: 1,000 × 1,000 = <b>a million scores</b>. That's the "N×N table." Double the text, quadruple the table.</span>
+    </p>
+    <p>
+      <span class="zh"><b>② GPU 的"冰箱"和"灶台"。</b>把 GPU 想象成厨房：<b>HBM 显存是冰箱</b>——容量大（几十 GB）但离灶台远、取用慢；<b>SRAM 是灶台边的小料碟</b>——伸手就到、极快，但只放得下一点点（几十 MB）。厨房规则：计算核心只能处理"手边"（SRAM）的数据，凡在冰箱里的必须先搬过来。而 GPU 的天性是<b>算得飞快、搬得慢</b>。</span>
+      <span class="en"><b>② The GPU's fridge and countertop.</b> Picture the GPU as a kitchen: <b>HBM is the fridge</b> — huge (tens of GB) but far from the stove and slow to reach; <b>SRAM is the little prep bowl beside the burner</b> — instant, but it holds almost nothing (tens of MB). House rule: compute cores can only work on what's within arm's reach (SRAM); anything in the fridge must be carried over first. And a GPU's nature is to <b>compute far faster than it can carry</b>.</span>
+    </p>
+    <p>
+      <span class="zh"><b>③ 标准算法慢在哪。</b>注意力要三步：算出整张得分表 → 每行归一化（softmax，把分数变成总和为 1 的权重）→ 加权求和。致命处：那张 100 万格的表<b>料碟根本放不下</b>，于是每一步之间都只能整张搬进冰箱、再整张搬出来——同一张大表来回搬三四趟。真正的计算只占零头，<b>时间几乎全耗在搬运上</b>。</span>
+      <span class="en"><b>③ Why the standard algorithm crawls.</b> Attention takes three steps: build the score table → normalize each row (softmax turns scores into weights summing to 1) → take the weighted sum. The killer: the million-cell table <b>can't possibly fit in the prep bowl</b>, so between every step it gets hauled to the fridge and back — three or four full round trips for the same table. The arithmetic is a rounding error; <b>nearly all the time goes to carrying</b>.</span>
+    </p>
+    <p>
+      <span class="zh"><b>④ FlashAttention 的解法。</b>关键发现：归一化和加权求和<b>并不需要等整张表算完</b>。把前文切成小块（小到能进料碟），算一块的分数 → 立刻归一化 → 立刻累加进一个"进行中的汇总" → <b>把这块分数直接扔掉</b> → 算下一块。其中有个数学技巧（online softmax）：每来一块新分数，就回头按比例修正之前的累积值，所以分块算出的结果与一次性算完<b>精确一致</b>，不是近似。整张大表从头到尾没被完整写出来过——冰箱只开两次（取原料、存成品），中间所有草稿都在料碟上完成、用完即弃。搬运量骤减：速度提升 2–4 倍，显存占用从 N² 降到 N。</span>
+      <span class="en"><b>④ FlashAttention's move.</b> The key realization: normalizing and summing <b>don't require the finished table</b>. Chop the context into chunks small enough for the prep bowl: score one chunk → normalize immediately → fold it into a running summary → <b>toss the scores</b> → next chunk. A mathematical trick (online softmax) retro-corrects the running totals as each new chunk arrives, so the chunked result is <b>bit-for-bit identical</b> to computing everything at once — not an approximation. The million-cell table never fully exists; the fridge opens exactly twice (fetch ingredients, store the finished dish), and every scrap of scratch work lives and dies in the prep bowl. Carrying collapses: 2–4× faster, memory from N² down to N.</span>
+    </p>
+    <div class="analogy">
+      <span class="zh"><b>一句话总结"不改数学，只改搬运"：</b>同样的公式、同样的硬件，纯靠重新安排计算顺序就快了好几倍。推理公司赚的"优化差价"，本质就是无数个这种量级的安排技巧叠出来的。</span>
+      <span class="en"><b>The takeaway behind "same math, different logistics":</b> identical formula, identical hardware — several times faster purely by reordering the work. The "optimization spread" these companies monetize is exactly this kind of trick, stacked dozens deep.</span>
+    </div>
+    <details class="deep">
+      <summary><span class="zh">再深一层：FlashAttention-3 与 FlashDecoding</span><span class="en">One level deeper: FlashAttention-3 and FlashDecoding</span></summary>
+      <div class="body">
+        <p><span class="zh"><b>FA-3（2024）</b>，一句话：让"搬"和"炒"同时进行——一个人去冰箱搬下一块食材时，另一个人正在炒上一块，谁也不等谁。具体做法是利用 H100 的专用搬运引擎（TMA）异步搬数据、计算单元同时处理上一片，并交错执行矩阵乘法与 softmax，还支持 FP8。相比 FA-2 再快 1.5–2 倍。这类优化必须贴着每代新硬件重写——这正是养一支顶级内核团队的意义。</span><span class="en"><b>FA-3 (2024)</b>, in one line: carry and cook at the same time — one person fetches the next ingredient from the fridge while another is already cooking the last one, and nobody waits. Concretely, it uses the H100's dedicated copy engine (TMA) to haul data asynchronously while compute units process the previous tile, interleaves matmul with softmax, and adds FP8 — another 1.5–2× over FA-2. Each GPU generation demands this rewrite, which is exactly why you staff a world-class kernel team.</span></p>
+        <p><span class="zh"><b>FlashDecoding</b>，一句话：生成阶段每步只写一个新词，几千个核心大多闲着——那就把活拆了分给大家。它把<b>那条长长的 KV Cache 切成多段</b>，所有核心并行地各自计算一段的注意力，最后合并结果。长上下文场景的生成速度因此大幅提升——这直接回答"KV Cache 怎么被算得更快"。</span><span class="en"><b>FlashDecoding</b>, in one line: during decode only one new token is being written per step, leaving thousands of cores idle — so split the work and hand it out. It <b>chops the long KV cache into segments</b>, lets every core compute attention over its own segment in parallel, then merges the partials. Long-context generation speeds up dramatically — this is literally "how the KV cache gets computed faster."</span></p>
+      </div>
+    </details>
+  </div>
+  <figure class="visual-figure">
+    <img src="generated/together_part03/A_flashattention.png" alt="Together AI FlashAttention：不改数学，只减少 HBM 与 SRAM 之间的数据搬运" loading="lazy">
+  </figure>
+
+  <h3 class="block-title"><span class="n">B</span><span class="zh">KV Cache 的三重管理：分页、压缩、复用</span><span class="en">Triple-managing the KV cache: paging, compression, reuse</span></h3>
+  <div class="panel">
+    <p>
+      <span class="zh">Together 推理引擎对 KV Cache 的处理可拆成三招，每招对应一种浪费：</span>
+      <span class="en">Together's engine attacks KV-cache waste on three fronts, each targeting a different leak:</span>
+    </p>
+    <div class="tech-grid">
+      <div class="tech-card">
+        <span class="tag"><span class="zh">治"占着不用"</span><span class="en">Fixes: dead reservations</span></span>
+        <h4><span class="zh">分页管理（Paged KV）</span><span class="en">Paged KV</span></h4>
+        <p><span class="zh">早期引擎给每个请求按"可能的最大长度"预留连续显存，大量空间被占而未用。分页管理学操作系统的虚拟内存：把缓存切成小块，用多少分配多少，用完立刻回收。显存利用率大幅提升 → 同一块 GPU 塞进更多并发。</span><span class="en">Early engines reserved contiguous VRAM per request at "worst-case max length," stranding huge unused blocks. Paging borrows the OS virtual-memory trick: chop the cache into small blocks, allocate on demand, reclaim instantly. Far higher memory utilization → far more concurrency per GPU.</span></p>
+      </div>
+      <div class="tech-card">
+        <span class="tag"><span class="zh">治"太占地方"</span><span class="en">Fixes: sheer size</span></span>
+        <h4><span class="zh">FP8 KV 压缩</span><span class="en">FP8 KV compression</span></h4>
+        <p><span class="zh">缓存里的向量也从 16 位压到 8 位，体积减半。同样显存 → 并发接近翻倍，长上下文场景收益最大。</span><span class="en">Cache vectors get squeezed from 16-bit to 8-bit, halving the footprint. Same VRAM → nearly double the concurrency, with the biggest wins on long contexts.</span></p>
+      </div>
+      <div class="tech-card">
+        <span class="tag"><span class="zh">治"重复计算"</span><span class="en">Fixes: recomputation</span></span>
+        <h4><span class="zh">前缀复用（Prefix caching）</span><span class="en">Prefix caching</span></h4>
+        <p><span class="zh">一个客服应用的每条请求都以同样几千字的系统提示词开头。把这段前缀的 KV 算一次、缓存住，之后成千上万条请求直接跳过这部分 Prefill——省下的全是真金白银的算力。</span><span class="en">Every request from a support app opens with the same multi-thousand-token system prompt. Compute that prefix's KV once, cache it, and thousands of subsequent requests skip that prefill entirely — pure compute savings, straight to margin.</span></p>
+      </div>
+      <div class="tech-card">
+        <span class="tag"><span class="zh">治"猜不准"</span><span class="en">Fixes: stale guessing</span></span>
+        <h4><span class="zh">ATLAS 自适应投机解码</span><span class="en">ATLAS adaptive speculation</span></h4>
+        <p><span class="zh">普通投机解码用固定的小模型抢答，流量变了就猜不准。ATLAS 让抢答模型<b>随生产流量持续学习</b>：你的负载它见得越多，猜中率越高，速度随使用时间越来越快（官方称最高约 4 倍）。与 Fireworks 的定制 drafter 异曲同工，思路是"边跑边学"而非"一次训练"。</span><span class="en">Vanilla speculation uses a frozen draft model that goes stale when traffic shifts. ATLAS makes the speculator <b>keep learning from live production traffic</b>: the more of your workload it sees, the higher its hit rate — so serving literally gets faster over time (up to ~4×, per Together). Same destination as Fireworks' custom drafters, different route: continuous learning instead of one-shot training.</span></p>
+      </div>
+    </div>
+    <details class="deep">
+      <summary><span class="zh">对照 Fireworks 的追问：ATLAS 怎么解决"每个客户训一遍"的工作量问题？</span><span class="en">The same follow-up, answered Together's way: how does ATLAS dodge the per-customer training grind?</span></summary>
+      <div class="body">
+        <p><span class="zh"><b>先想清楚一件事：训练 drafter 的"标准答案"，服务过程本身就在免费量产。</b>每处理一条请求，大模型实际生成的内容就是这道题的正确答案；小模型要学的只有一件事——"在这类场景下，猜得和大模型一样"。所以不需要人工标注、不需要专门攒数据集，教材随流量源源不断自动送上门。</span><span class="en"><b>Start with one realization: serving produces the drafter's training data for free, continuously.</b> Every request the big model handles, its actual output is the answer key; the only thing a drafter ever needs to learn is "in this kind of situation, guess what the big model would say." No human labeling, no dataset collection — the textbook writes itself as traffic flows.</span></p>
+        <p><span class="zh"><b>自适应层是什么：一个小到能"边上班边补课"的迷你投机模型。</b>它比常规 drafter 还小得多，所以更新它极其便宜：后台进程持续取最近的真实流量（提示词 + 大模型的实际输出），对它做小步微调，一轮几分钟、只占一点零头算力，更新完热替换上线，如此循环往复。所以"取消离线训练"不是"不训练"，而是<b>把一次性的大训练拆成了无数次嵌在服务里的小更新</b>——客户全程无感，猜中率却随流量持续爬升，这就是"越用越快"的机制本体。</span><span class="en"><b>What the adaptive layer is: a speculator so tiny it can study while on the job.</b> Being far smaller than even a normal drafter makes updates dirt cheap: a background process keeps taking recent live traffic (prompts plus the big model's actual outputs), nudges the little model's weights in minutes-long micro-rounds on a sliver of compute, hot-swaps the update into serving, and repeats. So "no offline training" doesn't mean "no training" — it means <b>one big training job shattered into endless tiny updates embedded inside serving</b>. The customer never notices; the hit rate just keeps climbing with traffic. That is the entire "faster with use" mechanism.</span></p>
+        <p><span class="zh"><b>双层结构负责兜底。</b>一个"置信控制器"实时监控自适应层在当前这类请求上的猜中率：练熟了的场景放手让它抢答（它最懂你），没见过的场景自动切回固定的通用 drafter——这就是"任何时候都不比基线慢"的保证。类比：通用 drafter 是资深外包助理，什么行业都懂七成；自适应层是贴身实习生，天天拿你团队的实际产出当范文默写，越练越像你们；控制器是班长，实习生哪块练熟了才放他上场。日子久了，实习生几乎能替你把话说完——<b>但他只在这一家有效，换供应商等于实习生清零重来</b>。</span><span class="en"><b>The two-tier structure is the safety net.</b> A confidence controller tracks the adaptive layer's live hit rate on the current type of request: where it has mastered your traffic, it takes the guessing (nobody knows you better); where the traffic is unfamiliar, the system falls back to the frozen general drafter — which is exactly the "never slower than baseline" guarantee. Analogy: the general drafter is a seasoned contractor who knows every industry at 70%; the adaptive layer is an embedded intern who drills daily on your team's actual output and grows to sound just like you; the controller is the supervisor who only fields the intern where they've proven sharp. Give it time and the intern can practically finish your sentences — <b>but only at this one firm. Switch vendors, and the intern starts from zero.</b></span></p>
+        <p><span class="zh">两条路线的取舍：Fireworks 的离线定制 drafter 一次训到位、针对性最强，适合流量巨大且稳定的大客户；ATLAS 的在线自适应零运维、自动跟随流量漂移（客户业务从写代码转向写文档，它自己会跟上），但单点针对性略弱。殊途同归的是商业效果——<b>"懂你流量"的加速积累都留在平台侧，切换供应商即清零</b>。</span><span class="en">The tradeoff between the routes: Fireworks' offline custom drafters are trained once and maximally targeted — ideal for whales with huge, stable traffic; ATLAS's online adaptation is zero-maintenance and follows drift automatically (if a customer's workload shifts from code to prose, it just keeps up), at some cost in peak specialization. Commercially they converge: <b>the "knows-your-traffic" speedup accrues on the platform's side, and switching vendors resets it to zero.</b></span></p>
+      </div>
+    </details>
+  </div>
+  <figure class="visual-figure">
+    <img src="generated/together_part03/B_kv_cache_management.png" alt="Together AI KV Cache 管理：分页、FP8 压缩、前缀复用和 ATLAS 自适应投机解码" loading="lazy">
+  </figure>
+
+  <h3 class="block-title"><span class="n">C</span><span class="zh">另一半生意：自建 GPU 集群的"新型云"（Neocloud）</span><span class="en">The other half: owned GPU fleets — the "neocloud" business</span></h3>
+  <div class="panel">
+    <p>
+      <span class="zh">与 Fireworks 最大的不同：Together <b>自建/长租大规模 GPU 机群</b>（包括最新的 NVIDIA GB200 Blackwell 集群），既支撑自家 API，也整租给需要训练或大规模推理的客户。这让它的产品线成为一条完整的"升级阶梯"：</span>
+      <span class="en">The starkest contrast with Fireworks: Together <b>builds and leases large GPU fleets</b> (including the latest NVIDIA GB200 Blackwell clusters), powering its own API and renting whole clusters to customers who train or serve at scale. The product line becomes a single upgrade ladder:</span>
+    </p>
+    <div class="diagram">
+      <div class="dg-box"><div class="t"><span class="zh">① Serverless API</span><span class="en">① Serverless API</span></div><div class="d"><span class="zh">按 token 付费，随开随用</span><span class="en">Pay per token, instant start</span></div></div>
+      <div class="dg-arrow">→</div>
+      <div class="dg-box"><div class="t"><span class="zh">② 专属端点</span><span class="en">② Dedicated endpoints</span></div><div class="d"><span class="zh">独占 GPU，性能可预期</span><span class="en">Reserved GPUs, predictable perf</span></div></div>
+      <div class="dg-arrow">→</div>
+      <div class="dg-box"><div class="t"><span class="zh">③ 微调/训练</span><span class="en">③ Fine-tune / train</span></div><div class="d"><span class="zh">在平台上做自己的模型</span><span class="en">Build your own model on-platform</span></div></div>
+      <div class="dg-arrow">→</div>
+      <div class="dg-box hl"><div class="t"><span class="zh">④ 整租集群</span><span class="en">④ Full clusters</span></div><div class="d"><span class="zh">GB200 级别机群，月/年合约</span><span class="en">GB200-class fleets, monthly/annual contracts</span></div></div>
+    </div>
+    <p>
+      <span class="zh">商业含义：客户从 20 美元的 API 试用起步，长成独角兽后签千万美元集群合约，<b>全程不用换供应商</b>。超 11.5 亿美元年化签约额中，集群合约贡献了收入的"压舱石"（预付、长约、可预测），API 贡献增速。代价是重资产：GPU 更新换代快（Hopper→Blackwell 不到两年），折旧风险自担，资本开支巨大——这也是它融资节奏偏快、引入 Aramco 等主权资本的原因。</span>
+      <span class="en">The commercial meaning: a customer starts with a $20 API experiment and ends up signing an eight-figure cluster contract as it scales — <b>never once switching vendors</b>. Within the $1.15B+ in annualized bookings, cluster deals are the ballast (prepaid, long-term, predictable) while the API drives growth. The cost is heavy capex: GPU generations turn over fast (Hopper→Blackwell in under two years), depreciation risk sits on Together's own books — which is exactly why it raises aggressively and courts sovereign capital like Aramco.</span>
+    </p>
+  </div>
+  <figure class="visual-figure">
+    <img src="generated/together_part03/C_neocloud_gpu_fleet.png" alt="Together AI Neocloud：自建或长租 GPU 集群与 Serverless API 到整租集群的升级阶梯" loading="lazy">
+  </figure>
+
+  <div class="biz-read">
+    <b class="h"><span class="zh">生意解读</span><span class="en">Business read</span></b>
+    <span class="zh">Together 是三家中<b>纵向一体化</b>最深的：算法（科研团队）+ 引擎（内核）+ 硬件（自有集群）层层叠加。算法领先降低单位成本，自有硬件再降一层，双重优势让它在价格战中有最深的"血条"。风险同样双重：科研明星可能被挖走，重资产可能在 GPU 换代或需求波动时变成包袱。它赌的是规模——足够大的机群 + 足够满的利用率，重资产才是优势而非枷锁。</span>
+    <span class="en">Together is the most <b>vertically integrated</b> of the three: algorithms (the research bench) + engine (kernels) + hardware (owned fleets), each layer compounding the last. Algorithmic leads cut unit costs; owned hardware cuts them again — the deepest health bar in a price war. The risks compound too: star researchers can be poached, and heavy assets can turn toxic when GPUs turn over or demand wobbles. The bet is scale: with big enough fleets running full enough, heavy assets are an edge rather than a shackle.</span>
+  </div>
+</section>
+
+<!-- ============ PART 4: BASETEN ============ -->
+<section id="p4">
+  <span class="part-tag">PART 04</span>
+  <div class="co-head">
+    <div>
+      <h2>Baseten</h2>
+      <div class="pos"><span class="zh">技术路线：客户自有模型的"生产级运行时" + 多云容量调度 · 轻资产</span><span class="en">Playbook: production-grade runtime for customers' own models + multi-cloud orchestration · asset-light</span></div>
+    </div>
+    <div class="co-facts">
+      <div class="co-fact"><span class="v">10<span class="zh">亿+/日</span><span class="en">B+/day</span></span><span class="zh">推理请求</span><span class="en">inference requests</span></div>
+      <div class="co-fact"><span class="v">18 <span class="zh">云</span><span class="en">clouds</span> · 87 <span class="zh">集群</span><span class="en">clusters</span></span><span class="zh">调度网络</span><span class="en">capacity network</span></div>
+      <div class="co-fact"><span class="v"><span class="zh">最高$130亿</span><span class="en">up to $13B</span></span><span class="zh">估值(2026.6)</span><span class="en">valuation (Jun '26)</span></div>
+    </div>
+  </div>
+
+  <div class="panel" style="margin-top:14px">
+    <p>
+      <span class="zh"><b>先认识它的客户，一切就好懂了。</b>Abridge 做医疗语音转录——医生问诊的对话实时变成病历；Writer 给企业做写作模型；Descript 用模型剪辑音视频。这类公司的共同点：<b>模型本身就是产品</b>，而且通常是自己微调或自研的模型。它们的烦恼不是"哪家 API 便宜"，而是：<b>模型文件在我手里了，然后呢？</b>要让它 7×24 小时稳定服务上百万用户，得买 GPU、装引擎、扛住流量高峰、防止宕机（模型挂一分钟 = 业务停一分钟）——这一整套"开店"的活儿，我不想也不该自己干。</span>
+      <span class="en"><b>Meet the customers first, and everything clicks.</b> Abridge turns doctor-patient conversations into medical notes in real time; Writer builds writing models for enterprises; Descript edits audio and video with models. What they share: <b>the model is the product</b>, and it's usually their own — fine-tuned or built in-house. Their headache isn't "whose API is cheapest." It's: <b>I have the model file... now what?</b> Serving millions of users around the clock means buying GPUs, wiring up engines, surviving traffic spikes, and never going down (a minute of model downtime is a minute of dead business) — a whole "running the shop" job they neither want nor should do themselves.</span>
+    </p>
+    <p>
+      <span class="zh"><b>Baseten 干的就是"替你开店"。</b>你把模型交给它，它把模型变成一家永不打烊的店。收费方式也像雇店员而不是卖咖啡：按"<b>副本</b>"（replica，一份正在运行的你的模型实例）的<b>运行时长</b>计费——雇两个店员轮班就是两份钱，而不是按卖出多少杯（token）抽成。这个区别贯穿它整个生意。</span>
+      <span class="en"><b>Baseten's job is running that shop for you.</b> Hand over the model, and it becomes a store that never closes. Even the billing works like staffing rather than selling coffee: you pay per <b>replica</b> (one running instance of your model) by the <b>hour it runs</b> — two clerks on shift means two salaries, rather than a cut of every cup (token) sold. That distinction runs through the entire business.</span>
+    </p>
+  </div>
+
+  <h3 class="block-title"><span class="n">A</span><span class="zh">开店第一步：模型怎么"上架"（打包 → 定制 → 上线）</span><span class="en">Opening the shop: how a model goes live (pack → tailor → launch)</span></h3>
+  <div class="panel">
+    <p>
+      <span class="zh"><b>第 1 步：打包（Truss）。</b>一个模型不只是权重文件，还拖着一堆"配套"：依赖哪些软件、什么版本、输入输出怎么处理。换台机器少装一样就跑不起来。<b>Truss</b> 是 Baseten 开源的"标准纸箱"：把权重、环境、处理代码全装进一个箱子并写清单，任何机器拆箱即用。纸箱本身不值钱，值钱的是<b>标准化之后的事</b>——装进箱子的模型，就能进入 Baseten 后面全自动的流水线。</span>
+      <span class="en"><b>Step 1: pack it (Truss).</b> A model is never just a weights file — it drags along baggage: which libraries, which versions, how inputs and outputs get processed. Move machines, forget one piece, and nothing runs. <b>Truss</b> is Baseten's open-source "standard box": weights, environment, and processing code packed together with a manifest, so any machine can unbox and run it. The box itself is worthless; <b>what standardization unlocks</b> is the point — anything in the box can enter Baseten's fully automated pipeline downstream.</span>
+    </p>
+    <p>
+      <span class="zh"><b>第 2 步：量体裁衣（Engine Builder）。</b>通用推理引擎像<b>均码衣服</b>：谁都能穿，谁穿都不合身。Baseten 的 TensorRT-LLM Engine Builder 做的是"高级定制"：拿到你的模型后，按三个尺寸——<b>模型结构、GPU 型号、你的典型输入输出长度</b>——提前把整条计算流程"焊死"成一台专用机器。核心动作叫算子融合：把几十个小计算步骤合并成几个大步骤，中间结果不再反复搬进搬出显存（和 FlashAttention"减少搬运"是同一个思想，只是作用于整个模型）。代价：换模型要重新定制（自动完成，几十分钟到几小时）；回报：生产实测约 <b>2 倍吞吐</b>——同样的硬件账单，服务翻倍的请求。</span>
+      <span class="en"><b>Step 2: tailor it (Engine Builder).</b> A general-purpose engine is <b>one-size-fits-all clothing</b>: everyone can wear it, no one looks good. Baseten's TensorRT-LLM Engine Builder does bespoke: given your model, it takes three measurements — <b>architecture, GPU model, and your typical input/output lengths</b> — and welds the whole computation into a purpose-built machine ahead of time. The core move is operator fusion: merging dozens of small steps into a few big ones so intermediate results stop shuttling in and out of memory (the same "move less data" idea as FlashAttention, applied model-wide). Cost: a new model means re-tailoring (automatic, tens of minutes to hours). Payoff: about <b>2× measured production throughput</b> — double the requests on the same hardware bill.</span>
+    </p>
+    <p>
+      <span class="zh"><b>第 3 步：上线。</b>你拿到一个 API 地址，App 直接调用；之后的扩容、监控、告警全由平台接管。补一句：Baseten 不迷信单一引擎——TensorRT-LLM、vLLM、SGLang 按你的负载择优选用。<b>引擎是工具不是信仰</b>，这是"平台公司"和"引擎公司"的分野。</span>
+      <span class="en"><b>Step 3: launch.</b> You get an API endpoint your app calls directly; scaling, monitoring, and alerting are the platform's problem from here on. One more note: Baseten worships no single engine — TensorRT-LLM, vLLM, or SGLang is picked per workload. <b>Engines are tools, not religions</b> — the line between platform companies and engine companies.</span>
+    </p>
+    <details class="deep">
+      <summary><span class="zh">对照 Fireworks 的追问：Baseten 也做"按客户定制"吗？它的定制发生在哪一步？</span><span class="en">The same follow-up, answered Baseten's way: does it customize per customer too — and where?</span></summary>
+      <div class="body">
+        <p><span class="zh">做，但定制的重心不在训练，而在<b>编译时</b>。Fireworks 的定制需要客户的流量数据（训 drafter）；Baseten 的定制只需要客户的<b>模型和负载画像</b>——Engine Builder 针对"这个模型 + 这块 GPU + 你的典型输入输出长度"编译专用引擎，整个过程是自动化的、通常几十分钟到几小时，客户换模型就重编一次。不碰流量内容，只看流量形状，这对医疗（Abridge）这类数据敏感客户恰好是卖点。</span><span class="en">Yes — but the customization lives at <b>compile time</b>, not training time. Fireworks' customization needs the customer's traffic content (to train drafters); Baseten's needs only the customer's <b>model and workload profile</b> — Engine Builder compiles a purpose-built engine for this model, this GPU, and your typical input/output lengths, fully automated, typically tens of minutes to hours, re-run whenever the model changes. It reads the traffic's shape, never its content — which for data-sensitive customers like Abridge (healthcare) is precisely the selling point.</span></p>
+        <p><span class="zh">投机解码它同样支持（引擎层内置，含 EAGLE 类方案，可按部署开启），但那是工具箱里的一件工具，而非商业模式的核心。Baseten 版的"越用越离不开"积累在另一处：<b>为你的负载调好的批处理上限、扩缩容阈值、多云容灾配置</b>——这些参数是运维时间沉淀出来的，同样是切换供应商即清零。</span><span class="en">Speculative decoding is supported too (built into the engine layer, EAGLE-style schemes included, toggled per deployment) — but it's one tool in the box, not the business model's core. Baseten's version of "harder to leave every month" accrues elsewhere: <b>batching ceilings, autoscaling thresholds, and cross-cloud failover configs tuned to your workload</b> — parameters distilled from operating time, and just as much reset to zero by switching vendors.</span></p>
+      </div>
+    </details>
+  </div>
+  <figure class="visual-figure">
+    <img src="generated/baseten_part04/A_model_onboarding.png" alt="Baseten 模型上架流程：Truss 打包、Engine Builder 定制、API 上线" loading="lazy">
+  </figure>
+
+  <h3 class="block-title"><span class="n">B</span><span class="zh">开店之后：一块 GPU 怎么又快又稳地同时服务很多人</span><span class="en">Running the shop: serving many people on one GPU, fast and without falling over</span></h3>
+  <div class="panel">
+    <p>
+      <span class="zh"><b>拼车，但要拼得聪明。</b>一块 GPU 太贵，不能一人独占，所以要把很多用户的请求"拼"在一起算（工具箱③）。老式拼法像<b>旅行团</b>：凑满一车才发车，还得等最慢的游客逛完，全车人才能走——你问了句"你好"，却要陪别人生成三千字长文。<b>连续批处理</b>改成公交车：每生成一个词的间隙就是一"站"，答完的请求立刻下车，新请求立刻上车，GPU 时刻满载，谁也不陪跑。</span>
+      <span class="en"><b>Carpool — but carpool smart.</b> A GPU is too expensive for one rider, so many users' requests get computed together (toolbox ③). The old way is a <b>tour bus</b>: it won't leave until full, and nobody gets off until the slowest tourist is done — you asked "hi" and now you're waiting out someone's 3,000-word essay. <b>Continuous batching</b> makes it a city bus: every generated token is a stop where finished requests hop off and new ones hop on. The GPU stays full; nobody chaperones anybody.</span>
+    </p>
+    <p>
+      <span class="zh"><b>Baseten 的功夫在"装车的艺术"。</b>决定一车装多少时，它数的不是<b>人头</b>而是<b>行李</b>——显存是被 token 数吃掉的，不是被请求条数吃掉的（回忆原理课第 2 点：每个请求的 KV Cache 大小取决于文本长度）。装太松，GPU 白白空转；装太猛，显存当场爆掉（OOM），整个服务崩溃。<b>贴着显存上限装车而永不超载</b>，就是它调度层最值钱的手艺。</span>
+      <span class="en"><b>Baseten's craft is the art of packing the bus.</b> When deciding how much fits, it counts <b>luggage, not heads</b> — VRAM is consumed by tokens, not by request count (recall Inference 101 §2: each request's KV cache scales with its text length). Pack too loose and the GPU idles; pack too greedy and memory blows (OOM) — the whole service crashes. <b>Loading right up against the memory ceiling without ever tipping over</b> is the scheduling layer's most valuable skill.</span>
+    </p>
+    <p>
+      <span class="zh"><b>老顾客要找回老店员（KV 感知路由）。</b>回忆原理课：你和模型对话的"记忆"（KV Cache）存放在<b>某一块具体的 GPU</b> 上。普通负载均衡器把你的第二句话随机扔给任何一台 GPU——那台机器没有你的记忆，只好把你们之前聊的全部内容<b>从头重算一遍</b>，你就干等。Baseten 的路由器记得你的对话存在哪台 GPU 上，把后续请求<b>精确送回那一台</b>——记忆还热着，接着聊就行，首字延迟骤降。多轮对话和 Agent（一次任务几十轮往返）场景下，这一招的差距是数量级的。</span>
+      <span class="en"><b>Regulars should get their usual clerk (KV-aware routing).</b> Recall Inference 101: the "memory" of your conversation (its KV cache) lives on <b>one specific GPU</b>. A naive load balancer tosses your second message to any random machine — which has no memory of you, so it <b>recomputes your entire history from scratch</b> while you wait. Baseten's router remembers which GPU holds your conversation and sends every follow-up <b>straight back to it</b> — the memory is still warm, the chat just continues, and time-to-first-token plummets. For long conversations and agents (dozens of round trips per task), the gap is an order of magnitude.</span>
+    </p>
+  </div>
+  <figure class="visual-figure">
+    <img src="generated/baseten_part04/B_gpu_serving_scheduler.png" alt="Baseten GPU 调度：连续批处理、HBM 装车、KV 感知路由" loading="lazy">
+  </figure>
+
+  <h3 class="block-title"><span class="n">C</span><span class="zh">生意最难的两关：流量突然暴涨、云突然挂掉</span><span class="en">The two hardest moments in the business: traffic spikes and clouds dying</span></h3>
+  <div class="panel">
+    <p>
+      <span class="zh"><b>第一关：高峰来了，新店员上岗太慢（冷启动）。</b>流量突然翻倍，最自然的反应是"再开一台 GPU"。但"开一台"没那么快：要先下载几十 GB 的模型权重（像新分店开张前先进货）、装载进显存、初始化引擎——笨办法要 10 分钟以上，等它就绪，高峰早过去了，或者服务已经崩了。Baseten 把这条路逐段压缩：权重切块并行下载、边下边装、引擎提前预热成"半成品"，把整个过程压进分钟以内。<b>这一条直接决定客户的账单形态</b>：能快速扩容，就可以平时只养 2 个"店员"、高峰临时加到 10 个；不能，就得为了偶尔的高峰常年养 10 个——成本差好几倍。</span>
+      <span class="en"><b>Gate one: the rush arrives, but new clerks are slow to clock in (cold starts).</b> Traffic doubles; the obvious response is "spin up another GPU." But "spinning up" isn't quick: first download tens of GB of model weights (like stocking a new branch before opening), load them into VRAM, initialize the engine — naively 10+ minutes, by which point the rush has passed or the service has already collapsed. Baseten compresses every segment: weights fetched in parallel chunks, loading that starts mid-download, engines pre-warmed as "half-cooked" standbys — squeezing the whole thing under a minute-scale bar. <b>This single capability decides the customer's bill</b>: scale fast, and you staff 2 clerks normally with 10 at rush hour; scale slow, and you pay for 10 all year — several times the cost.</span>
+    </p>
+    <p>
+      <span class="zh"><b>第二关：别把店开在一个房东手里（多云调度）。</b>Baseten 自己基本不囤 GPU。它在 <b>18 家云、87 个集群</b>之上运营一个"总调度台"：哪家云此刻有空闲 GPU、哪家便宜、哪家离用户近，活就派到哪；某家云的某个区域挂了，流量自动切到别家，用户毫无感觉。它还能把整套系统开进<b>客户自己的云账户里</b>——数据一步不出客户家门（医疗、金融客户的硬要求），只有突发流量才溢出到 Baseten 的公共池。这个调度台没有捷径：每家云的 GPU 什么时候有货、网络什么脾气、故障长什么样，都是<b>一个坑一个坑踩出来的</b>——这正是它最难被复制的资产。</span>
+      <span class="en"><b>Gate two: never rent your whole shop from one landlord (multi-cloud orchestration).</b> Baseten barely stockpiles GPUs. Instead it runs a dispatch desk over <b>18 clouds and 87 clusters</b>: whichever cloud has idle GPUs right now, cheaper prices, or closer proximity to users gets the work; when one cloud's region dies, traffic reroutes to another before users notice. It can even install the whole system <b>inside the customer's own cloud account</b> — data never leaves the building (a hard requirement in healthcare and finance), with only burst traffic overflowing into Baseten's shared pool. There is no shortcut to building this desk: when each cloud has stock, how its network behaves, what its failures look like — all of it was <b>learned one pothole at a time</b>, which is exactly why it's the hardest asset to copy.</span>
+    </p>
+    <div class="diagram">
+      <div class="dg-box"><div class="t"><span class="zh">客户流量</span><span class="en">Customer traffic</span></div><div class="d"><span class="zh">突发高峰 / 平稳基线</span><span class="en">Spiky peaks / steady base</span></div></div>
+      <div class="dg-arrow">→</div>
+      <div class="dg-box hl"><div class="t"><span class="zh">统一控制面</span><span class="en">Unified control plane</span></div><div class="d"><span class="zh">容量寻源 · KV 感知路由 · 跨云容灾</span><span class="en">Capacity sourcing · KV-aware routing · cross-cloud failover</span></div></div>
+      <div class="dg-arrow">→</div>
+      <div class="dg-box"><div class="t">18 <span class="zh">云</span><span class="en">clouds</span> / 87 <span class="zh">集群</span><span class="en">clusters</span></div><div class="d"><span class="zh">含客户自有云（VPC 内部署）</span><span class="en">Incl. the customer's own cloud (in-VPC)</span></div></div>
+    </div>
+    <details class="deep">
+      <summary><span class="zh">追问：这些具体是怎么做到的？难在哪？其他公司不能照做吗？</span><span class="en">Follow-up: how is any of this actually done? What's hard? Can't others just copy it?</span></summary>
+      <div class="body">
+        <p><span class="zh"><b>怎么做到的：没有魔法，是几百项小工程叠出来的。</b>以冷启动为例，把 10 分钟压进 1 分钟不靠天才算法，而是把路径拆段逐一抠：几十 GB 权重切成几百块、开几十条并行连接同时下载（单条 5 分钟 → 并行 30 秒）；下载与装载重叠，边下边往显存装；镜像和引擎提前预热待命；再养一个"温备池"——半初始化的机器，来活了最后一步激活即可。多云调度同理：写一个统一"控制面"（大脑），把 18 家云各自的 API、配额、GPU 型号、计费全部抽象成一个资源池，持续健康检查、比价、算距离，故障自动切流。每项单看都不神秘，<b>难的是同时做对几百项且一项不掉链子</b>。</span><span class="en"><b>How it's done: no magic — hundreds of small engineering wins stacked up.</b> Take cold starts: squeezing 10 minutes under one doesn't come from a genius algorithm but from carving the path into segments and shaving each one — tens of GB of weights split into hundreds of chunks fetched over dozens of parallel connections (5 minutes single-stream → 30 seconds parallel); loading overlapped with downloading; images and engines pre-warmed on standby; plus a "warm pool" of half-initialized machines needing only a final activation step. Multi-cloud orchestration likewise: build one control plane (the brain) that abstracts 18 clouds' APIs, quotas, GPU types, and billing into a single resource pool, continuously health-checking, price-comparing, and failing over. No single piece is mysterious; <b>the hard part is doing hundreds of pieces right simultaneously, with zero weak links</b>.</span></p>
+        <p><span class="zh"><b>难在哪：这类工程的学费没有捷径。</b>与"读懂论文就能复现"的算法优化不同，运维知识大多<b>不在任何论文里</b>——某家云的配额几点刷新、哪家的网络跨区时会抖、OOM 水位线设 93% 还是 96%，只能在真实生产流量里踩坑学会。而这里有个先有鸡先有蛋的结构：<b>只有跑着海量流量才能踩到坑，只有踩过坑才可靠到接得住海量流量</b>——Baseten 日均 10 亿+ 请求跑了几年，等于交了几年别人还没开始交的学费。再加上：99.99% 可用性 = 全年宕机不超 52 分钟，还是在<b>别人的基础设施上</b>（18 家云都不归它管）做到；背后需要 7×24 的 SRE 团队、事故响应文化、HIPAA/SOC2 合规——这些是组织能力，不是代码。</span><span class="en"><b>What's hard: there is no shortcut on this tuition.</b> Unlike algorithmic work you can reproduce from a paper, operational knowledge mostly <b>isn't written down anywhere</b> — when a given cloud's quota refreshes, whose network jitters on cross-region traffic, whether the OOM watermark belongs at 93% or 96%. It can only be learned by hitting the potholes in real production traffic. And the structure is chicken-and-egg: <b>only massive live traffic exposes the potholes, and only having survived them makes you reliable enough to win massive traffic</b>. Years of 1B+ daily requests means Baseten has paid years of tuition others haven't started paying. Add to that: 99.99% uptime = under 52 minutes of downtime per year, achieved on <b>infrastructure it doesn't control</b> (none of the 18 clouds are its own), backed by 24/7 SRE teams, incident-response culture, and HIPAA/SOC2 compliance — organizational muscle, not code.</span></p>
+        <p><span class="zh"><b>别人能做吗：能，也正在做——所以壁垒的真实形态是"时间窗口"，不是"不可复制"。</b>Fireworks/Together 有技术能力，也在推专属部署切入；但它们的栈围绕"自己的容量跑标准模型"优化，而 Baseten 的主场是"在客户的云里跑客户的奇怪模型"——毛利更低、支持更重、个个是特例，对卖 token 的公司动力有限。云厂商（SageMaker/Vertex）基建无限，但有结构性死穴：<b>AWS 永远不会把你的负载调度到 GCP 上</b>——中立多云对它们不是技术问题，是立场问题。客户自建（K8s+vLLM）能到 70 分，但冷启动、跨云容灾、贴线装批这最后 30 分正是流血处（且门槛逐年在降，确实蚕食低端）。结论：这类护城河<b>理论上偏弱、实践中很粘</b>——每块砖都搬得动，但砌墙需要"时间 × 流量 × 踩坑"相乘，而生产系统长在平台上又续了一层迁移成本。跟踪它时与其问"能否复制"，不如盯"领先窗口在拉大还是缩小"。</span><span class="en"><b>Can others do it? Yes — and they're trying. So the moat's true shape is a time window, not impossibility.</b> Fireworks and Together have the technical chops and are pushing dedicated deployments; but their stacks are optimized for "standard models on our own capacity," while Baseten's home game is "your weird model inside your cloud" — lower margin, heavier support, every customer a special case, which blunts a token-seller's appetite. Hyperscalers (SageMaker/Vertex) have infinite infrastructure but a structural dead end: <b>AWS will never schedule your workload onto GCP</b> — multi-cloud neutrality is a matter of allegiance, not engineering. DIY (K8s+vLLM) gets a team to 70%, but cold starts, cross-cloud failover, and ceiling-hugging batching are exactly where the last 30% bleeds (though that bar drops yearly, genuinely eroding the low end). Verdict: this moat is <b>weak in theory, sticky in practice</b> — every brick is liftable, but the wall takes time × traffic × potholes multiplied together, and production systems rooted in the platform add another layer of exit cost. When tracking Baseten, don't ask "can it be copied" — watch whether its lead is widening or shrinking.</span></p>
+      </div>
+    </details>
+  </div>
+  <figure class="visual-figure">
+    <img src="generated/baseten_part04/C_cold_start_multicloud.png" alt="Baseten 冷启动和多云容灾：分钟内扩容、18 云 87 集群自动调度" loading="lazy">
+  </figure>
+
+  <div class="biz-read">
+    <b class="h"><span class="zh">生意解读</span><span class="en">Business read</span></b>
+    <span class="zh">Baseten 卖的不是 token，是<b>"部署 + 可靠性 + 省心"</b>，按副本运行时长与平台费收钱。这带来两个结构性好处：① <b>避开 token 价格战主战场</b>——客户模型是独有的，没有"同款比价"；② <b>粘性极深</b>——客户的部署管线、自动扩缩配置、监控告警、SLA 全长在平台上，迁移等于重建整套生产基础设施。收入同比约 20 倍、日均 10 亿+ 请求的增长，验证了"自有模型公司"这个客群正在爆发。风险在于客群上限：如果未来多数公司直接用公共模型 API 而不再微调自有模型，它的池子会比对手小。</span>
+    <span class="en">Baseten sells not tokens but <b>deployment + reliability + peace of mind</b>, billed by replica-hours and platform fees. Two structural advantages follow: (1) <b>it sidesteps the token price war</b> — each customer's model is unique, so there's no like-for-like price comparison; (2) <b>retention runs deep</b> — deployment pipelines, autoscaling configs, monitoring, and SLAs all live on the platform, so leaving means rebuilding production infrastructure. Revenue up ~20× YoY on 1B+ daily requests validates that the "companies with their own models" segment is exploding. The risk is segment size: if most companies end up calling public-model APIs instead of fine-tuning their own, Baseten's pond is smaller than its rivals'.</span>
+  </div>
+</section>
+
+<!-- ============ PART 5: COMPARE + VALUATION ============ -->
+<section id="p5">
+  <span class="part-tag">PART 05</span>
+  <div class="sec-title"><h2><span class="zh">同与异、业务价值、最新估值</span><span class="en">Convergence, divergence, value, and valuations</span></h2></div>
+
+  <div class="duo">
+    <div class="panel">
+      <h3><span class="zh">✓ 相同之处</span><span class="en">✓ Where they converge</span></h3>
+      <div class="item"><span class="ic">✓</span><span><span class="zh">同一道除法题：都靠"单 GPU 产出更多 token"赚优化差价，工具箱（内核/量化/批处理/投机解码/缓存）高度重叠</span><span class="en">The same division problem: all profit from the optimization spread of "more tokens per GPU," drawing on a heavily overlapping toolbox (kernels, quantization, batching, speculation, caching)</span></span></div>
+      <div class="item"><span class="ic">✓</span><span><span class="zh">都不做基础模型，命运与开源模型（Llama、DeepSeek、Qwen）的进步深度绑定</span><span class="en">None build foundation models; all are lashed to the mast of open-model progress (Llama, DeepSeek, Qwen)</span></span></div>
+      <div class="item"><span class="ic">✓</span><span><span class="zh">都卡位云与应用之间的中间层："比自建便宜 2–4 倍、比大厂灵活"是共同卖点</span><span class="en">All occupy the middle layer between clouds and apps, selling "2–4× cheaper than DIY, nimbler than hyperscalers"</span></span></div>
+      <div class="item"><span class="ic">✓</span><span><span class="zh">投机解码殊途同归：Fireworks 定制 drafter、Together ATLAS 在线学习——都在把"懂客户流量"变成护城河</span><span class="en">Speculative decoding convergence: Fireworks' custom drafters and Together's online-learning ATLAS both turn "knowing your traffic" into a moat</span></span></div>
+    </div>
+    <div class="panel">
+      <h3><span class="zh">◆ 关键差异</span><span class="en">◆ Where they diverge</span></h3>
+      <div class="item"><span class="ic">◆</span><span><span class="zh"><b>卖什么：</b>Fireworks/Together 卖 token（公共模型），Baseten 卖部署（客户自有模型）——后者天然避开比价</span><span class="en"><b>What's sold:</b> Fireworks/Together sell tokens on public models; Baseten sells deployments of customers' own models — inherently un-price-comparable</span></span></div>
+      <div class="item"><span class="ic">◆</span><span><span class="zh"><b>技术重心：</b>Fireworks 深耕引擎内核与定制，Together 深耕算法科研+自有硬件，Baseten 深耕调度/编译/多云运维</span><span class="en"><b>Technical center of gravity:</b> Fireworks in kernels and customization, Together in algorithms plus owned hardware, Baseten in scheduling, compilation, and multi-cloud ops</span></span></div>
+      <div class="item"><span class="ic">◆</span><span><span class="zh"><b>资产模式：</b>Together 重资产自建集群；Fireworks、Baseten 轻资产（租用/跨云调度）——价格战 vs 灵活性的取舍</span><span class="en"><b>Asset model:</b> Together owns heavy fleets; Fireworks and Baseten stay light (rent/orchestrate) — staying power versus flexibility</span></span></div>
+      <div class="item"><span class="ic">◆</span><span><span class="zh"><b>失败模式：</b>Fireworks 怕开源引擎追平，Together 怕资产贬值与利用率不足，Baseten 怕"自有模型"客群萎缩</span><span class="en"><b>Failure modes:</b> Fireworks fears open-source engines catching up; Together fears depreciation and empty fleets; Baseten fears the own-model segment shrinking</span></span></div>
+    </div>
+  </div>
+
+  <h3 class="block-title"><span class="n">$</span><span class="zh">客户为什么买单（业务价值）</span><span class="en">Why customers pay (the value proposition)</span></h3>
+  <div class="fut-grid">
+    <div class="fut"><div class="icon">💰</div><h4><span class="zh">成本骤降</span><span class="en">Radically cheaper</span></h4><p><span class="zh">优化后的开源模型，单位成本常为闭源 API 的几分之一到几十分之一；且比自建再省 2–4 倍。</span><span class="en">Optimized open models cost a fraction — often 10–50× less — of closed APIs, and 2–4× less than DIY serving.</span></p></div>
+    <div class="fut"><div class="icon">⚡</div><h4><span class="zh">性能可承诺</span><span class="en">Performance you can promise</span></h4><p><span class="zh">首字延迟、每秒 token 数直接决定 AI 产品体验；专业优化把它变成可写进 SLA 的数字。</span><span class="en">Time-to-first-token and tokens/sec make or break an AI product's UX; specialists turn them into numbers you can put in an SLA.</span></p></div>
+    <div class="fut"><div class="icon">🛠️</div><h4><span class="zh">免去自建之苦</span><span class="en">No infra headaches</span></h4><p><span class="zh">自建 = 抢 GPU、招稀缺内核工程师、7×24 运维。外包后团队专注做产品。</span><span class="en">DIY means fighting for GPUs, hiring rare kernel engineers, and 24/7 ops. Outsource it and ship product instead.</span></p></div>
+    <div class="fut"><div class="icon">🔓</div><h4><span class="zh">模型主权</span><span class="en">Model sovereignty</span></h4><p><span class="zh">可换模型、可微调、可迁移，不被单一闭源厂商绑架——这是整个"开源推理层"的共同叙事。</span><span class="en">Swap, fine-tune, migrate freely instead of being captive to one closed vendor — the shared narrative of the entire open-inference layer.</span></p></div>
+  </div>
+
+  <h3 class="block-title"><span class="n">V</span><span class="zh">最新估值（2026 年年中）</span><span class="en">Latest valuations (mid-2026)</span></h3>
+  <div class="panel">
+    <div class="vbar-row"><div class="vbar-name">Fireworks</div><div class="vbar-track"><div class="vbar-fill pending" style="width:100%">~$15B*</div></div></div>
+    <div class="vbar-row"><div class="vbar-name">Baseten</div><div class="vbar-track"><div class="vbar-fill" style="width:87%">$13B</div></div></div>
+    <div class="vbar-row"><div class="vbar-name">Together AI</div><div class="vbar-track"><div class="vbar-fill" style="width:55%">$8.3B</div></div></div>
+    <div class="vbar-caption">
+      <span class="zh">* Fireworks：已完成轮为 $40亿（2025.10 C轮，$2.5亿融资）；~$150亿为融资谈判中的传闻估值（彭博，2026.5），斜纹表示未落定。Baseten：2026.6 F轮 $15亿，分两批（$110–130亿），半年前 E轮仅 $50亿。Together：2026.7.1 完成 $8亿 C轮（$83亿），Aramco Ventures 领投、NVIDIA 参投。</span>
+      <span class="en">* Fireworks: last closed round $4B ($250M Series C, Oct 2025); ~$15B is a reported target in ongoing talks (Bloomberg, May 2026) — striped bar = not finalized. Baseten: $1.5B Series F in June 2026, two tranches at $11–13B; its Series E was just $5B six months earlier. Together: $800M Series C closed July 1, 2026 at $8.3B, led by Aramco Ventures with NVIDIA participating.</span>
+    </div>
+    <details class="deep">
+      <summary><span class="zh">追问：Together 收入最高、还坐拥 FlashAttention 发明者，为什么估值反而最低？</span><span class="en">Follow-up: Together has the highest revenue and the FlashAttention inventor — why the lowest valuation?</span></summary>
+      <div class="body">
+        <p><span class="zh"><b>先校准两个事实。</b>① 按"已落定"口径，排序其实是 Baseten（$130亿）> Together（$83亿）> Fireworks（$40亿）——Fireworks 的 $150亿只是谈判中的传闻价。② Tri Dao 是 Together 的<b>首席科学家</b>（2023 年加入），联合创始人是 Vipul Ved Prakash、Ce Zhang 及斯坦福教授 Chris Ré、Percy Liang 等——不过"科研底色深"这个判断本身没错。</span><span class="en"><b>Two facts to calibrate first.</b> (1) By closed rounds, the actual order is Baseten ($13B) > Together ($8.3B) > Fireworks ($4B) — Fireworks' $15B is only a rumored negotiating figure. (2) Tri Dao is Together's <b>chief scientist</b> (joined 2023); the co-founders are Vipul Ved Prakash, Ce Zhang, and Stanford professors Chris Ré and Percy Liang — though the "deep research DNA" read is correct.</span></p>
+        <p><span class="zh"><b>真正的问题是倍数：市场给 Together 每一块钱收入的定价最低。</b>Together 收入三家最高（年化签约 $11.5亿+），估值却只有 $83亿，约 <b>7 倍</b>；Fireworks 约 $8亿收入谈 $150亿，约 <b>19 倍</b>；Baseten 收入更小而估值 $130亿，倍数可能更高。核心原因是<b>收入的"成色"不同</b>：Together 相当一部分收入来自 GPU 集群出租——本质是"转售算力"，毛利薄、要先砸钱买卡、GPU 两年换代折旧自担，资本市场按基础设施公司（CoreWeave 一类）给倍数；而 Fireworks/Baseten 的收入更接近软件/平台收入，毛利高、不背硬件，按软件公司给倍数。<b>同样一块钱收入，软件的一块钱更值钱。</b></span><span class="en"><b>The real question is the multiple: the market prices each dollar of Together's revenue lowest.</b> Together has the highest revenue ($1.15B+ annualized bookings) yet an $8.3B valuation — roughly <b>7×</b>; Fireworks is talking $15B on ~$800M — about <b>19×</b>; Baseten's revenue is smaller against $13B — likely higher still. The core reason is <b>revenue quality</b>: a large share of Together's comes from renting GPU clusters — essentially compute resale, with thin margins, cash sunk into cards upfront, and two-year GPU depreciation on its own books — so markets price it like infrastructure (the CoreWeave category). Fireworks' and Baseten's revenue looks like software/platform revenue: high-margin, no hardware on the balance sheet, priced like software. <b>A software dollar is worth more than a resale dollar.</b></span></p>
+        <p><span class="zh"><b>还有三个次要因素。</b>① 增速光学：Baseten 收入同比 ~20 倍、Fireworks 半年估值翻近 4 倍，而 Together 基数大、相对增速慢——私募市场为增长曲线的"斜率"付钱。② 口径：$11.5亿是<b>签约额</b>（含多年期集群合约），与另两家的年化收入不完全可比。③ 科研的悖论：FlashAttention 是<b>公开发表并开源</b>的，全行业（包括对手）都在用——顶级科研买到的是 6–12 个月抢跑期，不是独占权，市场只会为"持续产出下一个 FlashAttention 的能力"付一部分溢价。最后提醒一句：<b>估值低 ≠ 公司差</b>——也完全可以读作定价更实；反过来，谁的倍数最高，谁在增速放缓时回调的空间也最大。</span><span class="en"><b>Three secondary factors round it out.</b> (1) Growth optics: Baseten grew ~20× YoY and Fireworks nearly 4×'d its valuation in six months, while Together compounds from a bigger base — private markets pay for the slope of the curve. (2) Accounting: $1.15B is <b>bookings</b> (including multi-year cluster contracts), not directly comparable to the others' run rates. (3) The research paradox: FlashAttention was <b>published and open-sourced</b> — the whole industry runs on it, competitors included. Elite research buys a 6–12 month head start, not exclusivity, so the market pays only a partial premium for "the ability to produce the next FlashAttention." One closing caution: <b>a lower valuation isn't a worse company</b> — it can equally be read as saner pricing. Conversely, whoever carries the richest multiple has the farthest to fall when growth cools.</span></p>
+      </div>
+    </details>
+  </div>
+
+  <div class="table-scroll" style="margin-top:16px">
+    <table>
+      <thead><tr><th></th><th>Fireworks AI</th><th>Together AI</th><th>Baseten</th></tr></thead>
+      <tbody>
+        <tr><th><span class="zh">一句话定位</span><span class="en">One-liner</span></th>
+          <td><span class="zh">最快的开源模型 API，可为大客户深度定制</span><span class="en">The fastest open-model API, deeply customizable for big accounts</span></td>
+          <td><span class="zh">科研驱动的开源 AI 全栈云（API 到整租集群）</span><span class="en">Research-led full-stack cloud for open AI, from API to whole clusters</span></td>
+          <td><span class="zh">客户自有模型的生产级运行时与多云调度平台</span><span class="en">Production-grade runtime and multi-cloud orchestration for customers' own models</span></td></tr>
+        <tr><th><span class="zh">收费方式</span><span class="en">Pricing</span></th>
+          <td><span class="zh">按 token / 专属部署</span><span class="en">Per token / dedicated capacity</span></td>
+          <td><span class="zh">按 token / GPU 时 / 集群合约</span><span class="en">Per token / GPU-hour / cluster contracts</span></td>
+          <td><span class="zh">按副本运行时长 + 平台费</span><span class="en">Per replica-hour + platform fees</span></td></tr>
+        <tr><th><span class="zh">技术招牌</span><span class="en">Signature tech</span></th>
+          <td>FireAttention · FP8/FP4 · P/D<span class="zh">分离</span><span class="en"> disaggregation</span> · FireOptimizer</td>
+          <td>FlashAttention-3 · FlashDecoding · ATLAS · GB200<span class="zh">集群</span><span class="en"> fleets</span></td>
+          <td>Truss · Engine Builder · KV<span class="zh">感知路由</span><span class="en">-aware routing</span> · <span class="zh">多云控制面</span><span class="en">multi-cloud control plane</span></td></tr>
+        <tr><th><span class="zh">收入规模</span><span class="en">Revenue scale</span></th>
+          <td><span class="zh">~$8亿 年化（Sacra 估算）</span><span class="en">~$800M annualized (Sacra est.)</span></td>
+          <td><span class="zh">>$11.5亿 年化签约额</span><span class="en">>$1.15B annualized bookings</span></td>
+          <td><span class="zh">未披露；同比 ~20 倍</span><span class="en">Undisclosed; ~20× YoY</span></td></tr>
+        <tr><th><span class="zh">典型客户</span><span class="en">Typical customers</span></th>
+          <td>Cursor · Perplexity · Notion · Uber</td>
+          <td>Zoom · Salesforce · <span class="zh">训练型初创</span><span class="en">training-heavy startups</span></td>
+          <td>Writer · Abridge · Descript · Clay</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============ PART 6: MOATS ============ -->
+<section id="p6">
+  <span class="part-tag">PART 06</span>
+  <div class="sec-title"><h2><span class="zh">竞争壁垒：含上下游入侵的压力测试</span><span class="en">Moats — stress-tested against value-chain invasion</span></h2></div>
+  <p class="sec-lede">
+    <span class="zh">读懂了原理，壁垒就能看得更准：哪些优势是"保鲜期资产"（会被追平），哪些是"复利资产"（越用越深）。每家左栏是壁垒，右栏是"如果上游（NVIDIA、云厂商）和下游（大客户、模型厂）也来抢"的推演。</span>
+    <span class="en">With the fundamentals in hand, moats come into focus: which edges are perishable (they get caught up to) and which compound (they deepen with use). Left column: the moat. Right: what happens if upstream players (NVIDIA, hyperscalers) and downstream ones (big customers, model labs) invade.</span>
+  </p>
+
+  <div class="moat-card">
+    <h3>Fireworks AI</h3>
+    <div class="moat-grid">
+      <div class="moat-cell strong">
+        <div class="h"><span class="zh">✓ 壁垒</span><span class="en">✓ Moat</span></div>
+        <ul>
+          <li><span class="zh"><b>内核领先（保鲜期资产）</b>：FireAttention + 量化手艺来自 PyTorch 原班人马，短期难复制，但需持续投入维持</span><span class="en"><b>Kernel lead (perishable):</b> FireAttention plus quantization craft from the ex-PyTorch team — hard to copy quickly, but must be perpetually renewed</span></li>
+          <li><span class="zh"><b>FireOptimizer 飞轮（复利资产）</b>：定制 drafter 随客户流量越用越准，切换 = 放弃已积累的加速</span><span class="en"><b>The FireOptimizer flywheel (compounding):</b> custom drafters sharpen with every day of customer traffic; switching means forfeiting accumulated speedups</span></li>
+          <li><span class="zh">Cursor、Perplexity 级标杆客户 = 开发者心智占位；延迟敏感客户切换即冒体验倒退风险</span><span class="en">Cursor/Perplexity-grade logos anchor developer mindshare; for latency-sensitive customers, switching risks a visible UX regression</span></li>
+        </ul>
+      </div>
+      <div class="moat-cell threat">
+        <div class="h"><span class="zh">⚠ 上下游入侵推演</span><span class="en">⚠ Invasion scenarios</span></div>
+        <ul>
+          <li><span class="zh"><b>开源引擎追赶</b>：vLLM/SGLang 背后是全社区的人力，纯速度差距逐年收窄——这是最确定的侵蚀</span><span class="en"><b>Open-source catch-up:</b> vLLM/SGLang have the whole community's labor behind them; the raw speed gap narrows yearly — the most certain erosion</span></li>
+          <li><span class="zh"><b>上游云厂商</b>（Bedrock/Vertex）补齐推理优化 + 用捆绑折扣抢单；好在大厂慢、且不"中立"</span><span class="en"><b>Hyperscalers</b> (Bedrock/Vertex) close the serving gap and win deals with bundled discounts; the saving grace is they're slow and non-neutral</span></li>
+          <li><span class="zh"><b>下游巨型客户自建</b>：Cursor 体量的公司完全可能自租 GPU + 开源引擎自己跑——Fireworks 必须用定制化把"离开成本"抬高</span><span class="en"><b>Giant customers in-sourcing:</b> a Cursor-scale company could rent GPUs and self-serve on open engines — Fireworks must keep raising the exit cost via customization</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="moat-card">
+    <h3>Together AI</h3>
+    <div class="moat-grid">
+      <div class="moat-cell strong">
+        <div class="h"><span class="zh">✓ 壁垒</span><span class="en">✓ Moat</span></div>
+        <ul>
+          <li><span class="zh"><b>科研管线（半复利）</b>：FlashAttention 级成果的持续产出能力，比任何单项技术都难挖走——但系于关键人才</span><span class="en"><b>The research pipeline (semi-compounding):</b> the capacity to keep producing FlashAttention-grade results is harder to poach than any single technique — but it hangs on key people</span></li>
+          <li><span class="zh"><b>自有算力（规模资产）</b>：算法降本 × 硬件降本双重叠加，价格战中血条最厚；集群长约提供收入压舱石</span><span class="en"><b>Owned compute (scale asset):</b> algorithmic savings stacked on hardware savings — the thickest health bar in a price war, with long cluster contracts as revenue ballast</span></li>
+          <li><span class="zh">API→微调→集群的升级阶梯，客户长大全程留在体系内</span><span class="en">The API→fine-tune→cluster ladder keeps customers in-house at every stage of growth</span></li>
+        </ul>
+      </div>
+      <div class="moat-cell threat">
+        <div class="h"><span class="zh">⚠ 上下游入侵推演</span><span class="en">⚠ Invasion scenarios</span></div>
+        <ul>
+          <li><span class="zh"><b>与算力云正面对撞</b>：CoreWeave、Nebius 资本更雄厚，正从"卖裸算力"向上做推理服务——同一块地两头挖</span><span class="en"><b>Head-on with neoclouds:</b> CoreWeave and Nebius are better capitalized and climbing from raw compute into inference — two sides digging the same tunnel</span></li>
+          <li><span class="zh"><b>重资产的刀刃</b>：GPU 两年一换代（Hopper→Blackwell→…），需求波动或利用率不足时，折旧直接吃掉利润</span><span class="en"><b>The blade of heavy assets:</b> GPUs turn over every ~2 years (Hopper→Blackwell→…); when demand wobbles or fleets run empty, depreciation eats straight into profit</span></li>
+          <li><span class="zh"><b>NVIDIA 既是股东也是潜在对手</b>：NIM/DGX Cloud 若直接服务企业，中间层被上游挤压</span><span class="en"><b>NVIDIA as investor and rival:</b> if NIM / DGX Cloud serves enterprises directly, the middle layer gets squeezed from above</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="moat-card">
+    <h3>Baseten</h3>
+    <div class="moat-grid">
+      <div class="moat-cell strong">
+        <div class="h"><span class="zh">✓ 壁垒</span><span class="en">✓ Moat</span></div>
+        <ul>
+          <li><span class="zh"><b>工作流锁定（复利资产）</b>：部署管线、扩缩配置、监控、SLA 全长在平台上，迁移 = 重建生产基础设施</span><span class="en"><b>Workflow lock-in (compounding):</b> pipelines, autoscaling configs, monitoring, and SLAs all live on-platform; leaving means rebuilding production infra</span></li>
+          <li><span class="zh"><b>多云运营经验（复利资产）</b>：18 云 87 集群的供给规律、故障模式是数年踩坑攒下的，砸钱买不到时间</span><span class="en"><b>Multi-cloud scar tissue (compounding):</b> the supply quirks and failure modes of 18 clouds/87 clusters took years to learn; money can't buy back the time</span></li>
+          <li><span class="zh">定制模型客群天然<b>避开 token 比价战</b>——竞争维度是可靠性而非单价</span><span class="en">The custom-model segment inherently <b>escapes token price comparison</b> — the axis of competition is reliability, not unit price</span></li>
+        </ul>
+      </div>
+      <div class="moat-cell threat">
+        <div class="h"><span class="zh">⚠ 上下游入侵推演</span><span class="en">⚠ Invasion scenarios</span></div>
+        <ul>
+          <li><span class="zh"><b>云厂商托管平台</b>（SageMaker/Vertex）功能重合度最高；若体验追平，"中立多云 + 更懂推理"是仅存差异</span><span class="en"><b>Hyperscaler ML platforms</b> (SageMaker/Vertex) overlap most directly; if their UX catches up, "neutral multi-cloud + deeper inference craft" is the last differentiator</span></li>
+          <li><span class="zh"><b>开源部署栈成熟</b>：K8s + vLLM 的自建门槛逐年降低，中小客户可能流失；高端市场（强 SLA）相对安全</span><span class="en"><b>Open-source serving stacks mature:</b> the K8s+vLLM DIY bar drops every year, bleeding smaller customers; the high end (hard SLAs) stays safer</span></li>
+          <li><span class="zh"><b>同业渗透</b>：Fireworks/Together 都在推"专属部署"，直插 Baseten 腹地；反向地，Baseten 也开始提供公共模型 API</span><span class="en"><b>Peer incursion:</b> Fireworks and Together are both pushing dedicated deployments straight into Baseten's home turf — while Baseten counter-raids with its own public-model APIs</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PART 7: FUTURE ============ -->
+<section id="p7">
+  <span class="part-tag">PART 07</span>
+  <div class="sec-title"><h2><span class="zh">未来推演：顺风、逆风与关键信号</span><span class="en">Outlook: tailwinds, headwinds, and the signals that matter</span></h2></div>
+  <div class="fut-grid">
+    <div class="fut"><div class="icon">📈</div>
+      <h4><span class="zh">顺风：token 消耗指数级增长</span><span class="en">Tailwind: token demand compounds</span></h4>
+      <p><span class="zh">Agent 一次任务要调用模型几十上百次；推理型模型"思考"时自己就烧掉数千 token。单价降、总量涨，行业共识是推理支出将远超训练——三家都在风口正中央。</span><span class="en">One agent task calls the model dozens of times; reasoning models burn thousands of tokens just "thinking." Prices fall but volume explodes — the consensus is inference spend will dwarf training. All three sit dead center of that wind.</span></p>
+    </div>
+    <div class="fut"><div class="icon">🏷️</div>
+      <h4><span class="zh">逆风：单价持续下坠</span><span class="en">Headwind: unit prices keep sliding</span></h4>
+      <p><span class="zh">开源引擎进步 + 同质化竞争 → token 单价逐年腰斩。出路是"以量补价" + 向高毛利层上移：微调、Agent 基础设施、按客户定制（三家已各自动手）。</span><span class="en">Better open engines plus commoditized competition halve token prices year after year. The escape: volume, plus climbing into higher-margin layers — fine-tuning, agent infra, per-customer customization (all three are already climbing).</span></p>
+    </div>
+    <div class="fut"><div class="icon">🔗</div>
+      <h4><span class="zh">整合与站队</span><span class="en">Consolidation and alignment</span></h4>
+      <p><span class="zh">赛道拥挤（Groq、Modal、Replicate、各云自营……），并购几乎必然。NVIDIA 入股 Together/Baseten、Aramco 领投 Together，巨头已在提前占坑。</span><span class="en">The field is crowded (Groq, Modal, Replicate, every cloud's own service…), so M&A is near-inevitable. NVIDIA's stakes in Together and Baseten and Aramco leading Together's round show the giants staking claims early.</span></p>
+    </div>
+    <div class="fut"><div class="icon">🚀</div>
+      <h4><span class="zh">IPO 窗口</span><span class="en">The IPO window</span></h4>
+      <p><span class="zh">三家收入都到/接近 10 亿美元年化量级；CoreWeave 已蹚出上市路径。若增速维持，2027 年前后是合理窗口——届时"优化差价能否守住"将被公开市场逐季拷问。</span><span class="en">All three are at or near a $1B run rate, and CoreWeave has already blazed the public-market trail. Hold the growth and 2027-ish listings are plausible — at which point "can the optimization spread hold?" gets interrogated quarterly, in public.</span></p>
+    </div>
+  </div>
+  <div class="risk-strip">
+    <span class="zh"><b>两个最需要跟踪的信号：</b>① <b>开源模型的进步是否延续</b>——若开源停滞、闭源（OpenAI/Anthropic/Google）性价比反超，整个开源推理层的需求根基动摇，三家同时受损；② <b>上游是否下场</b>——NVIDIA（NIM/DGX Cloud）或云巨头若认真做第一方推理服务，中间层的利润会被两头挤压。对三家各自还要加一条：Fireworks 看开源引擎与它的跑分差距，Together 看集群利用率与资本开支节奏，Baseten 看"自有模型"客群是扩张还是萎缩。</span>
+    <span class="en"><b>The two signals to watch:</b> (1) <b>Does open-model progress continue?</b> If it stalls and closed models (OpenAI/Anthropic/Google) retake the price-performance crown, the demand base under the whole open-inference layer erodes — hurting all three at once. (2) <b>Does upstream come downhill?</b> If NVIDIA (NIM/DGX Cloud) or the hyperscalers get serious about first-party inference, the middle layer gets squeezed from both ends. Plus one company-specific gauge each: for Fireworks, the benchmark gap versus open-source engines; for Together, fleet utilization against capex pace; for Baseten, whether the own-model customer segment expands or shrinks.</span>
+  </div>
+</section>
+
+<!-- ============ PART 8: WILL GIANTS ENTER ============ -->
+<section id="p8">
+  <span class="part-tag">PART 08</span>
+  <div class="sec-title"><h2><span class="zh">如果推理这么值钱，英伟达和 LLM 公司会不会亲自下场？</span><span class="en">If inference is this valuable, won't NVIDIA and the LLM labs just do it themselves?</span></h2></div>
+  <p class="sec-lede">
+    <span class="zh">这是评估三家公司长期价值时最尖锐的问题。答案不是简单的会或不会——两类巨头各有强烈的下场动机，也各有难以绕开的结构性顾虑。</span>
+    <span class="en">This is the sharpest question you can ask about these companies' long-term value. The answer isn't a clean yes or no — both classes of giant have strong reasons to enter, and structural reasons they hold back.</span>
+  </p>
+
+  <div class="moat-card">
+    <h3><span class="zh">英伟达：已经把一只脚踩进来了</span><span class="en">NVIDIA: one foot already in the door</span></h3>
+    <div class="moat-grid">
+      <div class="moat-cell threat">
+        <div class="h"><span class="zh">⚠ 会做的理由（且已在做）</span><span class="en">⚠ Why it would (and already is)</span></div>
+        <ul>
+          <li><span class="zh"><b>雏形已齐</b>：NIM 是打包好的推理微服务；DGX Cloud 直接出租算力；2025 年收购 Lepton AI 后推出的 <b>DGX Cloud Lepton</b> 是跨云 GPU 调度市场——每一件都踩在中间层的地盘上</span><span class="en"><b>The pieces exist</b>: NIM ships packaged inference microservices; DGX Cloud rents compute directly; and <b>DGX Cloud Lepton</b> (built on the 2025 Lepton AI acquisition) is a cross-cloud GPU marketplace — each one steps squarely onto the middle layer's turf</span></li>
+          <li><span class="zh"><b>动机充分</b>：芯片是周期性生意，服务是经常性收入；下场还能直接掌握终端客户关系，而不是隔着云厂商和推理公司两层</span><span class="en"><b>The motive is real</b>: chips are cyclical, services are recurring — and going direct means owning the end-customer relationship instead of sitting two layers away</span></li>
+          <li><span class="zh"><b>能力碾压</b>：最懂自家硬件（TensorRT-LLM 本来就是它写的），资金近乎无限</span><span class="en"><b>Overwhelming capability</b>: nobody knows its hardware better (it wrote TensorRT-LLM), and its war chest is effectively bottomless</span></li>
+        </ul>
+      </div>
+      <div class="moat-cell strong">
+        <div class="h"><span class="zh">✓ 克制的理由</span><span class="en">✓ Why it holds back</span></div>
+        <ul>
+          <li><span class="zh"><b>不能和自己的客户抢生意</b>：云厂商和推理公司正是它最大的买家（Together、Baseten 还是它的被投企业）。亲自下场抢单，等于把客户推向 AMD 和自研芯片——这是它最忌惮的连锁反应</span><span class="en"><b>It can't compete with its own customers</b>: clouds and inference companies are its biggest buyers (Together and Baseten are also portfolio companies). Undercutting them directly risks pushing them toward AMD and custom silicon — the chain reaction it fears most</span></li>
+          <li><span class="zh"><b>毛利向下不划算</b>：卖"铲子"毛利 90%+；做服务毛利更低、还要养支持团队——财务上是自我稀释</span><span class="en"><b>Margin dilution</b>: selling shovels runs 90%+ gross margin; running services means lower margins plus a support organization — financially, a step down</span></li>
+          <li><span class="zh"><b>中立性天生缺失</b>：推理公司帮客户在多云、多硬件间调度；英伟达永远不会帮你把负载调到 AMD 的卡上</span><span class="en"><b>Neutrality is structurally impossible</b>: inference platforms schedule across clouds and hardware; NVIDIA will never route your workload onto an AMD card</span></li>
+          <li><span class="zh">现行策略更像"<b>武装所有人</b>"：NIM 给所有云、投资遍布中间层——收租而不选边</span><span class="en">Its actual playbook is <b>arming everyone</b>: NIM for every cloud, investments across the whole middle layer — collecting rent without picking sides</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="moat-card">
+    <h3><span class="zh">LLM 公司（OpenAI / Anthropic / Google）：能力最强，动机最拧巴</span><span class="en">The LLM labs (OpenAI / Anthropic / Google): most capable, most conflicted</span></h3>
+    <div class="moat-grid">
+      <div class="moat-cell threat">
+        <div class="h"><span class="zh">⚠ 会做的理由</span><span class="en">⚠ Why they would</span></div>
+        <ul>
+          <li><span class="zh"><b>它们本来就是全球最大的推理运营者</b>——自家 API 就是推理服务，规模远超三家总和，推理优化本就是核心能力（成本直接决定 API 定价空间）</span><span class="en"><b>They already run the world's largest inference operations</b> — their own APIs are inference services at a scale dwarfing all three combined, and optimization is core muscle (cost sets the floor of API pricing)</span></li>
+          <li><span class="zh"><b>防御逻辑</b>：如果开源模型持续侵蚀闭源 API，开放"托管开源/客户模型"能把流失的负载留在自家基础设施上——输了模型，还能赢运行时</span><span class="en"><b>The defensive logic</b>: if open models keep eating closed APIs, hosting open or customer models keeps the defecting workloads on their infrastructure — lose the model war, still win the runtime</span></li>
+          <li><span class="zh"><b>Agent 时代的入口价值</b>：谁掌握运行时，谁就坐在生态的收费站上；OpenAI 自建数据中心（Stargate）表明它们正在把基础设施攥进手里</span><span class="en"><b>The agent-era tollbooth</b>: whoever owns the runtime sits at the ecosystem's toll gate — and OpenAI's Stargate buildout shows the labs pulling infrastructure in-house</span></li>
+        </ul>
+      </div>
+      <div class="moat-cell strong">
+        <div class="h"><span class="zh">✓ 不做的理由</span><span class="en">✓ Why they don't</span></div>
+        <ul>
+          <li><span class="zh"><b>左右互搏</b>：托管开源模型 = 亲手向市场证明"不用我家闭源模型也行"，直接冲击自家最高毛利的 API 业务——战略上自我否定</span><span class="en"><b>Self-sabotage</b>: hosting open models is a hands-on demonstration that "you don't need our closed model after all" — a direct strike on their highest-margin API business</span></li>
+          <li><span class="zh"><b>稀缺资源全押在别处</b>：算力和顶尖人才全部投向下一代模型与产品；帮别人跑 Llama 是低毛利的分心业务，而且它们的算力连自用都紧张</span><span class="en"><b>Scarce resources are committed elsewhere</b>: compute and elite talent are all-in on next-gen models and products. Serving someone else's Llama is a low-margin distraction — and their compute is strained even for their own needs</span></li>
+          <li><span class="zh"><b>客户信任死结</b>：AI 应用公司本就提防 LLM 公司抢应用层的生意，谁敢把自家私有模型（等于产品机密和流量数据）托管给潜在竞争对手？Baseten 们的"中立"恰是解药</span><span class="en"><b>The trust knot</b>: app companies already fear the labs invading the application layer — who hands their proprietary model (product secrets and traffic data included) to a potential competitor? The neutrality of the Basetens is precisely the antidote</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="biz-read">
+    <b class="h"><span class="zh">综合判断与跟踪信号</span><span class="en">The verdict, and what to watch</span></b>
+    <span class="zh">两类巨头都<b>不太可能从零复制</b>一个 Fireworks 或 Baseten——渠道冲突和战略互搏的成本太高。更现实的路径是：英伟达以"平台/市场"的形态渗透（Lepton 模式：做撮合层而非服务层），LLM 公司让自用优化能力"外溢"成有限的托管产品；而对中间层利润最直接的收编方式，其实是<b>投资与并购</b>——这也解释了英伟达为什么同时入股 Together 和 Baseten（占坑 + 保留选择权）。对三家推理公司来说，"上游下场"最可能的终局未必是被碾压，而是<b>被收购</b>。跟踪两个信号即可：DGX Cloud Lepton 的扩张速度，以及 OpenAI/Anthropic 是否开始提供第三方/开源模型的托管服务。</span>
+    <span class="en">Neither giant is likely to <b>rebuild a Fireworks or Baseten from scratch</b> — the channel conflict and strategic self-contradiction cost too much. The realistic paths: NVIDIA seeps in as a <b>platform/marketplace</b> (the Lepton play: own the matchmaking layer, not the service layer), while the labs let internal optimization "leak out" as limited hosting products. The most direct way upstream captures middle-layer profit is actually <b>investment and M&A</b> — which is exactly why NVIDIA holds stakes in both Together and Baseten (claims staked, options kept). For the three inference companies, the likeliest endgame of "upstream enters" isn't being crushed — it's <b>being acquired</b>. Two signals to track: how fast DGX Cloud Lepton expands, and whether OpenAI or Anthropic starts hosting third-party or open models.</span>
+  </div>
+</section>
+
+<footer>
+  <span class="zh">数据截至 2026 年 7 月。估值/收入来自公开报道（Bloomberg、TechCrunch、Sacra 等）；性能倍数多为厂商自述基准，已标注"官方宣称"。技术描述基于公开论文与各公司技术博客，为便于理解做了简化。仅供学习了解，不构成投资建议。</span>
+  <span class="en">Data as of July 2026. Valuations/revenue from public reporting (Bloomberg, TechCrunch, Sacra, etc.); performance multiples are mostly vendor-run benchmarks, flagged as claims. Technical descriptions draw on public papers and company engineering blogs, simplified for clarity. For learning purposes only — not investment advice.</span>
+</footer>
+
+</div>
+
+<script>
+  function toggleLang() {
+    const b = document.body;
+    const zh = b.classList.contains('lang-zh');
+    b.classList.toggle('lang-zh', !zh);
+    b.classList.toggle('lang-en', zh);
+    document.documentElement.lang = zh ? 'en' : 'zh';
+  }
+</script>
+
+</body>
+</html>
