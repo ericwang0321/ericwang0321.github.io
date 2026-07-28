@@ -18,6 +18,14 @@ type SourceArticleProps = {
   deckHref?: string;
 };
 
+const deferArticleImages = (html: string) => html.replace(/<img\b([^>]*)>/gi, (_match, attributes: string) => {
+  const optimizedAttributes = attributes
+    .replace(/\sloading=("[^"]*"|'[^']*')/gi, "")
+    .replace(/\sdecoding=("[^"]*"|'[^']*')/gi, "")
+    .replace(/\sfetchpriority=("[^"]*"|'[^']*')/gi, "");
+  return `<img${optimizedAttributes} loading="lazy" decoding="async" fetchpriority="low">`;
+});
+
 export default function SourceArticle({
   title,
   subtitle,
@@ -28,6 +36,8 @@ export default function SourceArticle({
   toc,
   deckHref,
 }: SourceArticleProps) {
+  const optimizedArticleHtml = deferArticleImages(articleHtml);
+
   return (
     <main className={styles.shell}>
       <header className={styles.header}>
@@ -70,7 +80,7 @@ export default function SourceArticle({
           </div>
         </aside>
 
-        <article className={styles.body} dangerouslySetInnerHTML={{ __html: articleHtml }} />
+        <article className={styles.body} dangerouslySetInnerHTML={{ __html: optimizedArticleHtml }} />
       </section>
 
       <footer className={styles.footer}>

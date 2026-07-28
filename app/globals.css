@@ -368,9 +368,10 @@ html[lang="zh-CN"] .hero-copy h1 {
 }
 
 .scene-poster {
+  background-color: #f8f5ed;
   background-position: center;
   background-repeat: no-repeat;
-  background-size: cover;
+  background-size: contain;
   inset: 0;
   opacity: 1;
   position: absolute;
@@ -1438,7 +1439,7 @@ html[lang="zh-CN"] .hero-copy h1 {
   }
 
   .hero-sticky::after {
-    background: linear-gradient(180deg, rgba(247, 245, 239, 0.98) 0%, rgba(247, 245, 239, 0.82) 54%, rgba(247, 245, 239, 0.28) 74%, rgba(247, 245, 239, 0.9) 100%);
+    background: linear-gradient(180deg, rgba(247, 245, 239, 0.98) 0%, rgba(247, 245, 239, 0.88) 43%, rgba(247, 245, 239, 0.16) 54%, rgba(247, 245, 239, 0.03) 76%, rgba(247, 245, 239, 0.88) 100%);
   }
 
   .hero-copy {
@@ -1462,9 +1463,9 @@ html[lang="zh-CN"] .hero-copy h1 {
   }
 
   .scene-poster {
-    background-position: 68% 82%;
-    background-size: auto 72%;
-    opacity: 0.78;
+    background-position: center 62%;
+    background-size: contain;
+    opacity: 0.96;
   }
 
   .research-scene.is-ready .scene-poster {

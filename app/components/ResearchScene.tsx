@@ -1,10 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { gsap } from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-import Lenis from "lenis";
-import * as THREE from "three";
 
 type Language = "en" | "zh";
 
@@ -187,23 +183,26 @@ const fragmentShader = `
   uniform float uToScale;
   uniform float uMix;
 
-  vec2 coverUv(vec2 uv, vec2 imageSize, float scale, vec2 offset) {
+  uniform vec2 uFrameCenter;
+
+  vec2 containUv(vec2 uv, vec2 imageSize, float sceneScale, vec2 offset, out float mask) {
     float viewportAspect = uResolution.x / max(uResolution.y, 1.0);
     float imageAspect = imageSize.x / max(imageSize.y, 1.0);
-    vec2 crop = vec2(1.0);
+    vec2 drawSize = vec2(1.0);
 
     if (viewportAspect > imageAspect) {
-      crop.y = imageAspect / viewportAspect;
+      drawSize.x = imageAspect / viewportAspect;
     } else {
-      crop.x = viewportAspect / imageAspect;
+      drawSize.y = viewportAspect / imageAspect;
     }
 
-    vec2 mapped = (uv - 0.5) * crop / scale + 0.5 + offset;
-    return clamp(mapped, vec2(0.001), vec2(0.999));
-  }
-
-  vec2 zoomAroundFocus(vec2 uv, vec2 focus, float zoom) {
-    return focus + (uv - focus) / max(zoom, 0.001);
+    float safeScale = mix(0.94, 0.99, clamp((sceneScale - 1.0) / 0.13, 0.0, 1.0));
+    drawSize *= safeScale;
+    vec2 localUv = (uv - uFrameCenter - offset) / drawSize + 0.5;
+    vec2 fadeIn = smoothstep(vec2(0.0), vec2(0.012), localUv);
+    vec2 fadeOut = 1.0 - smoothstep(vec2(0.988), vec2(1.0), localUv);
+    mask = fadeIn.x * fadeIn.y * fadeOut.x * fadeOut.y;
+    return clamp(localUv, vec2(0.001), vec2(0.999));
   }
 
   vec4 focusMotionSample(sampler2D image, vec2 uv, vec2 focusUv, float blurAmount) {
@@ -230,24 +229,18 @@ const fragmentShader = `
   void main() {
     float eased = uMix * uMix * (3.0 - 2.0 * uMix);
     float energy = sin(eased * 3.14159265);
+    float fromMask;
+    float toMask;
+    vec2 fromUv = containUv(vUv, uFromSize, uFromScale, uFromOffset, fromMask);
+    vec2 toUv = containUv(vUv, uToSize, uToScale, uToOffset, toMask);
 
-    float fromZoom = mix(1.0, 1.18, eased);
-    float toZoom = mix(0.96, 1.0, eased);
-    vec2 fromViewportUv = zoomAroundFocus(vUv, uFocus, fromZoom);
-    vec2 toViewportUv = zoomAroundFocus(vUv, uFocus, toZoom);
-    vec2 fromUv = coverUv(fromViewportUv, uFromSize, uFromScale, uFromOffset);
-    vec2 toUv = coverUv(toViewportUv, uToSize, uToScale, uToOffset);
-    vec2 fromFocusUv = coverUv(uFocus, uFromSize, uFromScale, uFromOffset);
-    vec2 toFocusUv = coverUv(uFocus, uToSize, uToScale, uToOffset);
+    float blurAmount = pow(energy, 0.82) * 7.0;
+    vec3 warmVeil = vec3(0.973, 0.961, 0.932);
+    vec4 fromColor = mix(vec4(warmVeil, 1.0), focusMotionSample(tFrom, fromUv, uFocus, blurAmount), fromMask);
+    vec4 toColor = mix(vec4(warmVeil, 1.0), focusMotionSample(tTo, toUv, uFocus, blurAmount), toMask);
+    vec4 color = mix(fromColor, toColor, eased);
 
-    float blurAmount = pow(energy, 0.82) * 14.0;
-    vec4 fromColor = focusMotionSample(tFrom, fromUv, fromFocusUv, blurAmount);
-    vec4 toColor = focusMotionSample(tTo, toUv, toFocusUv, blurAmount);
-    float lensCut = step(0.5, eased);
-    vec4 color = mix(fromColor, toColor, lensCut);
-
-    vec3 warmVeil = vec3(0.965, 0.952, 0.925);
-    float veil = pow(energy, 3.0) * 0.94;
+    float veil = pow(energy, 3.0) * 0.18;
     color.rgb = mix(color.rgb, warmVeil, veil);
     gl_FragColor = color;
   }
@@ -276,253 +269,334 @@ export default function ResearchScene({
       return () => track.style.removeProperty("--hero-progress");
     }
 
-    let renderer: THREE.WebGLRenderer;
-    try {
-      renderer = new THREE.WebGLRenderer({
-        canvas,
-        antialias: false,
-        alpha: false,
-        powerPreference: "high-performance",
-      });
-    } catch {
-      queueMicrotask(() => setFallback(true));
-      return;
-    }
+    let cancelled = false;
+    let bootstrapFrame = 0;
+    let disposeScene: (() => void) | undefined;
 
-    gsap.registerPlugin(ScrollTrigger);
-    renderer.outputColorSpace = THREE.SRGBColorSpace;
-    renderer.toneMapping = THREE.NoToneMapping;
+    const initialize = async () => {
+      try {
+        const THREE = await import("three");
+        if (cancelled) return;
 
-    const scene = new THREE.Scene();
-    const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
-    const geometry = new THREE.PlaneGeometry(2, 2);
-    const material = new THREE.ShaderMaterial({
-      depthTest: false,
-      depthWrite: false,
-      uniforms: {
-        tFrom: { value: null },
-        tTo: { value: null },
-        uResolution: { value: new THREE.Vector2(1, 1) },
-        uFromSize: { value: new THREE.Vector2(1, 1) },
-        uToSize: { value: new THREE.Vector2(1, 1) },
-        uFromOffset: { value: new THREE.Vector2() },
-        uToOffset: { value: new THREE.Vector2() },
-        uFocus: { value: new THREE.Vector2(0.65, 0.5) },
-        uFromScale: { value: 1.03 },
-        uToScale: { value: 1.03 },
-        uMix: { value: 0 },
-      },
-      vertexShader,
-      fragmentShader,
-    });
-    scene.add(new THREE.Mesh(geometry, material));
-
-    const pointerTarget = new THREE.Vector2();
-    const pointer = new THREE.Vector2();
-    const textures: Array<THREE.Texture | null> = new Array(journeyFrames.length).fill(null);
-    let targetProgress = 0;
-    let renderedProgress = 0;
-    let previousPhase = -1;
-    let previousTime = performance.now();
-    let animationFrame = 0;
-    let visible = true;
-    let disposed = false;
-    let loaded = false;
-
-    const textureSize = (texture: THREE.Texture) => {
-      const image = texture.image as { naturalWidth?: number; naturalHeight?: number; width?: number; height?: number };
-      return new THREE.Vector2(
-        image.naturalWidth ?? image.width ?? 1,
-        image.naturalHeight ?? image.height ?? 1,
-      );
-    };
-
-    const resize = () => {
-      const width = Math.max(1, mount.clientWidth);
-      const height = Math.max(1, mount.clientHeight);
-      const mobile = width <= 720;
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, mobile ? 1.15 : 1.5));
-      renderer.setSize(width, height, false);
-      material.uniforms.uResolution.value.set(width, height);
-      ScrollTrigger.refresh();
-    };
-
-    const render = (time: number) => {
-      animationFrame = 0;
-      if (disposed || !visible || !loaded) return;
-
-      const deltaSeconds = Math.min(0.064, Math.max(0.001, (time - previousTime) / 1000));
-      previousTime = time;
-      renderedProgress = THREE.MathUtils.damp(renderedProgress, targetProgress, 11.5, deltaSeconds);
-      pointer.lerp(pointerTarget, 1 - Math.exp(-deltaSeconds * 7.5));
-      if (Math.abs(renderedProgress - targetProgress) < 0.00008) renderedProgress = targetProgress;
-
-      track.style.setProperty("--hero-progress", renderedProgress.toFixed(4));
-      const phaseIndex = Math.min(phases.length - 1, Math.floor(renderedProgress * phases.length));
-      if (phaseIndex !== previousPhase) {
-        previousPhase = phaseIndex;
-        setActivePhase(phaseIndex);
-      }
-
-      const scaled = renderedProgress >= 0.9999
-        ? journeyFrames.length - 1
-        : renderedProgress * (journeyFrames.length - 1);
-      const frameIndex = Math.min(journeyFrames.length - 1, Math.floor(scaled));
-      const nextIndex = Math.min(journeyFrames.length - 1, frameIndex + 1);
-      const localProgress = frameIndex === journeyFrames.length - 1 ? 1 : scaled - frameIndex;
-      const mix = frameIndex === nextIndex ? 0 : smoothstep(0.52, 0.86, localProgress);
-      const resolveTextureIndex = (requestedIndex: number) => {
-        for (let distance = 0; distance < journeyFrames.length; distance += 1) {
-          const previousIndex = requestedIndex - distance;
-          if (previousIndex >= 0 && textures[previousIndex]) return previousIndex;
-          const followingIndex = requestedIndex + distance;
-          if (followingIndex < journeyFrames.length && textures[followingIndex]) return followingIndex;
+        let renderer: import("three").WebGLRenderer;
+        try {
+          renderer = new THREE.WebGLRenderer({
+            canvas,
+            antialias: false,
+            alpha: false,
+            powerPreference: "high-performance",
+          });
+        } catch {
+          queueMicrotask(() => setFallback(true));
+          return;
         }
-        return 0;
-      };
-      const resolvedFrameIndex = resolveTextureIndex(frameIndex);
-      const resolvedNextIndex = textures[nextIndex] ? nextIndex : resolvedFrameIndex;
-      const currentTexture = textures[resolvedFrameIndex];
-      const nextTexture = textures[resolvedNextIndex];
-      if (!currentTexture || !nextTexture) return;
-      const currentFrame = journeyFrames[resolvedFrameIndex];
-      const nextFrame = journeyFrames[resolvedNextIndex];
-      const effectiveMix = resolvedFrameIndex === resolvedNextIndex ? 0 : mix;
-      const currentOffset = new THREE.Vector2(...currentFrame.offsetStart)
-        .lerp(new THREE.Vector2(...currentFrame.offsetEnd), smoothstep(0, 1, localProgress));
-      currentOffset.x += pointer.x * 0.0025;
-      currentOffset.y += pointer.y * 0.0018;
-      const nextOffset = new THREE.Vector2(...nextFrame.offsetStart);
-      nextOffset.x += pointer.x * 0.0025;
-      nextOffset.y += pointer.y * 0.0018;
 
-      material.uniforms.tFrom.value = currentTexture;
-      material.uniforms.tTo.value = nextTexture;
-      material.uniforms.uFromSize.value.copy(textureSize(currentTexture));
-      material.uniforms.uToSize.value.copy(textureSize(nextTexture));
-      material.uniforms.uFromOffset.value.copy(currentOffset);
-      material.uniforms.uToOffset.value.copy(nextOffset);
-      material.uniforms.uFocus.value
-        .set(...currentFrame.focus)
-        .lerp(new THREE.Vector2(...nextFrame.focus), effectiveMix);
-      material.uniforms.uFromScale.value = THREE.MathUtils.lerp(
-        currentFrame.scaleStart,
-        currentFrame.scaleEnd,
-        smoothstep(0, 1, localProgress),
-      );
-      material.uniforms.uToScale.value = nextFrame.scaleStart - (1 - effectiveMix) * 0.018;
-      material.uniforms.uMix.value = effectiveMix;
+        renderer.outputColorSpace = THREE.SRGBColorSpace;
+        renderer.toneMapping = THREE.NoToneMapping;
 
-      renderer.render(scene, camera);
-
-      const moving =
-        Math.abs(renderedProgress - targetProgress) > 0.00008 ||
-        pointer.distanceTo(pointerTarget) > 0.001;
-      if (moving) animationFrame = window.requestAnimationFrame(render);
-    };
-
-    const requestRender = () => {
-      if (!animationFrame && visible && !disposed) animationFrame = window.requestAnimationFrame(render);
-    };
-
-    const loader = new THREE.TextureLoader();
-    const loadTexture = async (index: number) => {
-      const texture = await loader.loadAsync(journeyFrames[index].src);
-      if (disposed) {
-        texture.dispose();
-        return;
-      }
-      texture.colorSpace = THREE.SRGBColorSpace;
-      texture.minFilter = THREE.LinearFilter;
-      texture.magFilter = THREE.LinearFilter;
-      texture.generateMipmaps = false;
-      textures[index] = texture;
-      if (index === 0) {
-        loaded = true;
-        setReady(true);
-      }
-      requestRender();
-    };
-
-    loadTexture(0)
-      .then(() => {
-        journeyFrames.slice(1).forEach((_, frameOffset) => {
-          void loadTexture(frameOffset + 1).catch(() => undefined);
+        const scene = new THREE.Scene();
+        const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+        const geometry = new THREE.PlaneGeometry(2, 2);
+        const material = new THREE.ShaderMaterial({
+          depthTest: false,
+          depthWrite: false,
+          uniforms: {
+            tFrom: { value: null },
+            tTo: { value: null },
+            uResolution: { value: new THREE.Vector2(1, 1) },
+            uFromSize: { value: new THREE.Vector2(1, 1) },
+            uToSize: { value: new THREE.Vector2(1, 1) },
+            uFromOffset: { value: new THREE.Vector2() },
+            uToOffset: { value: new THREE.Vector2() },
+            uFocus: { value: new THREE.Vector2(0.65, 0.5) },
+            uFrameCenter: { value: new THREE.Vector2(0.5, 0.5) },
+            uFromScale: { value: 1.03 },
+            uToScale: { value: 1.03 },
+            uMix: { value: 0 },
+          },
+          vertexShader,
+          fragmentShader,
         });
-      })
-      .catch(() => {
-        if (!disposed) setFallback(true);
-      });
+        scene.add(new THREE.Mesh(geometry, material));
 
-    const lenis = new Lenis({
-      lerp: 0.095,
-      smoothWheel: true,
-      syncTouch: false,
-      anchors: true,
+        const pointerTarget = new THREE.Vector2();
+        const pointer = new THREE.Vector2();
+        const textures = new Array<import("three").Texture | null>(journeyFrames.length).fill(null);
+        const inFlight = new Array<Promise<void> | null>(journeyFrames.length).fill(null);
+        const failed = new Set<number>();
+        const idleCancellers = new Map<number, () => void>();
+        let targetProgress = 0;
+        let renderedProgress = 0;
+        let previousPhase = -1;
+        let previousTime = performance.now();
+        let animationFrame = 0;
+        let visible = true;
+        let disposed = false;
+        let loaded = false;
+
+        const textureSize = (texture: import("three").Texture) => {
+          const image = texture.image as { naturalWidth?: number; naturalHeight?: number; width?: number; height?: number };
+          return new THREE.Vector2(
+            image.naturalWidth ?? image.width ?? 1,
+            image.naturalHeight ?? image.height ?? 1,
+          );
+        };
+
+        const resize = () => {
+          const width = Math.max(1, mount.clientWidth);
+          const height = Math.max(1, mount.clientHeight);
+          const mobile = width <= 720;
+          renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, mobile ? 1.1 : 1.5));
+          renderer.setSize(width, height, false);
+          material.uniforms.uResolution.value.set(width, height);
+          // WebGL UV space starts at the bottom, so 0.38 places the image at 62% of the visible height.
+          material.uniforms.uFrameCenter.value.set(0.5, mobile ? 0.38 : 0.5);
+        };
+
+        const render = (time: number) => {
+          animationFrame = 0;
+          if (disposed || !visible || !loaded) return;
+
+          const deltaSeconds = Math.min(0.064, Math.max(0.001, (time - previousTime) / 1000));
+          previousTime = time;
+          renderedProgress = THREE.MathUtils.damp(renderedProgress, targetProgress, 11.5, deltaSeconds);
+          pointer.lerp(pointerTarget, 1 - Math.exp(-deltaSeconds * 7.5));
+          if (Math.abs(renderedProgress - targetProgress) < 0.00008) renderedProgress = targetProgress;
+
+          track.style.setProperty("--hero-progress", renderedProgress.toFixed(4));
+          const phaseIndex = Math.min(phases.length - 1, Math.floor(renderedProgress * phases.length));
+          if (phaseIndex !== previousPhase) {
+            previousPhase = phaseIndex;
+            setActivePhase(phaseIndex);
+          }
+
+          const scaled = renderedProgress >= 0.9999
+            ? journeyFrames.length - 1
+            : renderedProgress * (journeyFrames.length - 1);
+          const frameIndex = Math.min(journeyFrames.length - 1, Math.floor(scaled));
+          const nextIndex = Math.min(journeyFrames.length - 1, frameIndex + 1);
+          const localProgress = frameIndex === journeyFrames.length - 1 ? 1 : scaled - frameIndex;
+          const mix = frameIndex === nextIndex ? 0 : smoothstep(0.36, 0.88, localProgress);
+          const resolveTextureIndex = (requestedIndex: number) => {
+            for (let distance = 0; distance < journeyFrames.length; distance += 1) {
+              const previousIndex = requestedIndex - distance;
+              if (previousIndex >= 0 && textures[previousIndex]) return previousIndex;
+              const followingIndex = requestedIndex + distance;
+              if (followingIndex < journeyFrames.length && textures[followingIndex]) return followingIndex;
+            }
+            return 0;
+          };
+          const resolvedFrameIndex = resolveTextureIndex(frameIndex);
+          const resolvedNextIndex = textures[nextIndex] ? nextIndex : resolvedFrameIndex;
+          const currentTexture = textures[resolvedFrameIndex];
+          const nextTexture = textures[resolvedNextIndex];
+          if (!currentTexture || !nextTexture) return;
+          const currentFrame = journeyFrames[resolvedFrameIndex];
+          const nextFrame = journeyFrames[resolvedNextIndex];
+          const effectiveMix = resolvedFrameIndex === resolvedNextIndex ? 0 : mix;
+          const currentOffset = new THREE.Vector2(...currentFrame.offsetStart)
+            .lerp(new THREE.Vector2(...currentFrame.offsetEnd), smoothstep(0, 1, localProgress));
+          currentOffset.x += pointer.x * 0.0025;
+          currentOffset.y += pointer.y * 0.0018;
+          const nextOffset = new THREE.Vector2(...nextFrame.offsetStart);
+          nextOffset.x += pointer.x * 0.0025;
+          nextOffset.y += pointer.y * 0.0018;
+
+          material.uniforms.tFrom.value = currentTexture;
+          material.uniforms.tTo.value = nextTexture;
+          material.uniforms.uFromSize.value.copy(textureSize(currentTexture));
+          material.uniforms.uToSize.value.copy(textureSize(nextTexture));
+          material.uniforms.uFromOffset.value.copy(currentOffset);
+          material.uniforms.uToOffset.value.copy(nextOffset);
+          material.uniforms.uFocus.value
+            .set(...currentFrame.focus)
+            .lerp(new THREE.Vector2(...nextFrame.focus), effectiveMix);
+          material.uniforms.uFromScale.value = THREE.MathUtils.lerp(
+            currentFrame.scaleStart,
+            currentFrame.scaleEnd,
+            smoothstep(0, 1, localProgress),
+          );
+          material.uniforms.uToScale.value = nextFrame.scaleStart - (1 - effectiveMix) * 0.018;
+          material.uniforms.uMix.value = effectiveMix;
+
+          renderer.render(scene, camera);
+
+          const moving =
+            Math.abs(renderedProgress - targetProgress) > 0.00008 ||
+            pointer.distanceTo(pointerTarget) > 0.001;
+          if (moving) animationFrame = window.requestAnimationFrame(render);
+        };
+
+        const requestRender = () => {
+          if (!animationFrame && visible && !disposed) animationFrame = window.requestAnimationFrame(render);
+        };
+
+        const cancelIdleLoad = (index: number) => {
+          idleCancellers.get(index)?.();
+          idleCancellers.delete(index);
+        };
+
+        const loadTexture = (index: number, priority: "high" | "low" = "low") => {
+          if (index < 0 || index >= journeyFrames.length || textures[index] || failed.has(index)) {
+            return Promise.resolve();
+          }
+          if (inFlight[index]) return inFlight[index];
+          cancelIdleLoad(index);
+
+          const promise = new Promise<void>((resolve, reject) => {
+            const image = new Image();
+            image.decoding = "async";
+            image.fetchPriority = priority;
+            image.onload = () => {
+              if (disposed) {
+                resolve();
+                return;
+              }
+              const texture = new THREE.Texture(image);
+              texture.needsUpdate = true;
+              texture.colorSpace = THREE.SRGBColorSpace;
+              texture.minFilter = THREE.LinearFilter;
+              texture.magFilter = THREE.LinearFilter;
+              texture.generateMipmaps = false;
+              textures[index] = texture;
+              if (index === 0) {
+                loaded = true;
+                setReady(true);
+              }
+              requestRender();
+              resolve();
+            };
+            image.onerror = () => {
+              failed.add(index);
+              reject(new Error(`Unable to load hero frame ${index + 1}`));
+            };
+            image.src = journeyFrames[index].src;
+          }).finally(() => {
+            inFlight[index] = null;
+          });
+          inFlight[index] = promise;
+          return promise;
+        };
+
+        const scheduleIdleTexture = (index: number) => {
+          if (
+            index < 0 ||
+            index >= journeyFrames.length ||
+            textures[index] ||
+            inFlight[index] ||
+            failed.has(index) ||
+            idleCancellers.has(index)
+          ) return;
+
+          if ("requestIdleCallback" in window) {
+            const handle = window.requestIdleCallback(() => {
+              idleCancellers.delete(index);
+              void loadTexture(index, "low").catch(() => undefined);
+            }, { timeout: 1400 });
+            idleCancellers.set(index, () => window.cancelIdleCallback(handle));
+          } else {
+            const handle = globalThis.setTimeout(() => {
+              idleCancellers.delete(index);
+              void loadTexture(index, "low").catch(() => undefined);
+            }, 420);
+            idleCancellers.set(index, () => globalThis.clearTimeout(handle));
+          }
+        };
+
+        const preloadAround = (frameIndex: number) => {
+          void loadTexture(frameIndex, "high").catch(() => undefined);
+          void loadTexture(frameIndex + 1, "high").catch(() => undefined);
+          scheduleIdleTexture(frameIndex + 2);
+          scheduleIdleTexture(frameIndex - 1);
+        };
+
+        const updateScrollProgress = () => {
+          const bounds = track.getBoundingClientRect();
+          const distance = Math.max(1, track.offsetHeight - window.innerHeight);
+          targetProgress = clamp(-bounds.top / distance);
+          const targetFrame = Math.min(
+            journeyFrames.length - 1,
+            Math.floor(targetProgress * (journeyFrames.length - 1)),
+          );
+          preloadAround(targetFrame);
+          requestRender();
+        };
+
+        const observer = new IntersectionObserver(
+          ([entry]) => {
+            visible = entry.isIntersecting;
+            if (visible) {
+              updateScrollProgress();
+              requestRender();
+            }
+          },
+          { rootMargin: "20% 0px" },
+        );
+        observer.observe(track);
+
+        const onPointerMove = (event: PointerEvent) => {
+          pointerTarget.set(
+            (event.clientX / Math.max(1, window.innerWidth) - 0.5) * 2,
+            -(event.clientY / Math.max(1, window.innerHeight) - 0.5) * 2,
+          );
+          requestRender();
+        };
+        const onResize = () => {
+          resize();
+          updateScrollProgress();
+          requestRender();
+        };
+        const onContextLost = (event: Event) => {
+          event.preventDefault();
+          setFallback(true);
+        };
+
+        window.addEventListener("pointermove", onPointerMove, { passive: true });
+        window.addEventListener("scroll", updateScrollProgress, { passive: true });
+        window.addEventListener("resize", onResize);
+        canvas.addEventListener("webglcontextlost", onContextLost);
+        resize();
+        updateScrollProgress();
+
+        disposeScene = () => {
+          disposed = true;
+          observer.disconnect();
+          idleCancellers.forEach((cancel) => cancel());
+          idleCancellers.clear();
+          window.removeEventListener("pointermove", onPointerMove);
+          window.removeEventListener("scroll", updateScrollProgress);
+          window.removeEventListener("resize", onResize);
+          canvas.removeEventListener("webglcontextlost", onContextLost);
+          window.cancelAnimationFrame(animationFrame);
+          textures.forEach((texture) => texture?.dispose());
+          geometry.dispose();
+          material.dispose();
+          renderer.dispose();
+          track.style.removeProperty("--hero-progress");
+        };
+
+        try {
+          await loadTexture(0, "high");
+          if (!disposed) {
+            updateScrollProgress();
+            preloadAround(0);
+          }
+        } catch {
+          if (!disposed) setFallback(true);
+        }
+      } catch {
+        if (!cancelled) setFallback(true);
+      }
+    };
+
+    bootstrapFrame = window.requestAnimationFrame(() => {
+      bootstrapFrame = window.requestAnimationFrame(() => void initialize());
     });
-    const onLenisScroll = () => ScrollTrigger.update();
-    lenis.on("scroll", onLenisScroll);
-    const ticker = (seconds: number) => lenis.raf(seconds * 1000);
-    gsap.ticker.add(ticker);
-    gsap.ticker.lagSmoothing(0);
-
-    const scrollTrigger = ScrollTrigger.create({
-      trigger: track,
-      start: "top top",
-      end: "bottom bottom",
-      scrub: true,
-      invalidateOnRefresh: true,
-      onUpdate: (self) => {
-        targetProgress = self.progress;
-        requestRender();
-      },
-    });
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        visible = entry.isIntersecting;
-        if (visible) requestRender();
-      },
-      { rootMargin: "20% 0px" },
-    );
-    observer.observe(track);
-
-    const onPointerMove = (event: PointerEvent) => {
-      pointerTarget.set(
-        (event.clientX / Math.max(1, window.innerWidth) - 0.5) * 2,
-        -(event.clientY / Math.max(1, window.innerHeight) - 0.5) * 2,
-      );
-      requestRender();
-    };
-    const onResize = () => {
-      resize();
-      requestRender();
-    };
-    const onContextLost = (event: Event) => {
-      event.preventDefault();
-      setFallback(true);
-    };
-
-    window.addEventListener("pointermove", onPointerMove, { passive: true });
-    window.addEventListener("resize", onResize);
-    canvas.addEventListener("webglcontextlost", onContextLost);
-    resize();
 
     return () => {
-      disposed = true;
-      observer.disconnect();
-      scrollTrigger.kill();
-      lenis.off("scroll", onLenisScroll);
-      lenis.destroy();
-      gsap.ticker.remove(ticker);
-      window.removeEventListener("pointermove", onPointerMove);
-      window.removeEventListener("resize", onResize);
-      canvas.removeEventListener("webglcontextlost", onContextLost);
-      window.cancelAnimationFrame(animationFrame);
-      textures.forEach((texture) => texture?.dispose());
-      geometry.dispose();
-      material.dispose();
-      renderer.dispose();
+      cancelled = true;
+      window.cancelAnimationFrame(bootstrapFrame);
+      disposeScene?.();
       track.style.removeProperty("--hero-progress");
     };
   }, []);
