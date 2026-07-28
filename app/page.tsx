@@ -30,6 +30,7 @@ const copy = {
     research: { en: "Research", zh: "研究" },
     publication: { en: "Publication", zh: "论文" },
     experience: { en: "Experience", zh: "经历" },
+    usage: { en: "Usage", zh: "用量" },
     contact: { en: "Contact", zh: "联系" },
   },
   hero: {
@@ -349,6 +350,7 @@ export default function Home() {
           <a href="#research" onClick={() => setMenuOpen(false)}>{t(copy.nav.research, language)}</a>
           <a href="#publication" onClick={() => setMenuOpen(false)}>{t(copy.nav.publication, language)}</a>
           <a href="#experience" onClick={() => setMenuOpen(false)}>{t(copy.nav.experience, language)}</a>
+          <a href="/codex-usage/" onClick={() => setMenuOpen(false)}>{t(copy.nav.usage, language)}</a>
           <a href="#contact" onClick={() => setMenuOpen(false)}>{t(copy.nav.contact, language)}</a>
         </nav>
 

@@ -1,0 +1,41 @@
+export type DailyUsage = {
+  date: string;
+  inputTokens: number;
+  cachedInputTokens: number;
+  uncachedInputTokens: number;
+  cacheWriteInputTokens: number;
+  outputTokens: number;
+  reasoningOutputTokens: number;
+  totalTokens: number;
+  requests: number;
+  sessions: number;
+  cacheHitRate: number;
+};
+
+export type UsageData = {
+  schemaVersion: number;
+  generatedAt: string;
+  timezone: string;
+  throughDate: string;
+  source: {
+    firstDate: string;
+    filesIndexed: number;
+    sessionsWithUsage: number;
+    invalidTokenLines: number;
+    contentRead: boolean;
+  };
+  totals: Omit<DailyUsage, "date">;
+  summary: {
+    calendarDays: number;
+    activeDays: number;
+    averagePerActiveDay: number;
+    lastSevenDaysTokens: number;
+    previousSevenDaysTokens: number;
+    sevenDayChangePercent: number | null;
+    peakDate: string;
+    peakTokens: number;
+    currentStreak: number;
+    longestStreak: number;
+  };
+  daily: DailyUsage[];
+};
