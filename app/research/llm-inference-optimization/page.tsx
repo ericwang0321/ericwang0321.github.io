@@ -29,7 +29,7 @@ export default async function LlmInferenceOptimizationArticle() {
 
   return (
     <SourceArticle
-      title="LLM INFERENCE OPTIMIZATION, ILLUSTRATED"
+      title="LLM Inference Optimization, Illustrated"
       subtitle="The journey of a prompt, and the two families of techniques that make it fast: optimizations built around the KV cache, and optimizations that have nothing to do with it"
       kicker="LLM INFERENCE · ORIGINAL REPORT"
       sourceNote={'A plain-language report adaptation of the internal tech talk "LLM Inference: The Journey of a Prompt" (30 slides)'}

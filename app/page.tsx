@@ -20,6 +20,7 @@ type PortfolioEntry = {
   sourceType: Localized;
   image: string;
   kind: "deck" | "article";
+  group: "company" | "industry";
   imagePosition?: string;
 };
 
@@ -101,6 +102,7 @@ const portfolioEntries: PortfolioEntry[] = [
     sourceType: { en: "AI VALUE CHAIN", zh: "AI 产业链" },
     image: "/hero-journey/01-grid-campus-v1.jpg",
     kind: "article",
+    group: "industry",
   },
   {
     number: "02",
@@ -114,6 +116,7 @@ const portfolioEntries: PortfolioEntry[] = [
     sourceType: { en: "AI INFRASTRUCTURE", zh: "AI 基础设施" },
     image: "/hero-journey/06-campus-rack-bridge-v2.jpg",
     kind: "article",
+    group: "industry",
   },
   {
     number: "03",
@@ -127,6 +130,7 @@ const portfolioEntries: PortfolioEntry[] = [
     sourceType: { en: "AI INFERENCE", zh: "AI 推理" },
     image: "/hero-journey/10-chip-app-bridge-v2.jpg",
     kind: "article",
+    group: "company",
   },
   {
     number: "04",
@@ -140,6 +144,7 @@ const portfolioEntries: PortfolioEntry[] = [
     sourceType: { en: "GO-TO-MARKET", zh: "商业化路径" },
     image: "/hero-journey/05-ai-application-v1.jpg",
     kind: "article",
+    group: "company",
   },
   {
     number: "05",
@@ -153,6 +158,7 @@ const portfolioEntries: PortfolioEntry[] = [
     sourceType: { en: "AI DATA LAYER", zh: "AI 数据层" },
     image: "/research-thumbnails/ai-data-layer.png",
     kind: "article",
+    group: "company",
   },
   {
     number: "06",
@@ -169,10 +175,11 @@ const portfolioEntries: PortfolioEntry[] = [
     sourceType: { en: "MEMORY & HBM", zh: "内存与 HBM" },
     image: "/hero-journey/04-gpu-package-v1.jpg",
     kind: "article",
+    group: "industry",
   },
   {
     number: "07",
-    title: { en: "LLM INFERENCE OPTIMIZATION, ILLUSTRATED", zh: "LLM INFERENCE OPTIMIZATION, ILLUSTRATED" },
+    title: { en: "LLM Inference Optimization, Illustrated", zh: "LLM Inference Optimization, Illustrated" },
     excerpt: {
       en: "The journey of a prompt, and the two families of techniques that make it fast: optimizations built around the KV cache, and optimizations that have nothing to do with it.",
       zh: "The journey of a prompt, and the two families of techniques that make it fast: optimizations built around the KV cache, and optimizations that have nothing to do with it.",
@@ -182,6 +189,7 @@ const portfolioEntries: PortfolioEntry[] = [
     sourceType: { en: "LLM INFERENCE", zh: "LLM 推理" },
     image: "/hero-journey/09-tray-gpu-macro-v2.jpg",
     kind: "article",
+    group: "industry",
   },
   {
     number: "08",
@@ -195,6 +203,7 @@ const portfolioEntries: PortfolioEntry[] = [
     sourceType: { en: "MODEL × HARDWARE", zh: "模型 × 硬件" },
     image: "/hero-journey/03-compute-tray-v1.jpg",
     kind: "article",
+    group: "company",
   },
   {
     number: "09",
@@ -208,6 +217,7 @@ const portfolioEntries: PortfolioEntry[] = [
     image: "/readings/llm-agent-three-layers/page-01.avif",
     sourceType: { en: "AGENT ARCHITECTURE", zh: "AGENT 架构" },
     kind: "deck",
+    group: "industry",
   },
   {
     number: "10",
@@ -221,6 +231,7 @@ const portfolioEntries: PortfolioEntry[] = [
     image: "/readings/agent-harness/page-01.avif",
     sourceType: { en: "AGENT SYSTEMS", zh: "AGENT 系统" },
     kind: "deck",
+    group: "industry",
   },
   {
     number: "11",
@@ -234,6 +245,7 @@ const portfolioEntries: PortfolioEntry[] = [
     image: "/readings/agent-sandbox/page-01.avif",
     sourceType: { en: "SECURE EXECUTION", zh: "安全执行环境" },
     kind: "deck",
+    group: "industry",
   },
   {
     number: "12",
@@ -250,8 +262,12 @@ const portfolioEntries: PortfolioEntry[] = [
     image: "/readings/kimi-k3-deployment/page-01.avif",
     sourceType: { en: "MODEL × HARDWARE", zh: "模型 × 硬件" },
     kind: "deck",
+    group: "company",
   },
 ];
+
+const companyResearch = portfolioEntries.filter((entry) => entry.group === "company");
+const industryResearch = portfolioEntries.filter((entry) => entry.group === "industry");
 
 const timeline = [
   {
@@ -315,6 +331,31 @@ const education = [
 
 function t(value: Localized, language: Language) {
   return value[language];
+}
+
+function ResearchList({ entries, language }: { entries: PortfolioEntry[]; language: Language }) {
+  return (
+    <div className="research-list">
+      {entries.map((item) => (
+        <article className="research-row" key={item.number}>
+          <a className="research-thumbnail" href={item.href} tabIndex={-1} aria-hidden="true">
+            <Image
+              src={item.image}
+              alt=""
+              fill
+              sizes="(max-width: 720px) calc(100vw - 40px), 210px"
+              style={{ objectPosition: item.imagePosition ?? "center" }}
+            />
+          </a>
+          <div className="research-copy">
+            <p className="research-meta">{t(item.sourceType, language)} · {t(item.meta, language)}</p>
+            <h3><a href={item.href}>{t(item.title, language)}</a></h3>
+            <p>{t(item.excerpt, language)}</p>
+          </div>
+        </article>
+      ))}
+    </div>
+  );
 }
 
 export default function Home() {
@@ -540,29 +581,18 @@ export default function Home() {
 
           <section id="research" className="content-section">
             <div className="simple-section-heading">
-              <h2>{language === "en" ? "Selected Research" : "精选研究"}</h2>
-              <span>{portfolioEntries.length} {language === "en" ? "works" : "项成果"}</span>
+              <h2>{language === "en" ? "Company Research" : "公司研究"}</h2>
+              <span>{companyResearch.length} {language === "en" ? "works" : "项成果"}</span>
             </div>
-            <div className="research-list">
-              {portfolioEntries.map((item) => (
-                <article className="research-row" key={item.number}>
-                  <a className="research-thumbnail" href={item.href} tabIndex={-1} aria-hidden="true">
-                    <Image
-                      src={item.image}
-                      alt=""
-                      fill
-                      sizes="(max-width: 720px) calc(100vw - 40px), 210px"
-                      style={{ objectPosition: item.imagePosition ?? "center" }}
-                    />
-                  </a>
-                  <div className="research-copy">
-                    <p className="research-meta">{t(item.sourceType, language)} · {t(item.meta, language)}</p>
-                    <h3><a href={item.href}>{t(item.title, language)}</a></h3>
-                    <p>{t(item.excerpt, language)}</p>
-                  </div>
-                </article>
-              ))}
+            <ResearchList entries={companyResearch} language={language} />
+          </section>
+
+          <section id="industry-research" className="content-section">
+            <div className="simple-section-heading">
+              <h2>{language === "en" ? "Industry Research" : "产业研究"}</h2>
+              <span>{industryResearch.length} {language === "en" ? "works" : "项成果"}</span>
             </div>
+            <ResearchList entries={industryResearch} language={language} />
           </section>
 
           <section id="experience" className="content-section">
