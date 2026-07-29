@@ -72,7 +72,6 @@ const copy = {
     label: { en: "Experience & education", zh: "经历与教育" },
     title: { en: "Research built for decisions.", zh: "让研究服务于决策。" },
     education: { en: "Education", zh: "教育" },
-    evidence: { en: "Official evidence", zh: "官方证明" },
   },
   contact: {
     label: { en: "Contact", zh: "联系" },
@@ -412,12 +411,9 @@ export default function Home() {
             <ul className="dated-list">
               <li>
                 <time>2023</time>
-                <span>
-                  Faculty Outstanding Student, The Hong Kong Polytechnic University ·{" "}
-                  <a href={officialOutstandingStudentProof} target="_blank" rel="noreferrer">
-                    {t(copy.experience.evidence, language)}
-                  </a>
-                </span>
+                <a href={officialOutstandingStudentProof} target="_blank" rel="noreferrer">
+                  Faculty Outstanding Student, The Hong Kong Polytechnic University
+                </a>
               </li>
             </ul>
           </section>
