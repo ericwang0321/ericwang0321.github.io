@@ -317,12 +317,12 @@ export default function Home() {
         <div className="header-inner">
           <a className="header-brand" href="#top">Eric Wang&apos;s Page</a>
           <nav className="header-nav" aria-label="Primary navigation">
+            <a href="#education">{t(copy.nav.education, language)}</a>
+            <a href="#honors">{t(copy.nav.honors, language)}</a>
             <a href="#about">{t(copy.nav.about, language)}</a>
             <a href="#publication">{t(copy.nav.publication, language)}</a>
             <a href="#research">{t(copy.nav.research, language)}</a>
-            <a href="#honors">{t(copy.nav.honors, language)}</a>
             <a href="#experience">{t(copy.nav.experience, language)}</a>
-            <a href="#education">{t(copy.nav.education, language)}</a>
             <a href="/codex-usage/">{t(copy.nav.usage, language)}</a>
           </nav>
           <button
@@ -366,6 +366,36 @@ export default function Home() {
         </aside>
 
         <div className="academic-content">
+          <section id="education" className="content-section">
+            <h2>{language === "en" ? "Education" : "教育"}</h2>
+            <div className="plain-timeline">
+              {education.map((item) => (
+                <article key={item.school.en}>
+                  <time>{item.year}</time>
+                  <div>
+                    <h3>{t(item.school, language)}</h3>
+                    <p>{t(item.degree, language)}</p>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </section>
+
+          <section id="honors" className="content-section">
+            <h2>{language === "en" ? "Honors and Awards" : "荣誉与奖项"}</h2>
+            <ul className="dated-list">
+              <li>
+                <time>2023</time>
+                <span>
+                  Faculty Outstanding Student, The Hong Kong Polytechnic University ·{" "}
+                  <a href={officialOutstandingStudentProof} target="_blank" rel="noreferrer">
+                    {t(copy.experience.evidence, language)}
+                  </a>
+                </span>
+              </li>
+            </ul>
+          </section>
+
           <section id="about" className="content-section">
             <h2>{language === "en" ? "About Me" : "关于我"}</h2>
             {language === "en" ? (
@@ -374,6 +404,13 @@ export default function Home() {
                   Hi, I am <strong>Eric Wang</strong>. I work at the intersection of
                   <strong> AI infrastructure</strong>, <strong>public markets</strong>, and quantitative research.
                   My work follows the AI value chain from power and silicon to systems, applications, and market signals.
+                  I am especially interested in how physical constraints—power, memory bandwidth, networking, and
+                  cooling—become product economics, competitive advantages, and investment signals.
+                </p>
+                <p>
+                  I enjoy turning complex technical systems into clear, evidence-backed maps, models, and decision
+                  tools. Across both research and investing, I care about connecting first-principles understanding
+                  with questions that matter in the real world.
                 </p>
                 <p>My current research interests include:</p>
                 <ul>
@@ -381,13 +418,22 @@ export default function Home() {
                   <li>Inference economics, agent systems, and model deployment</li>
                   <li>Data-driven equity research and market-monitoring systems</li>
                 </ul>
+                <p>
+                  Outside research, I enjoy playing <strong>tennis</strong> and <strong>Texas Hold&apos;em</strong>—two
+                  different ways to practice patience, discipline, and decision-making under uncertainty.
+                </p>
               </>
             ) : (
               <>
                 <p>
                   你好，我是 <strong>Eric Wang</strong>。我的研究聚焦于
                   <strong> AI 基础设施</strong>、<strong>资本市场</strong>与量化研究的交叉领域，
-                  沿着电力、芯片、系统、应用到市场信号研究完整的 AI 产业链。
+                  沿着电力、芯片、系统、应用到市场信号研究完整的 AI 产业链。我尤其关注电力、内存带宽、
+                  网络与散热等物理约束，如何进一步转化为产品经济性、竞争优势和投资信号。
+                </p>
+                <p>
+                  我喜欢把复杂的技术系统拆解为清晰、有证据支持的产业链地图、模型和决策工具，
+                  将第一性原理的技术理解与真实世界中的研究和投资问题连接起来。
                 </p>
                 <p>目前主要关注：</p>
                 <ul>
@@ -395,6 +441,10 @@ export default function Home() {
                   <li>推理经济性、Agent 系统与模型部署</li>
                   <li>数据驱动的股票研究与市场监控系统</li>
                 </ul>
+                <p>
+                  研究之外，我喜欢打<strong>网球</strong>和玩<strong>德州扑克</strong>；它们以不同的方式训练耐心、
+                  纪律，以及在不完全信息下做决策的能力。
+                </p>
               </>
             )}
           </section>
@@ -463,21 +513,6 @@ export default function Home() {
             </div>
           </section>
 
-          <section id="honors" className="content-section">
-            <h2>{language === "en" ? "Honors and Awards" : "荣誉与奖项"}</h2>
-            <ul className="dated-list">
-              <li>
-                <time>2023</time>
-                <span>
-                  Faculty Outstanding Student, The Hong Kong Polytechnic University ·{" "}
-                  <a href={officialOutstandingStudentProof} target="_blank" rel="noreferrer">
-                    {t(copy.experience.evidence, language)}
-                  </a>
-                </span>
-              </li>
-            </ul>
-          </section>
-
           <section id="experience" className="content-section">
             <h2>{language === "en" ? "Experience" : "经历"}</h2>
             <div className="plain-timeline">
@@ -494,20 +529,6 @@ export default function Home() {
             </div>
           </section>
 
-          <section id="education" className="content-section">
-            <h2>{language === "en" ? "Education" : "教育"}</h2>
-            <div className="plain-timeline">
-              {education.map((item) => (
-                <article key={item.school.en}>
-                  <time>{item.year}</time>
-                  <div>
-                    <h3>{t(item.school, language)}</h3>
-                    <p>{t(item.degree, language)}</p>
-                  </div>
-                </article>
-              ))}
-            </div>
-          </section>
         </div>
       </div>
 
