@@ -338,7 +338,14 @@ export default function Home() {
 
       <div className="academic-layout">
         <aside className="profile-sidebar" aria-label="Profile">
-          <div className="profile-avatar" aria-hidden="true">EW</div>
+          <Image
+            className="profile-avatar"
+            src="/eric.png"
+            alt="Eric Wang"
+            width={538}
+            height={720}
+            priority
+          />
           <h1>Eric Wang</h1>
           <p className="profile-tagline">
             {language === "en" ? "AI Infrastructure × Markets" : "AI 基础设施 × 资本市场"}

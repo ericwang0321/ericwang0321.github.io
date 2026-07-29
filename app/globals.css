@@ -129,18 +129,14 @@ img {
 }
 
 .profile-avatar {
-  align-items: center;
   background: #eef4f8;
   border: 1px solid #d9e4ec;
   border-radius: 50%;
-  color: #315f8f;
-  display: flex;
-  font-size: 38px;
-  font-weight: 700;
+  display: block;
   height: 142px;
-  justify-content: center;
-  letter-spacing: -0.06em;
   margin-bottom: 18px;
+  object-fit: cover;
+  object-position: center 24%;
   width: 142px;
 }
 
@@ -474,7 +470,6 @@ img {
   }
 
   .profile-avatar {
-    font-size: 32px;
     height: 124px;
     width: 124px;
   }
@@ -523,7 +518,6 @@ img {
   }
 
   .profile-avatar {
-    font-size: 24px;
     grid-row: 1 / span 4;
     height: 82px;
     margin: 0;
