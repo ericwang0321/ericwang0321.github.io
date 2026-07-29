@@ -20,7 +20,7 @@ type PortfolioEntry = {
   sourceType: Localized;
   image: string;
   kind: "deck" | "article";
-  group: "company" | "industry";
+  group: "company" | "technology";
   imagePosition?: string;
 };
 
@@ -102,7 +102,7 @@ const portfolioEntries: PortfolioEntry[] = [
     sourceType: { en: "AI VALUE CHAIN", zh: "AI 产业链" },
     image: "/hero-journey/01-grid-campus-v1.jpg",
     kind: "article",
-    group: "industry",
+    group: "technology",
   },
   {
     number: "02",
@@ -116,7 +116,7 @@ const portfolioEntries: PortfolioEntry[] = [
     sourceType: { en: "AI INFRASTRUCTURE", zh: "AI 基础设施" },
     image: "/hero-journey/06-campus-rack-bridge-v2.jpg",
     kind: "article",
-    group: "industry",
+    group: "technology",
   },
   {
     number: "03",
@@ -175,7 +175,7 @@ const portfolioEntries: PortfolioEntry[] = [
     sourceType: { en: "MEMORY & HBM", zh: "内存与 HBM" },
     image: "/hero-journey/04-gpu-package-v1.jpg",
     kind: "article",
-    group: "industry",
+    group: "technology",
   },
   {
     number: "07",
@@ -189,7 +189,7 @@ const portfolioEntries: PortfolioEntry[] = [
     sourceType: { en: "LLM INFERENCE", zh: "LLM 推理" },
     image: "/hero-journey/09-tray-gpu-macro-v2.jpg",
     kind: "article",
-    group: "industry",
+    group: "technology",
   },
   {
     number: "08",
@@ -203,7 +203,7 @@ const portfolioEntries: PortfolioEntry[] = [
     sourceType: { en: "MODEL × HARDWARE", zh: "模型 × 硬件" },
     image: "/hero-journey/03-compute-tray-v1.jpg",
     kind: "article",
-    group: "company",
+    group: "technology",
   },
   {
     number: "09",
@@ -217,7 +217,7 @@ const portfolioEntries: PortfolioEntry[] = [
     image: "/readings/llm-agent-three-layers/page-01.avif",
     sourceType: { en: "AGENT ARCHITECTURE", zh: "AGENT 架构" },
     kind: "deck",
-    group: "industry",
+    group: "technology",
   },
   {
     number: "10",
@@ -231,7 +231,7 @@ const portfolioEntries: PortfolioEntry[] = [
     image: "/readings/agent-harness/page-01.avif",
     sourceType: { en: "AGENT SYSTEMS", zh: "AGENT 系统" },
     kind: "deck",
-    group: "industry",
+    group: "technology",
   },
   {
     number: "11",
@@ -245,7 +245,7 @@ const portfolioEntries: PortfolioEntry[] = [
     image: "/readings/agent-sandbox/page-01.avif",
     sourceType: { en: "SECURE EXECUTION", zh: "安全执行环境" },
     kind: "deck",
-    group: "industry",
+    group: "technology",
   },
   {
     number: "12",
@@ -262,12 +262,12 @@ const portfolioEntries: PortfolioEntry[] = [
     image: "/readings/kimi-k3-deployment/page-01.avif",
     sourceType: { en: "MODEL × HARDWARE", zh: "模型 × 硬件" },
     kind: "deck",
-    group: "company",
+    group: "technology",
   },
 ];
 
 const companyResearch = portfolioEntries.filter((entry) => entry.group === "company");
-const industryResearch = portfolioEntries.filter((entry) => entry.group === "industry");
+const technologyResearch = portfolioEntries.filter((entry) => entry.group === "technology");
 
 const timeline = [
   {
@@ -587,12 +587,12 @@ export default function Home() {
             <ResearchList entries={companyResearch} language={language} />
           </section>
 
-          <section id="industry-research" className="content-section">
+          <section id="technology-research" className="content-section">
             <div className="simple-section-heading">
-              <h2>{language === "en" ? "Industry Research" : "产业研究"}</h2>
-              <span>{industryResearch.length} {language === "en" ? "works" : "项成果"}</span>
+              <h2>{language === "en" ? "Technology & Industry Research" : "技术与产业研究"}</h2>
+              <span>{technologyResearch.length} {language === "en" ? "works" : "项成果"}</span>
             </div>
-            <ResearchList entries={industryResearch} language={language} />
+            <ResearchList entries={technologyResearch} language={language} />
           </section>
 
           <section id="experience" className="content-section">
