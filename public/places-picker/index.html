@@ -1,0 +1,705 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Places Picker · Eric Wang</title>
+    <link rel="stylesheet" href="./vendor/jsvectormap.min.css" />
+    <style>
+      :root {
+        --page: #ffffff;
+        --panel: #fafafa;
+        --text: #444444;
+        --heading: #303030;
+        --muted: #777777;
+        --line: #e5e5e5;
+        --link: #315f8f;
+        --link-dark: #20466d;
+        --visited: #315f8f;
+        --visited-hover: #244b73;
+        --country: #dfe4e8;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        background: var(--page);
+        color: var(--text);
+        font-family: Arial, "Helvetica Neue", Helvetica, "PingFang SC", "Microsoft YaHei", sans-serif;
+        font-size: 14px;
+        line-height: 1.55;
+        margin: 0;
+      }
+
+      button,
+      input {
+        font: inherit;
+      }
+
+      button,
+      a {
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      button:focus-visible,
+      input:focus-visible,
+      a:focus-visible,
+      .jvm-region:focus-visible {
+        outline: 2px solid var(--link);
+        outline-offset: 3px;
+      }
+
+      .picker-header {
+        border-bottom: 1px solid var(--line);
+      }
+
+      .picker-header-inner {
+        align-items: center;
+        display: flex;
+        height: 52px;
+        justify-content: space-between;
+        margin: 0 auto;
+        max-width: 1120px;
+        padding: 0 22px;
+      }
+
+      .picker-header strong {
+        color: var(--heading);
+        font-size: 13px;
+      }
+
+      .picker-header a {
+        color: var(--link);
+        font-size: 12px;
+        text-decoration: none;
+      }
+
+      main {
+        margin: 0 auto;
+        max-width: 1120px;
+        padding: 38px 22px 64px;
+      }
+
+      .intro {
+        max-width: 720px;
+      }
+
+      h1 {
+        color: var(--heading);
+        font-size: clamp(28px, 4vw, 42px);
+        letter-spacing: -0.035em;
+        line-height: 1.08;
+        margin: 0;
+      }
+
+      .intro p {
+        color: #616161;
+        font-size: 15px;
+        margin: 12px 0 0;
+      }
+
+      .privacy-note {
+        color: var(--muted) !important;
+        font-size: 12px !important;
+      }
+
+      .picker-grid {
+        align-items: start;
+        display: grid;
+        gap: 24px;
+        grid-template-columns: minmax(0, 1.55fr) minmax(290px, 0.75fr);
+        margin-top: 28px;
+      }
+
+      .card {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        overflow: hidden;
+      }
+
+      .card-heading {
+        align-items: baseline;
+        border-bottom: 1px solid var(--line);
+        display: flex;
+        justify-content: space-between;
+        padding: 15px 17px 12px;
+      }
+
+      h2 {
+        color: var(--heading);
+        font-size: 17px;
+        margin: 0;
+      }
+
+      .card-heading span {
+        color: var(--muted);
+        font-size: 11px;
+      }
+
+      #world-map {
+        background: #fbfcfd;
+        height: 470px;
+        width: 100%;
+      }
+
+      .jvm-container {
+        background-color: transparent !important;
+      }
+
+      .jvm-region {
+        cursor: pointer;
+        transition: fill 120ms ease;
+      }
+
+      .jvm-zoom-btn {
+        background: #ffffff;
+        border: 1px solid var(--line);
+        border-radius: 4px;
+        color: var(--heading);
+      }
+
+      .selected-block {
+        border-top: 1px solid var(--line);
+        padding: 14px 17px 17px;
+      }
+
+      .selected-block h3,
+      .city-panel h3,
+      .result-panel h3 {
+        color: var(--heading);
+        font-size: 13px;
+        margin: 0 0 9px;
+      }
+
+      .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 7px;
+        min-height: 30px;
+      }
+
+      .chip,
+      .city-option {
+        background: #f4f5f6;
+        border: 1px solid #dfe2e5;
+        border-radius: 999px;
+        color: #555555;
+        cursor: pointer;
+        font-size: 12px;
+        line-height: 1.2;
+        padding: 7px 10px;
+      }
+
+      .chip {
+        background: #e8f0f7;
+        border-color: #c8d8e8;
+        color: var(--link-dark);
+      }
+
+      .chip:hover,
+      .city-option:hover {
+        border-color: #9db4c9;
+      }
+
+      .city-option[aria-pressed="true"] {
+        background: var(--visited);
+        border-color: var(--visited);
+        color: #ffffff;
+      }
+
+      .empty {
+        color: var(--muted);
+        font-size: 12px;
+        margin: 4px 0;
+      }
+
+      .side-stack {
+        display: grid;
+        gap: 18px;
+      }
+
+      .city-panel,
+      .result-panel {
+        padding: 16px 17px 18px;
+      }
+
+      .city-panel > p,
+      .result-panel > p {
+        color: var(--muted);
+        font-size: 12px;
+        margin: -2px 0 12px;
+      }
+
+      .city-form {
+        display: grid;
+        gap: 8px;
+        grid-template-columns: minmax(0, 1fr) auto;
+        margin-bottom: 15px;
+      }
+
+      .city-form input {
+        border: 1px solid #d8d8d8;
+        border-radius: 5px;
+        color: var(--heading);
+        min-width: 0;
+        padding: 8px 10px;
+      }
+
+      .primary-button,
+      .secondary-button,
+      .quiet-button {
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 12px;
+        padding: 8px 12px;
+      }
+
+      .primary-button {
+        background: var(--link);
+        border: 1px solid var(--link);
+        color: #ffffff;
+      }
+
+      .primary-button:hover {
+        background: var(--link-dark);
+      }
+
+      .secondary-button,
+      .quiet-button {
+        background: #ffffff;
+        border: 1px solid #d7d7d7;
+        color: #555555;
+      }
+
+      .secondary-button:hover,
+      .quiet-button:hover {
+        border-color: #a9a9a9;
+      }
+
+      .quick-cities {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        max-height: 210px;
+        overflow: auto;
+        padding-right: 3px;
+      }
+
+      .result-summary {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 5px;
+        color: #555555;
+        font-size: 12px;
+        margin: 0 0 12px;
+        min-height: 74px;
+        padding: 10px 11px;
+        white-space: pre-wrap;
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .status {
+        color: var(--link-dark);
+        font-size: 11px;
+        min-height: 18px;
+        margin-top: 9px;
+      }
+
+      .reset-row {
+        border-top: 1px solid var(--line);
+        margin-top: 15px;
+        padding-top: 13px;
+      }
+
+      @media (max-width: 850px) {
+        .picker-grid {
+          grid-template-columns: 1fr;
+        }
+
+        #world-map {
+          height: 420px;
+        }
+      }
+
+      @media (max-width: 560px) {
+        main {
+          padding: 28px 14px 48px;
+        }
+
+        .picker-header-inner {
+          padding: 0 14px;
+        }
+
+        #world-map {
+          height: 310px;
+        }
+
+        .card-heading {
+          align-items: flex-start;
+          gap: 8px;
+          flex-direction: column;
+        }
+
+        .city-form {
+          grid-template-columns: 1fr;
+        }
+
+        .city-form button {
+          width: 100%;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          scroll-behavior: auto !important;
+          transition-duration: 0.01ms !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="picker-header">
+      <div class="picker-header-inner">
+        <strong>Eric Wang · Places Picker</strong>
+        <a href="/">返回个人主页</a>
+      </div>
+    </header>
+
+    <main>
+      <section class="intro">
+        <h1>选择我去过的地方</h1>
+        <p>点击地图选择国家或地区，再选择或输入去过的城市。暂时不需要填写年份。</p>
+        <p class="privacy-note">选择仅保存在你的浏览器中；完成后点击“复制结果”，把内容粘贴回 Codex 即可。</p>
+      </section>
+
+      <div class="picker-grid">
+        <section class="card" aria-labelledby="world-title">
+          <div class="card-heading">
+            <h2 id="world-title">世界地图</h2>
+            <span>点击国家/地区即可选中或取消</span>
+          </div>
+          <div id="world-map" aria-label="可选择国家和地区的世界地图"></div>
+          <div class="selected-block">
+            <h3>已选择的国家/地区 <span id="country-count"></span></h3>
+            <div class="chips" id="selected-countries"></div>
+          </div>
+        </section>
+
+        <div class="side-stack">
+          <section class="card city-panel" aria-labelledby="city-title">
+            <h2 id="city-title">城市</h2>
+            <p>下方可直接点击常见内地城市；没有的城市可自行输入。</p>
+            <form class="city-form" id="city-form">
+              <input id="city-input" list="city-suggestions" autocomplete="off" placeholder="输入任意城市，例如 桂林" />
+              <button class="primary-button" type="submit">添加城市</button>
+            </form>
+            <datalist id="city-suggestions"></datalist>
+            <h3>内地城市快速选择</h3>
+            <div class="quick-cities" id="quick-cities"></div>
+            <div class="selected-block" style="border-top: 0; padding: 16px 0 0">
+              <h3>已选择的城市 <span id="city-count"></span></h3>
+              <div class="chips" id="selected-cities"></div>
+            </div>
+          </section>
+
+          <section class="card result-panel" aria-labelledby="result-title">
+            <h2 id="result-title">完成选择</h2>
+            <p>复制文字最方便；复制链接可以稍后继续编辑。</p>
+            <div class="result-summary" id="result-summary" aria-live="polite"></div>
+            <div class="actions">
+              <button class="primary-button" id="copy-result" type="button">复制结果</button>
+              <button class="secondary-button" id="copy-link" type="button">复制选择链接</button>
+            </div>
+            <div class="status" id="status" aria-live="polite"></div>
+            <div class="reset-row">
+              <button class="quiet-button" id="clear-all" type="button">清空全部选择</button>
+            </div>
+          </section>
+        </div>
+      </div>
+    </main>
+
+    <script src="./vendor/jsvectormap.min.js"></script>
+    <script src="./vendor/world.min.js"></script>
+    <script>
+      (function () {
+        const quickCities = [
+          "北京", "上海", "天津", "重庆", "广州", "深圳", "珠海", "佛山", "东莞",
+          "杭州", "宁波", "南京", "苏州", "无锡", "合肥", "福州", "厦门", "南昌",
+          "济南", "青岛", "郑州", "武汉", "长沙", "成都", "贵阳", "昆明", "南宁",
+          "海口", "三亚", "西安", "太原", "石家庄", "呼和浩特", "沈阳", "大连",
+          "长春", "哈尔滨", "兰州", "西宁", "银川", "乌鲁木齐", "拉萨", "桂林",
+          "洛阳", "张家界", "黄山"
+        ];
+
+        const defaults = {
+          countries: ["CN", "HK", "SG", "US"],
+          cities: ["香港", "新加坡", "Raleigh"]
+        };
+
+        const storageKey = "eric-places-picker-v1";
+        const params = new URLSearchParams(window.location.search);
+        let initialState = null;
+
+        if (params.has("countries") || params.has("cities")) {
+          initialState = {
+            countries: (params.get("countries") || "").split(",").filter(Boolean),
+            cities: (params.get("cities") || "").split("|").map(decodeURIComponent).filter(Boolean)
+          };
+        } else {
+          try {
+            initialState = JSON.parse(window.localStorage.getItem(storageKey));
+          } catch (error) {
+            initialState = null;
+          }
+        }
+
+        if (!initialState || !Array.isArray(initialState.countries) || !Array.isArray(initialState.cities)) {
+          initialState = defaults;
+        }
+
+        let selectedCountries = new Set(initialState.countries);
+        let selectedCities = Array.from(new Set(initialState.cities.map((city) => city.trim()).filter(Boolean)));
+
+        const countryNames = new Intl.DisplayNames(["zh-CN"], { type: "region" });
+        const countriesElement = document.getElementById("selected-countries");
+        const citiesElement = document.getElementById("selected-cities");
+        const quickCitiesElement = document.getElementById("quick-cities");
+        const resultElement = document.getElementById("result-summary");
+        const statusElement = document.getElementById("status");
+        const countryCount = document.getElementById("country-count");
+        const cityCount = document.getElementById("city-count");
+        const cityInput = document.getElementById("city-input");
+
+        function getCountryName(code) {
+          const names = { HK: "香港", MO: "澳门", TW: "台湾" };
+          return names[code] || countryNames.of(code) || code;
+        }
+
+        function sortedCountryCodes() {
+          return Array.from(selectedCountries).sort((a, b) =>
+            getCountryName(a).localeCompare(getCountryName(b), "zh-CN")
+          );
+        }
+
+        function currentResult() {
+          const countryText = sortedCountryCodes().map(getCountryName).join("、") || "无";
+          const cityText = selectedCities.join("、") || "无";
+          return "国家/地区：" + countryText + "\n城市：" + cityText;
+        }
+
+        function currentLink() {
+          const url = new URL(window.location.href);
+          url.search = "";
+          url.searchParams.set("countries", sortedCountryCodes().join(","));
+          url.searchParams.set("cities", selectedCities.map(encodeURIComponent).join("|"));
+          return url.toString();
+        }
+
+        function persist() {
+          const state = { countries: sortedCountryCodes(), cities: selectedCities };
+          window.localStorage.setItem(storageKey, JSON.stringify(state));
+          window.history.replaceState(null, "", currentLink());
+        }
+
+        function makeChip(label, onRemove) {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "chip";
+          button.textContent = label + " ×";
+          button.setAttribute("aria-label", "移除 " + label);
+          button.addEventListener("click", onRemove);
+          return button;
+        }
+
+        function renderCountries() {
+          countriesElement.innerHTML = "";
+          const codes = sortedCountryCodes();
+          countryCount.textContent = "(" + codes.length + ")";
+
+          if (!codes.length) {
+            const empty = document.createElement("p");
+            empty.className = "empty";
+            empty.textContent = "尚未选择";
+            countriesElement.appendChild(empty);
+            return;
+          }
+
+          codes.forEach((code) => {
+            countriesElement.appendChild(
+              makeChip(getCountryName(code), () => map.clearSelectedRegions(code))
+            );
+          });
+        }
+
+        function renderCities() {
+          citiesElement.innerHTML = "";
+          cityCount.textContent = "(" + selectedCities.length + ")";
+
+          if (!selectedCities.length) {
+            const empty = document.createElement("p");
+            empty.className = "empty";
+            empty.textContent = "尚未选择";
+            citiesElement.appendChild(empty);
+          } else {
+            selectedCities.forEach((city) => {
+              citiesElement.appendChild(
+                makeChip(city, () => {
+                  selectedCities = selectedCities.filter((item) => item !== city);
+                  updateAll();
+                })
+              );
+            });
+          }
+
+          quickCitiesElement.querySelectorAll("button").forEach((button) => {
+            button.setAttribute("aria-pressed", String(selectedCities.includes(button.dataset.city)));
+          });
+        }
+
+        function updateAll() {
+          renderCountries();
+          renderCities();
+          resultElement.textContent = currentResult();
+          persist();
+        }
+
+        function addCity(city) {
+          const normalized = city.trim();
+          if (!normalized || selectedCities.includes(normalized)) return;
+          selectedCities.push(normalized);
+          updateAll();
+        }
+
+        function showStatus(message) {
+          statusElement.textContent = message;
+          window.setTimeout(() => {
+            if (statusElement.textContent === message) statusElement.textContent = "";
+          }, 2400);
+        }
+
+        async function copyText(text, successMessage) {
+          try {
+            await navigator.clipboard.writeText(text);
+          } catch (error) {
+            const textarea = document.createElement("textarea");
+            textarea.value = text;
+            textarea.style.position = "fixed";
+            textarea.style.opacity = "0";
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand("copy");
+            textarea.remove();
+          }
+          showStatus(successMessage);
+        }
+
+        quickCities.forEach((city) => {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "city-option";
+          button.dataset.city = city;
+          button.textContent = city;
+          button.setAttribute("aria-pressed", String(selectedCities.includes(city)));
+          button.addEventListener("click", () => {
+            if (selectedCities.includes(city)) {
+              selectedCities = selectedCities.filter((item) => item !== city);
+              updateAll();
+            } else {
+              addCity(city);
+            }
+          });
+          quickCitiesElement.appendChild(button);
+
+          const option = document.createElement("option");
+          option.value = city;
+          document.getElementById("city-suggestions").appendChild(option);
+        });
+
+        const map = new jsVectorMap({
+          selector: "#world-map",
+          map: "world",
+          backgroundColor: "transparent",
+          draggable: true,
+          zoomButtons: true,
+          zoomOnScroll: false,
+          regionsSelectable: true,
+          selectedRegions: Array.from(selectedCountries),
+          regionStyle: {
+            initial: {
+              fill: "#dfe4e8",
+              stroke: "#ffffff",
+              strokeWidth: 0.65,
+              fillOpacity: 1
+            },
+            hover: {
+              fill: "#aab9c6",
+              cursor: "pointer"
+            },
+            selected: {
+              fill: "#315f8f"
+            },
+            selectedHover: {
+              fill: "#244b73"
+            }
+          },
+          onRegionSelected(code, isSelected, selectedRegions) {
+            selectedCountries = new Set(selectedRegions);
+            updateAll();
+          },
+          onRegionTooltipShow(event, tooltip, code) {
+            tooltip.text(getCountryName(code));
+          },
+          onLoaded() {
+            document.querySelectorAll(".jvm-region").forEach((region) => {
+              const code = region.getAttribute("data-code");
+              if (!code) return;
+              region.setAttribute("tabindex", "0");
+              region.setAttribute("role", "button");
+              region.setAttribute("aria-label", getCountryName(code));
+              region.addEventListener("keydown", (event) => {
+                if (event.key !== "Enter" && event.key !== " ") return;
+                event.preventDefault();
+                region.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+              });
+            });
+          }
+        });
+
+        document.getElementById("city-form").addEventListener("submit", (event) => {
+          event.preventDefault();
+          addCity(cityInput.value);
+          cityInput.value = "";
+          cityInput.focus();
+        });
+
+        document.getElementById("copy-result").addEventListener("click", () => {
+          copyText(currentResult(), "结果已复制，可以粘贴回 Codex。 ");
+        });
+
+        document.getElementById("copy-link").addEventListener("click", () => {
+          copyText(currentLink(), "选择链接已复制。 ");
+        });
+
+        document.getElementById("clear-all").addEventListener("click", () => {
+          map.clearSelectedRegions();
+          selectedCountries = new Set();
+          selectedCities = [];
+          updateAll();
+        });
+
+        updateAll();
+      })();
+    </script>
+  </body>
+</html>
