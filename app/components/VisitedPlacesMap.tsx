@@ -71,11 +71,69 @@ function loadScript(src: string, id: string) {
   });
 }
 
+function loadStylesheet(href: string, id: string) {
+  return new Promise<void>((resolve, reject) => {
+    const existing = document.getElementById(id) as HTMLLinkElement | null;
+
+    if (existing) {
+      if (existing.dataset.loaded === "true" || existing.sheet) {
+        resolve();
+        return;
+      }
+
+      existing.addEventListener("load", () => resolve(), { once: true });
+      existing.addEventListener("error", () => reject(new Error(`Unable to load ${href}`)), { once: true });
+      return;
+    }
+
+    const stylesheet = document.createElement("link");
+    stylesheet.id = id;
+    stylesheet.rel = "stylesheet";
+    stylesheet.href = href;
+    stylesheet.addEventListener(
+      "load",
+      () => {
+        stylesheet.dataset.loaded = "true";
+        resolve();
+      },
+      { once: true },
+    );
+    stylesheet.addEventListener("error", () => reject(new Error(`Unable to load ${href}`)), { once: true });
+    document.head.appendChild(stylesheet);
+  });
+}
+
 export default function VisitedPlacesMap({ language }: { language: Language }) {
+  const sectionElement = useRef<HTMLElement>(null);
   const mapElement = useRef<HTMLDivElement>(null);
-  const [mapStatus, setMapStatus] = useState<"loading" | "ready" | "error">("loading");
+  const [shouldLoadMap, setShouldLoadMap] = useState(false);
+  const [mapStatus, setMapStatus] = useState<"idle" | "loading" | "ready" | "error">("idle");
 
   useEffect(() => {
+    const section = sectionElement.current;
+    if (!section) return;
+
+    if (!("IntersectionObserver" in window)) {
+      setShouldLoadMap(true);
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (!entries.some((entry) => entry.isIntersecting)) return;
+        setShouldLoadMap(true);
+        observer.disconnect();
+      },
+      { rootMargin: "100px 0px" },
+    );
+
+    observer.observe(section);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!shouldLoadMap) return;
+
     let cancelled = false;
     let map: VectorMapInstance | null = null;
     let resizeObserver: ResizeObserver | null = null;
@@ -83,6 +141,7 @@ export default function VisitedPlacesMap({ language }: { language: Language }) {
     async function initializeMap() {
       try {
         setMapStatus("loading");
+        await loadStylesheet("/maps/jsvectormap.min.css", "jsvectormap-styles");
         await loadScript("/maps/jsvectormap.min.js", "jsvectormap-core");
         await loadScript("/maps/world.min.js", "jsvectormap-world");
 
@@ -175,10 +234,10 @@ export default function VisitedPlacesMap({ language }: { language: Language }) {
       resizeObserver?.disconnect();
       map?.destroy();
     };
-  }, [language]);
+  }, [language, shouldLoadMap]);
 
   return (
-    <section id="places" className="content-section places-section">
+    <section id="places" className="content-section places-section" ref={sectionElement}>
       <h2>{language === "en" ? "Places I’ve Been" : "我去过的地方"}</h2>
       <p className="places-intro">
         {language === "en"
@@ -195,6 +254,10 @@ export default function VisitedPlacesMap({ language }: { language: Language }) {
                 ? language === "en"
                   ? "The map could not load. The complete place list remains available."
                   : "地图暂时无法加载，右侧仍保留完整地点列表。"
+                : mapStatus === "idle"
+                  ? language === "en"
+                    ? "Map loads when you reach this section."
+                    : "滚动到此处时加载地图。"
                 : language === "en"
                   ? "Loading map…"
                   : "地图加载中…"}

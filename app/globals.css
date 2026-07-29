@@ -428,6 +428,8 @@ img {
 .research-row {
   align-items: center;
   border-top: 1px solid var(--line);
+  contain-intrinsic-size: auto 150px;
+  content-visibility: auto;
   display: grid;
   gap: 18px;
   grid-template-columns: 210px minmax(0, 1fr);

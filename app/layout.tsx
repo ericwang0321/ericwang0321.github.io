@@ -40,9 +40,6 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
-      <head>
-        <link rel="stylesheet" href="/maps/jsvectormap.min.css" />
-      </head>
       <body>{children}</body>
     </html>
   );
