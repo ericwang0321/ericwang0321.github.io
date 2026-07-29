@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import VisitedPlacesMap from "./components/VisitedPlacesMap";
 
 type Language = "en" | "zh";
 
@@ -31,6 +32,7 @@ const copy = {
     research: { en: "Research", zh: "研究" },
     publication: { en: "Publication", zh: "论文" },
     honors: { en: "Honors", zh: "荣誉" },
+    places: { en: "Places", zh: "足迹" },
     experience: { en: "Experience", zh: "经历" },
     education: { en: "Education", zh: "教育" },
     usage: { en: "Usage", zh: "用量" },
@@ -336,6 +338,7 @@ export default function Home() {
             <a href="#education">{t(copy.nav.education, language)}</a>
             <a href="#honors">{t(copy.nav.honors, language)}</a>
             <a href="#about">{t(copy.nav.about, language)}</a>
+            <a href="#places">{t(copy.nav.places, language)}</a>
             <a href="#publication">{t(copy.nav.publication, language)}</a>
             <a href="#research">{t(copy.nav.research, language)}</a>
             <a href="#experience">{t(copy.nav.experience, language)}</a>
@@ -470,6 +473,8 @@ export default function Home() {
               </>
             )}
           </section>
+
+          <VisitedPlacesMap language={language} />
 
           <section id="publication" className="content-section">
             <h2>{language === "en" ? "Publication" : "论文"}</h2>

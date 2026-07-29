@@ -237,6 +237,124 @@ img {
   margin: 5px 0;
 }
 
+.places-intro {
+  color: #666;
+  font-size: 13px;
+  margin-bottom: 14px !important;
+}
+
+.places-grid {
+  align-items: stretch;
+  border-bottom: 1px solid var(--line);
+  border-top: 1px solid var(--line);
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(210px, 0.7fr);
+}
+
+.places-map-shell {
+  background: #fbfcfd;
+  min-height: 390px;
+  overflow: hidden;
+  position: relative;
+}
+
+.places-map {
+  height: 390px;
+  width: 100%;
+}
+
+.places-map-status {
+  align-items: center;
+  background: #fbfcfd;
+  color: var(--muted);
+  display: flex;
+  font-size: 12px;
+  inset: 0;
+  justify-content: center;
+  padding: 30px;
+  position: absolute;
+  text-align: center;
+}
+
+.places-map .jvm-container {
+  background: transparent !important;
+}
+
+.places-map .jvm-region {
+  transition: fill 120ms ease;
+}
+
+.places-map .jvm-zoom-btn {
+  background: #fff;
+  border: 1px solid #d9d9d9;
+  border-radius: 3px;
+  color: var(--heading);
+  line-height: 13px;
+}
+
+.places-country-panel {
+  border-left: 1px solid var(--line);
+  padding: 14px 16px;
+}
+
+.places-country-panel h3,
+.china-regions h3 {
+  align-items: baseline;
+  color: var(--heading);
+  display: flex;
+  font-size: 13px;
+  justify-content: space-between;
+  margin: 0 0 9px;
+}
+
+.places-country-panel h3 span,
+.china-regions h3 span {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 400;
+}
+
+.places-country-list {
+  list-style: none;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.places-country-list li {
+  align-items: center;
+  display: flex;
+  font-size: 11px;
+  gap: 7px;
+  margin: 0;
+  padding: 2px 0;
+}
+
+.places-flag {
+  font-size: 15px;
+  line-height: 1;
+  width: 21px;
+}
+
+.china-regions {
+  padding: 14px 0 0;
+}
+
+.china-region-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.china-region-list > span {
+  background: #f5f6f7;
+  border: 1px solid #e1e3e5;
+  border-radius: 999px;
+  color: #5e5e5e;
+  font-size: 11px;
+  line-height: 1.2;
+  padding: 6px 9px;
+}
+
 .content-section a,
 .research-copy h3 a {
   color: var(--link);
@@ -572,6 +690,27 @@ img {
     padding-bottom: 26px;
   }
 
+  .places-grid {
+    display: block;
+  }
+
+  .places-map-shell,
+  .places-map {
+    min-height: 320px;
+    height: 320px;
+  }
+
+  .places-country-panel {
+    border-left: 0;
+    border-top: 1px solid var(--line);
+  }
+
+  .places-country-list {
+    display: grid;
+    gap: 1px 14px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .research-row {
     align-items: start;
     gap: 12px;
@@ -620,6 +759,12 @@ img {
 
   .publication-feature {
     display: block;
+  }
+
+  .places-map-shell,
+  .places-map {
+    min-height: 270px;
+    height: 270px;
   }
 
   .publication-figure {
