@@ -36,27 +36,6 @@ const visitedCountries = [
   { code: "US", flag: "🇺🇸", en: "United States", zh: "美国" },
 ] as const;
 
-const chinaRegions = [
-  { en: "Beijing", zh: "北京市" },
-  { en: "Shanghai", zh: "上海市" },
-  { en: "Tianjin", zh: "天津市" },
-  { en: "Guangdong", zh: "广东省" },
-  { en: "Jiangsu", zh: "江苏省" },
-  { en: "Fujian", zh: "福建省" },
-  { en: "Hebei", zh: "河北省" },
-  { en: "Ningxia", zh: "宁夏回族自治区" },
-  { en: "Qinghai", zh: "青海省" },
-  { en: "Gansu", zh: "甘肃省" },
-  { en: "Jilin", zh: "吉林省" },
-  { en: "Heilongjiang", zh: "黑龙江省" },
-  { en: "Shanxi", zh: "山西省" },
-  { en: "Shaanxi", zh: "陕西省" },
-  { en: "Sichuan", zh: "四川省" },
-  { en: "Guizhou", zh: "贵州省" },
-  { en: "Hunan", zh: "湖南省" },
-  { en: "Hong Kong SAR", zh: "香港特别行政区" },
-] as const;
-
 const mapCodes = visitedCountries.map((country) => country.code);
 
 function loadScript(src: string, id: string) {
@@ -237,17 +216,6 @@ export default function VisitedPlacesMap({ language }: { language: Language }) {
         </aside>
       </div>
 
-      <div className="china-regions">
-        <h3>
-          {language === "en" ? "China · provincial-level regions" : "中国 · 省级地区"}
-          <span>{chinaRegions.length}</span>
-        </h3>
-        <div className="china-region-list">
-          {chinaRegions.map((region) => (
-            <span key={region.en}>{region[language]}</span>
-          ))}
-        </div>
-      </div>
     </section>
   );
 }

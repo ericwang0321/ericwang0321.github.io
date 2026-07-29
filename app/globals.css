@@ -297,8 +297,7 @@ img {
   padding: 14px 16px;
 }
 
-.places-country-panel h3,
-.china-regions h3 {
+.places-country-panel h3 {
   align-items: baseline;
   color: var(--heading);
   display: flex;
@@ -307,8 +306,7 @@ img {
   margin: 0 0 9px;
 }
 
-.places-country-panel h3 span,
-.china-regions h3 span {
+.places-country-panel h3 span {
   color: var(--muted);
   font-size: 10px;
   font-weight: 400;
@@ -333,26 +331,6 @@ img {
   font-size: 15px;
   line-height: 1;
   width: 21px;
-}
-
-.china-regions {
-  padding: 14px 0 0;
-}
-
-.china-region-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.china-region-list > span {
-  background: #f5f6f7;
-  border: 1px solid #e1e3e5;
-  border-radius: 999px;
-  color: #5e5e5e;
-  font-size: 11px;
-  line-height: 1.2;
-  padding: 6px 9px;
 }
 
 .content-section a,
