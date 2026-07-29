@@ -253,14 +253,18 @@ img {
 
 .places-map-shell {
   background: #fbfcfd;
-  min-height: 390px;
+  height: 390px;
   overflow: hidden;
   position: relative;
 }
 
 .places-map {
-  height: 390px;
+  height: 100%;
   width: 100%;
+}
+
+.places-map.jvm-container {
+  min-height: 0;
 }
 
 .places-map-status {
@@ -672,9 +676,7 @@ img {
     display: block;
   }
 
-  .places-map-shell,
-  .places-map {
-    min-height: 320px;
+  .places-map-shell {
     height: 320px;
   }
 
