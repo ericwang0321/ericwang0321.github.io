@@ -26,6 +26,9 @@ type PortfolioEntry = {
 const officialOutstandingStudentProof =
   "https://www.polyu.edu.hk/sao/-/media/department/sao/content/srss/scholarships/osa/2023-24/fs_osa_sharing_wang-yidong.pdf?rev=d818a07102884a909ef84694e661e084&hash=ACB92226AB1532239025C9D15C6C093C";
 
+const officialLeadershipAwardNews =
+  "https://www.polyu.edu.hk/abct/news-and-events/news-and-awards/2024/polyu-outstanding-student-award-and-presidential-student-leadership-award-2023/";
+
 const copy = {
   nav: {
     about: { en: "About", zh: "关于" },
@@ -417,6 +420,28 @@ export default function Home() {
                 <a href={officialOutstandingStudentProof} target="_blank" rel="noreferrer">
                   Faculty Outstanding Student, The Hong Kong Polytechnic University
                 </a>
+              </li>
+              <li>
+                <time>2023</time>
+                <a href={officialLeadershipAwardNews} target="_blank" rel="noreferrer">
+                  Presidential Student Leadership Award, The Hong Kong Polytechnic University
+                </a>
+              </li>
+              <li>
+                <time>2023/24</time>
+                <span>Scholarship for Outstanding Performance, Hong Kong SAR Government Scholarship Fund</span>
+              </li>
+              <li>
+                <time>2022/23</time>
+                <span>Scholarship for Outstanding Performance, Hong Kong SAR Government Scholarship Fund</span>
+              </li>
+              <li>
+                <time>2022/23</time>
+                <span>Hong Kong, China – Asia-Pacific Economic Cooperation Scholarship (HK–APEC Scholarship)</span>
+              </li>
+              <li>
+                <time>2022/23</time>
+                <span>Reaching Out Award, Hong Kong SAR Government Scholarship Fund</span>
               </li>
             </ul>
           </section>
