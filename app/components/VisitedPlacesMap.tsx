@@ -18,6 +18,7 @@ type Tooltip = {
 const visitedCountries = [
   { code: "CN", flag: "🇨🇳", en: "China", zh: "中国" },
   { code: "HK", flag: "🇭🇰", en: "Hong Kong", zh: "香港" },
+  { code: "MO", flag: "🇲🇴", en: "Macao", zh: "澳门" },
   { code: "TW", flag: "🇹🇼", en: "Taiwan", zh: "台湾" },
   { code: "SG", flag: "🇸🇬", en: "Singapore", zh: "新加坡" },
   { code: "MY", flag: "🇲🇾", en: "Malaysia", zh: "马来西亚" },
@@ -134,6 +135,7 @@ export default function VisitedPlacesMap({ language }: { language: Language }) {
           },
           markers: [
             { name: language === "zh" ? "香港" : "Hong Kong", coords: [22.3193, 114.1694] },
+            { name: language === "zh" ? "澳门" : "Macao", coords: [22.1987, 113.5439] },
             { name: language === "zh" ? "新加坡" : "Singapore", coords: [1.3521, 103.8198] },
             { name: "Raleigh", coords: [35.7796, -78.6382] },
           ],
@@ -180,8 +182,8 @@ export default function VisitedPlacesMap({ language }: { language: Language }) {
       <h2>{language === "en" ? "Places I’ve Been" : "我去过的地方"}</h2>
       <p className="places-intro">
         {language === "en"
-          ? "Countries and regions are highlighted in blue. Zoom, scroll or drag to explore; markers identify Hong Kong, Singapore and Raleigh."
-          : "蓝色区域代表我去过的国家和地区。可缩放、滚动或拖动查看；圆点标记香港、新加坡和 Raleigh。"}
+          ? "Countries and regions are highlighted in blue. Zoom, scroll or drag to explore; markers identify Hong Kong, Macao, Singapore and Raleigh."
+          : "蓝色区域代表我去过的国家和地区。可缩放、滚动或拖动查看；圆点标记香港、澳门、新加坡和 Raleigh。"}
       </p>
 
       <div className="places-grid">
