@@ -284,11 +284,28 @@ const education = [
     year: "2026",
     school: { en: "National University of Singapore", zh: "新加坡国立大学" },
     degree: { en: "MSc, Financial Engineering · Distinction", zh: "金融工程硕士 · Distinction" },
+    logo: "/schools/nus.png",
+    logoAlt: "National University of Singapore logo",
+    website: "https://nus.edu.sg/",
   },
   {
     year: "2024",
     school: { en: "The Hong Kong Polytechnic University", zh: "香港理工大学" },
     degree: { en: "BSc (Hons), Physics · First Class · Top 5%", zh: "物理学荣誉学士 · 一等荣誉 · 前 5%" },
+    logo: "/schools/polyu.png",
+    logoAlt: "The Hong Kong Polytechnic University logo",
+    website: "https://www.polyu.edu.hk/",
+  },
+  {
+    year: "2023",
+    school: { en: "North Carolina State University", zh: "北卡罗来纳州立大学" },
+    degree: {
+      en: "Exchange Semester · Statistics · Raleigh, North Carolina, USA",
+      zh: "交换学期 · 统计学 · 美国北卡罗来纳州罗利",
+    },
+    logo: "/schools/nc-state.png",
+    logoAlt: "NC State University logo",
+    website: "https://www.ncsu.edu/",
   },
 ];
 
@@ -370,8 +387,17 @@ export default function Home() {
             <h2>{language === "en" ? "Education" : "教育"}</h2>
             <div className="plain-timeline">
               {education.map((item) => (
-                <article key={item.school.en}>
+                <article className="education-entry" key={item.school.en}>
                   <time>{item.year}</time>
+                  <a
+                    className="education-logo"
+                    href={item.website}
+                    target="_blank"
+                    rel="noreferrer"
+                    aria-label={item.school.en}
+                  >
+                    <Image src={item.logo} alt={item.logoAlt} fill sizes="110px" />
+                  </a>
                   <div>
                     <h3>{t(item.school, language)}</h3>
                     <p>{t(item.degree, language)}</p>
