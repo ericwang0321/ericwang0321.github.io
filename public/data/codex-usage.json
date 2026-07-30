@@ -1,37 +1,37 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-07-29T02:48:33.131Z",
+  "generatedAt": "2026-07-30T02:31:28.328Z",
   "timezone": "Asia/Hong_Kong",
-  "throughDate": "2026-07-28",
+  "throughDate": "2026-07-29",
   "source": {
     "firstDate": "2026-05-04",
-    "filesIndexed": 530,
-    "sessionsWithUsage": 521,
+    "filesIndexed": 555,
+    "sessionsWithUsage": 545,
     "invalidTokenLines": 0,
     "contentRead": false
   },
   "totals": {
-    "inputTokens": 15243720746,
-    "cachedInputTokens": 14337170432,
-    "uncachedInputTokens": 906550314,
+    "inputTokens": 16238076090,
+    "cachedInputTokens": 15291245184,
+    "uncachedInputTokens": 946830906,
     "cacheWriteInputTokens": 0,
-    "outputTokens": 59638288,
-    "reasoningOutputTokens": 19908090,
-    "totalTokens": 15303359034,
-    "requests": 109597,
-    "sessions": 521,
-    "cacheHitRate": 94.1
+    "outputTokens": 62960038,
+    "reasoningOutputTokens": 21134758,
+    "totalTokens": 16301036128,
+    "requests": 114944,
+    "sessions": 545,
+    "cacheHitRate": 94.2
   },
   "summary": {
-    "calendarDays": 86,
-    "activeDays": 78,
-    "averagePerActiveDay": 196196911,
-    "lastSevenDaysTokens": 3018671552,
-    "previousSevenDaysTokens": 6154298712,
-    "sevenDayChangePercent": -51,
+    "calendarDays": 87,
+    "activeDays": 79,
+    "averagePerActiveDay": 206342229,
+    "lastSevenDaysTokens": 3956384263,
+    "previousSevenDaysTokens": 5503976005,
+    "sevenDayChangePercent": -28.1,
     "peakDate": "2026-07-17",
     "peakTokens": 2711668592,
-    "currentStreak": 17,
+    "currentStreak": 18,
     "longestStreak": 20
   },
   "daily": [
@@ -1152,6 +1152,19 @@
       "requests": 9001,
       "sessions": 49,
       "cacheHitRate": 94.8
+    },
+    {
+      "date": "2026-07-29",
+      "inputTokens": 994355344,
+      "cachedInputTokens": 954074752,
+      "uncachedInputTokens": 40280592,
+      "cacheWriteInputTokens": 0,
+      "outputTokens": 3321750,
+      "reasoningOutputTokens": 1226668,
+      "totalTokens": 997677094,
+      "requests": 5347,
+      "sessions": 34,
+      "cacheHitRate": 95.9
     }
   ]
 }
