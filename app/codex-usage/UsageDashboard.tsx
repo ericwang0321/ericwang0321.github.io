@@ -7,7 +7,7 @@ import styles from "./usage.module.css";
 import type { DailyUsage, UsageData } from "./types";
 
 type Language = "en" | "zh";
-type Range = 14 | 30 | "all";
+type Range = 7 | 14 | 30 | "all";
 type TooltipState = {
   day: DailyUsage;
   left: number;
@@ -23,8 +23,6 @@ const compactTokens = (value: number) => {
 
   return `${new Intl.NumberFormat("en", { maximumFractionDigits }).format(scaled)}${unit}`;
 };
-
-const exactTokens = (value: number) => new Intl.NumberFormat("en-US").format(value);
 
 const shortDate = (date: string) => new Intl.DateTimeFormat("en", {
   month: "short",
@@ -44,16 +42,20 @@ const copy = {
     updated: "Complete through",
     back: "Portfolio",
     total: "Total",
+    periodTotal: "Period total",
+    average: "Daily average",
     input: "Input",
+    inputTotal: "Input total",
     cached: "Cached input",
     uncached: "Uncached input",
     output: "Output",
+    outputTotal: "Output total",
     cacheRate: "cache hit",
-    sessions: "sessions",
-    lastSeven: "last 7 days",
-    previous: "vs previous 7 days",
+    activeDays: "active days",
+    previous: "vs previous period",
     chart: "Daily usage",
     chartNote: "Hover or focus a bar for values in M/B.",
+    days7: "7D",
     days14: "14D",
     days30: "30D",
     all: "All",
@@ -68,16 +70,20 @@ const copy = {
     updated: "完整统计截至",
     back: "个人主页",
     total: "总计",
+    periodTotal: "期间总计",
+    average: "日均用量",
     input: "输入",
+    inputTotal: "输入总计",
     cached: "缓存输入",
     uncached: "非缓存输入",
     output: "输出",
+    outputTotal: "输出总计",
     cacheRate: "缓存命中",
-    sessions: "个会话",
-    lastSeven: "最近 7 天",
-    previous: "较此前 7 天",
+    activeDays: "个活跃日",
+    previous: "较上一周期",
     chart: "每日用量",
     chartNote: "悬停或聚焦柱体可查看 M/B 单位数据。",
+    days7: "7 天",
     days14: "14 天",
     days30: "30 天",
     all: "全部",
@@ -137,17 +143,42 @@ function Bar({ day, max, showDate, onHideTooltip, onShowTooltip }: {
 
 export default function UsageDashboard({ data }: { data: UsageData }) {
   const [language, setLanguage] = useState<Language>("en");
-  const [range, setRange] = useState<Range>(30);
+  const [range, setRange] = useState<Range>(14);
   const [activeTooltip, setActiveTooltip] = useState<TooltipState | null>(null);
   const label = copy[language];
   const visibleDays = useMemo(
     () => range === "all" ? data.daily : data.daily.slice(-range),
     [data.daily, range],
   );
+  const periodStats = useMemo(() => {
+    const totals = visibleDays.reduce((sum, day) => ({
+      cachedInputTokens: sum.cachedInputTokens + day.cachedInputTokens,
+      inputTokens: sum.inputTokens + day.inputTokens,
+      outputTokens: sum.outputTokens + day.outputTokens,
+      totalTokens: sum.totalTokens + day.totalTokens,
+    }), { cachedInputTokens: 0, inputTokens: 0, outputTokens: 0, totalTokens: 0 });
+    const days = visibleDays.length;
+    const activeDays = visibleDays.filter((day) => day.totalTokens > 0).length;
+    const previousDays = range === "all" ? [] : data.daily.slice(-(range * 2), -range);
+    const previousTotal = previousDays.reduce((sum, day) => sum + day.totalTokens, 0);
+
+    return {
+      ...totals,
+      activeDays,
+      averageTokens: days > 0 ? totals.totalTokens / days : 0,
+      cacheHitRate: totals.inputTokens > 0
+        ? (totals.cachedInputTokens / totals.inputTokens) * 100
+        : 0,
+      days,
+      trend: previousTotal > 0
+        ? ((totals.totalTokens - previousTotal) / previousTotal) * 100
+        : null,
+    };
+  }, [data.daily, range, visibleDays]);
   const max = Math.max(1, ...visibleDays.map((day) => day.totalTokens));
   const labelInterval = Math.max(1, Math.ceil(visibleDays.length / 7));
   const latestDays = data.daily.slice(-14).reverse();
-  const trend = data.summary.sevenDayChangePercent;
+  const rangeLabel = range === "all" ? label.all : `${range}D`;
 
   const showTooltip = (day: DailyUsage, target: HTMLDivElement) => {
     const rect = target.getBoundingClientRect();
@@ -196,30 +227,31 @@ export default function UsageDashboard({ data }: { data: UsageData }) {
           <small>{label.updated} {longDate(data.throughDate, language)} · {data.timezone}</small>
         </section>
 
-        <dl className={styles.summary} aria-label="Usage summary">
-          <div><dt>{label.total}</dt><dd>{compactTokens(data.totals.totalTokens)}</dd></div>
-          <div><dt>{label.input}</dt><dd>{compactTokens(data.totals.inputTokens)}</dd></div>
-          <div><dt>{label.cached}</dt><dd>{compactTokens(data.totals.cachedInputTokens)}</dd></div>
-          <div><dt>{label.output}</dt><dd>{compactTokens(data.totals.outputTokens)}</dd></div>
+        <dl className={styles.summary} aria-label="Usage summary" aria-live="polite">
+          <div><dt>{label.periodTotal}</dt><dd>{compactTokens(periodStats.totalTokens)}</dd></div>
+          <div><dt>{label.average}</dt><dd>{compactTokens(periodStats.averageTokens)}</dd></div>
+          <div><dt>{label.inputTotal}</dt><dd>{compactTokens(periodStats.inputTokens)}</dd></div>
+          <div><dt>{label.outputTotal}</dt><dd>{compactTokens(periodStats.outputTokens)}</dd></div>
         </dl>
 
         <p className={styles.secondarySummary}>
-          {data.totals.cacheHitRate}% {label.cacheRate} · {exactTokens(data.source.sessionsWithUsage)} {label.sessions} · {label.lastSeven}: {compactTokens(data.summary.lastSevenDaysTokens)}
-          {trend === null ? "" : ` (${trend > 0 ? "+" : ""}${trend}% ${label.previous})`}
+          {rangeLabel} · {periodStats.activeDays}/{periodStats.days} {label.activeDays} · {compactTokens(periodStats.cachedInputTokens)} {label.cached.toLowerCase()} · {periodStats.cacheHitRate.toFixed(1)}% {label.cacheRate}
+          {periodStats.trend === null ? "" : ` · ${periodStats.trend > 0 ? "+" : ""}${periodStats.trend.toFixed(1)}% ${label.previous}`}
         </p>
 
         <section className={styles.section}>
           <div className={styles.sectionHeader}>
             <div><h2>{label.chart}</h2><p>{label.chartNote}</p></div>
             <div className={styles.rangePicker} aria-label="Chart range">
-              {([14, 30, "all"] as Range[]).map((value) => (
+              {([7, 14, 30, "all"] as Range[]).map((value) => (
                 <button
+                  aria-pressed={range === value}
                   className={range === value ? styles.activeRange : ""}
                   key={value}
                   onClick={() => setRange(value)}
                   type="button"
                 >
-                  {value === 14 ? label.days14 : value === 30 ? label.days30 : label.all}
+                  {value === 7 ? label.days7 : value === 14 ? label.days14 : value === 30 ? label.days30 : label.all}
                 </button>
               ))}
             </div>
