@@ -162,23 +162,6 @@ const portfolioEntries: PortfolioEntry[] = [
   },
   {
     number: "06",
-    title: {
-      en: "内存市场全景研究：AI 推理与 HBM 驱动的产品、应用与公司格局",
-      zh: "内存市场全景研究：AI 推理与 HBM 驱动的产品、应用与公司格局",
-    },
-    excerpt: {
-      en: "内存市场正在从一个“消费电子周期品”变成“AI 基础设施瓶颈资产”。",
-      zh: "内存市场正在从一个“消费电子周期品”变成“AI 基础设施瓶颈资产”。",
-    },
-    href: "/research/memory-hbm/",
-    meta: { en: "Source blog · Jun 2026", zh: "原文博客 · 2026 年 6 月" },
-    sourceType: { en: "MEMORY & HBM", zh: "内存与 HBM" },
-    image: "/hero-journey/04-gpu-package-v1.jpg",
-    kind: "article",
-    group: "technology",
-  },
-  {
-    number: "07",
     title: { en: "LLM Inference Optimization, Illustrated", zh: "LLM Inference Optimization, Illustrated" },
     excerpt: {
       en: "The journey of a prompt, and the two families of techniques that make it fast: optimizations built around the KV cache, and optimizations that have nothing to do with it.",
@@ -192,7 +175,7 @@ const portfolioEntries: PortfolioEntry[] = [
     group: "technology",
   },
   {
-    number: "08",
+    number: "07",
     title: { en: "Kimi K3: Architecture, Precision and Hardware Deployment", zh: "Kimi K3: Architecture, Precision and Hardware Deployment" },
     excerpt: {
       en: "How text enters the model → how the model computes → where the data is stored → why low precision saves HBM → why some GPUs or TPUs can run the model more easily than others.",
@@ -206,7 +189,7 @@ const portfolioEntries: PortfolioEntry[] = [
     group: "technology",
   },
   {
-    number: "09",
+    number: "08",
     title: { en: "The Three Layers of LLM Agents", zh: "The Three Layers of LLM Agents" },
     excerpt: {
       en: "A field guide to what each layer answers — and how they stack, not compete.",
@@ -220,7 +203,7 @@ const portfolioEntries: PortfolioEntry[] = [
     group: "technology",
   },
   {
-    number: "10",
+    number: "09",
     title: { en: "Agents & Harnesses", zh: "Agents & Harnesses" },
     excerpt: {
       en: "The Layered Architecture, the Recurring Patterns, and What Endures.",
@@ -234,7 +217,7 @@ const portfolioEntries: PortfolioEntry[] = [
     group: "technology",
   },
   {
-    number: "11",
+    number: "10",
     title: { en: "Sandbox, Docker & Virtual Machines", zh: "Sandbox, Docker & Virtual Machines" },
     excerpt: {
       en: "How they really fit together for AI Agents.",
@@ -248,7 +231,7 @@ const portfolioEntries: PortfolioEntry[] = [
     group: "technology",
   },
   {
-    number: "12",
+    number: "11",
     title: {
       en: "Kimi K3: From Model Architecture and Numerical Precision to Real Hardware Deployment",
       zh: "Kimi K3: From Model Architecture and Numerical Precision to Real Hardware Deployment",
