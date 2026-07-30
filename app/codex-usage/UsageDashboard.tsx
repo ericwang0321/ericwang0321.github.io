@@ -15,10 +15,14 @@ type TooltipState = {
   top: number;
 };
 
-const compactTokens = (value: number) => new Intl.NumberFormat("en", {
-  notation: "compact",
-  maximumFractionDigits: value >= 1_000_000_000 ? 2 : 1,
-}).format(value);
+const compactTokens = (value: number) => {
+  const divisor = value >= 1_000_000_000 ? 1_000_000_000 : 1_000_000;
+  const unit = value >= 1_000_000_000 ? "B" : "M";
+  const scaled = value / divisor;
+  const maximumFractionDigits = unit === "B" ? 2 : scaled >= 100 ? 1 : 2;
+
+  return `${new Intl.NumberFormat("en", { maximumFractionDigits }).format(scaled)}${unit}`;
+};
 
 const exactTokens = (value: number) => new Intl.NumberFormat("en-US").format(value);
 
@@ -49,7 +53,7 @@ const copy = {
     lastSeven: "last 7 days",
     previous: "vs previous 7 days",
     chart: "Daily usage",
-    chartNote: "Hover or focus a bar for exact values.",
+    chartNote: "Hover or focus a bar for values in M/B.",
     days14: "14D",
     days30: "30D",
     all: "All",
@@ -73,7 +77,7 @@ const copy = {
     lastSeven: "最近 7 天",
     previous: "较此前 7 天",
     chart: "每日用量",
-    chartNote: "悬停或聚焦柱体可查看精确数据。",
+    chartNote: "悬停或聚焦柱体可查看 M/B 单位数据。",
     days14: "14 天",
     days30: "30 天",
     all: "全部",
@@ -90,10 +94,10 @@ function UsageTooltip({ day, language }: { day: DailyUsage; language: Language }
   return (
     <>
       <strong>{shortDate(day.date)}</strong>
-      <span>{label.cached}<b>{exactTokens(day.cachedInputTokens)}</b></span>
-      <span>{label.uncached}<b>{exactTokens(day.uncachedInputTokens)}</b></span>
-      <span>{label.output}<b>{exactTokens(day.outputTokens)}</b></span>
-      <span>{label.total}<b>{exactTokens(day.totalTokens)}</b></span>
+      <span>{label.cached}<b>{compactTokens(day.cachedInputTokens)}</b></span>
+      <span>{label.uncached}<b>{compactTokens(day.uncachedInputTokens)}</b></span>
+      <span>{label.output}<b>{compactTokens(day.outputTokens)}</b></span>
+      <span>{label.total}<b>{compactTokens(day.totalTokens)}</b></span>
     </>
   );
 }
@@ -111,7 +115,7 @@ function Bar({ day, max, showDate, onHideTooltip, onShowTooltip }: {
     <div
       className={styles.barColumn}
       tabIndex={day.totalTokens > 0 ? 0 : -1}
-      aria-label={`${day.date}: ${exactTokens(day.totalTokens)} tokens`}
+      aria-label={`${day.date}: ${compactTokens(day.totalTokens)} tokens`}
       onBlur={onHideTooltip}
       onFocus={(event) => onShowTooltip(day, event.currentTarget)}
       onMouseEnter={(event) => onShowTooltip(day, event.currentTarget)}
