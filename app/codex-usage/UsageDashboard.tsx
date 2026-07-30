@@ -1,12 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import styles from "./usage.module.css";
 import type { DailyUsage, UsageData } from "./types";
 
 type Language = "en" | "zh";
 type Range = 14 | 30 | "all";
+type TooltipState = {
+  day: DailyUsage;
+  left: number;
+  placement: "above" | "below";
+  top: number;
+};
 
 const compactTokens = (value: number) => new Intl.NumberFormat("en", {
   notation: "compact",
@@ -77,13 +84,27 @@ const copy = {
   },
 };
 
-function Bar({ day, max, language, showDate }: {
+function UsageTooltip({ day, language }: { day: DailyUsage; language: Language }) {
+  const label = copy[language];
+
+  return (
+    <>
+      <strong>{shortDate(day.date)}</strong>
+      <span>{label.cached}<b>{exactTokens(day.cachedInputTokens)}</b></span>
+      <span>{label.uncached}<b>{exactTokens(day.uncachedInputTokens)}</b></span>
+      <span>{label.output}<b>{exactTokens(day.outputTokens)}</b></span>
+      <span>{label.total}<b>{exactTokens(day.totalTokens)}</b></span>
+    </>
+  );
+}
+
+function Bar({ day, max, showDate, onHideTooltip, onShowTooltip }: {
   day: DailyUsage;
   max: number;
-  language: Language;
   showDate: boolean;
+  onHideTooltip: () => void;
+  onShowTooltip: (day: DailyUsage, target: HTMLDivElement) => void;
 }) {
-  const label = copy[language];
   const barHeight = day.totalTokens > 0 ? Math.max(2, (day.totalTokens / max) * 100) : 0;
 
   return (
@@ -91,14 +112,11 @@ function Bar({ day, max, language, showDate }: {
       className={styles.barColumn}
       tabIndex={day.totalTokens > 0 ? 0 : -1}
       aria-label={`${day.date}: ${exactTokens(day.totalTokens)} tokens`}
+      onBlur={onHideTooltip}
+      onFocus={(event) => onShowTooltip(day, event.currentTarget)}
+      onMouseEnter={(event) => onShowTooltip(day, event.currentTarget)}
+      onMouseLeave={onHideTooltip}
     >
-      <div className={styles.tooltip}>
-        <strong>{shortDate(day.date)}</strong>
-        <span>{label.cached}<b>{exactTokens(day.cachedInputTokens)}</b></span>
-        <span>{label.uncached}<b>{exactTokens(day.uncachedInputTokens)}</b></span>
-        <span>{label.output}<b>{exactTokens(day.outputTokens)}</b></span>
-        <span>{label.total}<b>{exactTokens(day.totalTokens)}</b></span>
-      </div>
       <div className={styles.barTrack}>
         {day.totalTokens > 0 ? (
           <div className={styles.barStack} style={{ height: `${barHeight}%` }}>
@@ -116,6 +134,7 @@ function Bar({ day, max, language, showDate }: {
 export default function UsageDashboard({ data }: { data: UsageData }) {
   const [language, setLanguage] = useState<Language>("en");
   const [range, setRange] = useState<Range>(30);
+  const [activeTooltip, setActiveTooltip] = useState<TooltipState | null>(null);
   const label = copy[language];
   const visibleDays = useMemo(
     () => range === "all" ? data.daily : data.daily.slice(-range),
@@ -126,8 +145,34 @@ export default function UsageDashboard({ data }: { data: UsageData }) {
   const latestDays = data.daily.slice(-14).reverse();
   const trend = data.summary.sevenDayChangePercent;
 
+  const showTooltip = (day: DailyUsage, target: HTMLDivElement) => {
+    const rect = target.getBoundingClientRect();
+    const tooltipWidth = Math.min(220, window.innerWidth - 24);
+    const centeredLeft = rect.left + rect.width / 2;
+    const left = Math.min(
+      window.innerWidth - 12 - tooltipWidth / 2,
+      Math.max(12 + tooltipWidth / 2, centeredLeft),
+    );
+    const placement = rect.top < 150 ? "below" : "above";
+    const top = placement === "below" ? rect.bottom + 10 : rect.top - 10;
+
+    setActiveTooltip({ day, left, placement, top });
+  };
+
+  useEffect(() => {
+    if (!activeTooltip) return;
+    const hideTooltip = () => setActiveTooltip(null);
+    window.addEventListener("resize", hideTooltip);
+    window.addEventListener("scroll", hideTooltip, true);
+    return () => {
+      window.removeEventListener("resize", hideTooltip);
+      window.removeEventListener("scroll", hideTooltip, true);
+    };
+  }, [activeTooltip]);
+
   return (
-    <main className={styles.shell}>
+    <>
+      <main className={styles.shell}>
       <header className={styles.header}>
         <div className={styles.headerInner}>
           <Link className={styles.brand} href="/">Eric Wang&apos;s Page</Link>
@@ -194,8 +239,9 @@ export default function UsageDashboard({ data }: { data: UsageData }) {
                     <Bar
                       day={day}
                       key={day.date}
-                      language={language}
                       max={max}
+                      onHideTooltip={() => setActiveTooltip(null)}
+                      onShowTooltip={showTooltip}
                       showDate={index % labelInterval === 0 || index === visibleDays.length - 1}
                     />
                   ))}
@@ -230,6 +276,19 @@ export default function UsageDashboard({ data }: { data: UsageData }) {
           <a href="/data/codex-usage.json">{label.data} ↗</a>
         </footer>
       </div>
-    </main>
+      </main>
+      {activeTooltip
+        ? createPortal(
+            <div
+              className={`${styles.tooltip} ${styles.floatingTooltip} ${activeTooltip.placement === "below" ? styles.floatingTooltipBelow : ""}`}
+              role="tooltip"
+              style={{ left: activeTooltip.left, top: activeTooltip.top }}
+            >
+              <UsageTooltip day={activeTooltip.day} language={language} />
+            </div>,
+            document.body,
+          )
+        : null}
+    </>
   );
 }
