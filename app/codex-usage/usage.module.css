@@ -268,12 +268,14 @@
 .barTrack {
   align-items: end;
   display: flex;
+  justify-content: center;
   min-height: 0;
 }
 
 .barStack {
   display: flex;
   flex-direction: column-reverse;
+  max-width: 28px;
   min-height: 2px;
   overflow: hidden;
   width: 100%;
