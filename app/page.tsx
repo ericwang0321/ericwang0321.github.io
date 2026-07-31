@@ -406,7 +406,7 @@ export default function Home() {
         </div>
         <h1 id="hero-title">
           {language === "en" ? (
-            <>AI infrastructure, markets,<br />and the systems in between.</>
+            <>AI infrastructure, markets,<br />{" "}and the systems in between.</>
           ) : (
             <>AI 基础设施、资本市场，<br />以及连接两者的系统。</>
           )}
