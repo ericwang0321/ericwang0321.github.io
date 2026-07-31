@@ -1,11 +1,11 @@
 {
-  "schemaVersion": 2,
-  "generatedAt": "2026-07-31T06:55:12.405Z",
+  "schemaVersion": 3,
+  "generatedAt": "2026-07-31T07:10:57.583Z",
   "timezone": "Asia/Hong_Kong",
   "throughDate": "2026-07-30",
   "source": {
     "firstDate": "2026-05-04",
-    "filesIndexed": 605,
+    "filesIndexed": 610,
     "sessionsWithUsage": 588,
     "invalidTokenLines": 0,
     "contentRead": false
@@ -31,8 +31,15 @@
     "sevenDayChangePercent": -21.4,
     "peakDate": "2026-07-17",
     "peakTokens": 2711668592,
+    "peakChatTokens": 771767959,
+    "longestChatSeconds": 16105,
     "currentStreak": 19,
     "longestStreak": 20
+  },
+  "behavior": {
+    "fastModePercent": 41.4,
+    "reasoningLabel": "极高",
+    "reasoningPercent": 60.3
   },
   "activity": {
     "toolCalls": 50967,
@@ -137,6 +144,28 @@
       {
         "name": "3-statement-model",
         "count": 12
+      }
+    ],
+    "topPlugins": [
+      {
+        "name": "spreadsheets",
+        "count": 438
+      },
+      {
+        "name": "presentations",
+        "count": 64
+      },
+      {
+        "name": "company-model-harness",
+        "count": 101
+      },
+      {
+        "name": "documents",
+        "count": 42
+      },
+      {
+        "name": "sites",
+        "count": 72
       }
     ]
   },
