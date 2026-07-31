@@ -1,37 +1,37 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-07-30T02:31:28.328Z",
+  "generatedAt": "2026-07-31T06:46:34.600Z",
   "timezone": "Asia/Hong_Kong",
-  "throughDate": "2026-07-29",
+  "throughDate": "2026-07-30",
   "source": {
     "firstDate": "2026-05-04",
-    "filesIndexed": 555,
-    "sessionsWithUsage": 545,
+    "filesIndexed": 602,
+    "sessionsWithUsage": 588,
     "invalidTokenLines": 0,
     "contentRead": false
   },
   "totals": {
-    "inputTokens": 16238076090,
-    "cachedInputTokens": 15291245184,
-    "uncachedInputTokens": 946830906,
+    "inputTokens": 18084003912,
+    "cachedInputTokens": 17064632192,
+    "uncachedInputTokens": 1019371720,
     "cacheWriteInputTokens": 0,
-    "outputTokens": 62960038,
-    "reasoningOutputTokens": 21134758,
-    "totalTokens": 16301036128,
-    "requests": 114944,
-    "sessions": 545,
-    "cacheHitRate": 94.2
+    "outputTokens": 69417863,
+    "reasoningOutputTokens": 23537389,
+    "totalTokens": 18153421775,
+    "requests": 129191,
+    "sessions": 588,
+    "cacheHitRate": 94.4
   },
   "summary": {
-    "calendarDays": 87,
-    "activeDays": 79,
-    "averagePerActiveDay": 206342229,
-    "lastSevenDaysTokens": 3956384263,
-    "previousSevenDaysTokens": 5503976005,
-    "sevenDayChangePercent": -28.1,
+    "calendarDays": 88,
+    "activeDays": 80,
+    "averagePerActiveDay": 226917772,
+    "lastSevenDaysTokens": 4922513192,
+    "previousSevenDaysTokens": 6259826559,
+    "sevenDayChangePercent": -21.4,
     "peakDate": "2026-07-17",
     "peakTokens": 2711668592,
-    "currentStreak": 18,
+    "currentStreak": 19,
     "longestStreak": 20
   },
   "daily": [
@@ -1165,6 +1165,19 @@
       "requests": 5347,
       "sessions": 34,
       "cacheHitRate": 95.9
+    },
+    {
+      "date": "2026-07-30",
+      "inputTokens": 1845927822,
+      "cachedInputTokens": 1773387008,
+      "uncachedInputTokens": 72540814,
+      "cacheWriteInputTokens": 0,
+      "outputTokens": 6457825,
+      "reasoningOutputTokens": 2402631,
+      "totalTokens": 1852385647,
+      "requests": 14247,
+      "sessions": 48,
+      "cacheHitRate": 96.1
     }
   ]
 }
