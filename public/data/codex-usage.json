@@ -1,11 +1,11 @@
 {
-  "schemaVersion": 1,
-  "generatedAt": "2026-07-31T06:46:34.600Z",
+  "schemaVersion": 2,
+  "generatedAt": "2026-07-31T06:55:12.405Z",
   "timezone": "Asia/Hong_Kong",
   "throughDate": "2026-07-30",
   "source": {
     "firstDate": "2026-05-04",
-    "filesIndexed": 602,
+    "filesIndexed": 605,
     "sessionsWithUsage": 588,
     "invalidTokenLines": 0,
     "contentRead": false
@@ -33,6 +33,112 @@
     "peakTokens": 2711668592,
     "currentStreak": 19,
     "longestStreak": 20
+  },
+  "activity": {
+    "toolCalls": 50967,
+    "uniqueTools": 47,
+    "skillReads": 918,
+    "uniqueSkills": 36,
+    "topTools": [
+      {
+        "name": "exec_command",
+        "count": 36452
+      },
+      {
+        "name": "write_stdin",
+        "count": 5192
+      },
+      {
+        "name": "wait",
+        "count": 3262
+      },
+      {
+        "name": "view_image",
+        "count": 1796
+      },
+      {
+        "name": "update_plan",
+        "count": 987
+      },
+      {
+        "name": "js",
+        "count": 518
+      },
+      {
+        "name": "load_workspace_dependencies",
+        "count": 393
+      },
+      {
+        "name": "get_stock_info",
+        "count": 391
+      },
+      {
+        "name": "wait_agent",
+        "count": 352
+      },
+      {
+        "name": "request_user_input",
+        "count": 303
+      },
+      {
+        "name": "spawn_agent",
+        "count": 281
+      },
+      {
+        "name": "send_message",
+        "count": 267
+      }
+    ],
+    "topSkills": [
+      {
+        "name": "spreadsheets",
+        "count": 438
+      },
+      {
+        "name": "company-model-harness",
+        "count": 101
+      },
+      {
+        "name": "browser",
+        "count": 70
+      },
+      {
+        "name": "presentations",
+        "count": 53
+      },
+      {
+        "name": "documents",
+        "count": 35
+      },
+      {
+        "name": "initiating-coverage",
+        "count": 28
+      },
+      {
+        "name": "audit-xls",
+        "count": 23
+      },
+      {
+        "name": "market-researcher",
+        "count": 18
+      },
+      {
+        "name": "imagegen",
+        "count": 16
+      },
+      {
+        "name": "competitive-analysis",
+        "count": 13
+      },
+      {
+        "name": "comps-analysis",
+        "count": 13
+      },
+      {
+        "name": "3-statement-model",
+        "count": 12
+      }
+    ]
   },
   "daily": [
     {
