@@ -37,5 +37,13 @@ export type UsageData = {
     currentStreak: number;
     longestStreak: number;
   };
+  activity: {
+    toolCalls: number;
+    uniqueTools: number;
+    skillReads: number;
+    uniqueSkills: number;
+    topTools: { name: string; count: number }[];
+    topSkills: { name: string; count: number }[];
+  };
   daily: DailyUsage[];
 };

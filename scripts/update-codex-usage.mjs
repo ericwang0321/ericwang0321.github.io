@@ -8,7 +8,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const TIME_ZONE = "Asia/Hong_Kong";
-const CACHE_VERSION = 2;
+const CACHE_VERSION = 3;
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const codexLogRoot = process.env.CODEX_USAGE_LOG_ROOT || path.join(homedir(), ".codex");
 const sourceRoots = [
@@ -30,6 +30,12 @@ const emptyUsage = () => ({
   totalTokens: 0,
   requests: 0,
 });
+
+const emptyActivity = () => ({ toolCounts: {}, skillCounts: {} });
+
+const incrementCount = (counts, name) => {
+  counts[name] = (counts[name] || 0) + 1;
+};
 
 const numeric = (value) => Number.isFinite(Number(value)) ? Math.max(0, Number(value)) : 0;
 
@@ -94,13 +100,13 @@ const writeJsonAtomic = async (targetPath, value, compact = false) => {
 };
 
 const scanFiles = async (files) => {
-  const perFile = new Map(files.map((file) => [file, { daily: {}, previous: emptyUsage(), invalidLines: 0 }]));
+  const perFile = new Map(files.map((file) => [file, { daily: {}, activityDaily: {}, previous: emptyUsage(), invalidLines: 0 }]));
   if (files.length === 0) return perFile;
 
   const batchSize = 72;
   for (let start = 0; start < files.length; start += batchSize) {
     const batch = files.slice(start, start + batchSize);
-    const child = spawn("rg", ["--json", "--no-messages", "-e", '"type":"token_count"', ...batch], {
+    const child = spawn("rg", ["--json", "--no-messages", "-e", '"type":"token_count"', "-e", '"type":"function_call"', ...batch], {
       stdio: ["ignore", "pipe", "pipe"],
     });
     const exitPromise = new Promise((resolve, reject) => {
@@ -127,6 +133,23 @@ const scanFiles = async (files) => {
         event = JSON.parse(rawLine);
       } catch {
         fileState.invalidLines += 1;
+        continue;
+      }
+      if (event?.payload?.type === "function_call" && event.timestamp) {
+        const toolName = typeof event.payload.name === "string" ? event.payload.name : "";
+        if (!/^[A-Za-z0-9_.:-]{1,120}$/.test(toolName)) continue;
+        const date = dateInTimeZone(event.timestamp);
+        const activity = fileState.activityDaily[date] || emptyActivity();
+        incrementCount(activity.toolCounts, toolName);
+
+        const args = typeof event.payload.arguments === "string" ? event.payload.arguments : "";
+        if (toolName === "exec_command" && args.includes("SKILL.md")) {
+          const skillNames = new Set(
+            [...args.matchAll(/(?:^|\/)([A-Za-z0-9][A-Za-z0-9._-]*)\/SKILL\.md/g)].map((match) => match[1]),
+          );
+          for (const skillName of skillNames) incrementCount(activity.skillCounts, skillName);
+        }
+        fileState.activityDaily[date] = activity;
         continue;
       }
       if (event?.payload?.type !== "token_count") continue;
@@ -225,6 +248,7 @@ const main = async () => {
     cache.files[file] = {
       ...metadata.get(file),
       daily: result?.daily || {},
+      activityDaily: result?.activityDaily || {},
       invalidLines: result?.invalidLines || 0,
     };
   }
@@ -233,6 +257,8 @@ const main = async () => {
   await writeJsonAtomic(cachePath, cache, true);
 
   const combined = {};
+  const toolCounts = {};
+  const skillCounts = {};
   let sourceSessions = 0;
   let invalidLines = 0;
   for (const file of Object.values(cache.files)) {
@@ -246,6 +272,11 @@ const main = async () => {
       day.uncachedInputTokens = Math.max(0, day.inputTokens - day.cachedInputTokens);
       combined[date] = day;
       included = true;
+    }
+    for (const [date, activity] of Object.entries(file.activityDaily || {})) {
+      if (date > throughDate) continue;
+      for (const [name, count] of Object.entries(activity.toolCounts || {})) toolCounts[name] = (toolCounts[name] || 0) + numeric(count);
+      for (const [name, count] of Object.entries(activity.skillCounts || {})) skillCounts[name] = (skillCounts[name] || 0) + numeric(count);
     }
     if (included) sourceSessions += 1;
   }
@@ -285,7 +316,7 @@ const main = async () => {
   }
 
   const output = {
-    schemaVersion: 1,
+    schemaVersion: 2,
     generatedAt: new Date().toISOString(),
     timezone: TIME_ZONE,
     throughDate,
@@ -308,6 +339,14 @@ const main = async () => {
       peakTokens: peakDay.totalTokens,
       currentStreak,
       longestStreak,
+    },
+    activity: {
+      toolCalls: Object.values(toolCounts).reduce((sum, count) => sum + count, 0),
+      uniqueTools: Object.keys(toolCounts).length,
+      skillReads: Object.values(skillCounts).reduce((sum, count) => sum + count, 0),
+      uniqueSkills: Object.keys(skillCounts).length,
+      topTools: Object.entries(toolCounts).sort((a, b) => b[1] - a[1]).slice(0, 12).map(([name, count]) => ({ name, count })),
+      topSkills: Object.entries(skillCounts).sort((a, b) => b[1] - a[1]).slice(0, 12).map(([name, count]) => ({ name, count })),
     },
     daily,
   };
