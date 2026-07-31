@@ -7,7 +7,7 @@ export const dynamic = "force-static";
 
 export const metadata: Metadata = {
   title: "Codex Usage — Eric Wang",
-  description: "A local-first view of daily Codex token usage, cache efficiency and activity trends.",
+  description: "A compact public view of Eric Wang's daily Codex token usage and activity trends.",
   robots: { index: false, follow: false },
 };
 

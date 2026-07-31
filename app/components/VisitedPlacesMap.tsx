@@ -114,8 +114,8 @@ export default function VisitedPlacesMap({ language }: { language: Language }) {
     if (!section) return;
 
     if (!("IntersectionObserver" in window)) {
-      setShouldLoadMap(true);
-      return;
+      const frame = requestAnimationFrame(() => setShouldLoadMap(true));
+      return () => cancelAnimationFrame(frame);
     }
 
     const observer = new IntersectionObserver(
@@ -168,8 +168,9 @@ export default function VisitedPlacesMap({ language }: { language: Language }) {
           backgroundColor: "transparent",
           draggable: true,
           zoomButtons: true,
-          zoomOnScroll: true,
-          zoomOnScrollSpeed: 1.4,
+          // Keep ordinary page scrolling available while the pointer is over
+          // the map. Visitors can still zoom with the visible controls.
+          zoomOnScroll: false,
           zoomMax: 9,
           bindTouchEvents: true,
           regionsSelectable: false,
@@ -241,8 +242,8 @@ export default function VisitedPlacesMap({ language }: { language: Language }) {
       <h2>{language === "en" ? "Places I’ve Been" : "我去过的地方"}</h2>
       <p className="places-intro">
         {language === "en"
-          ? "Countries and regions are highlighted in blue. Zoom, scroll or drag to explore; markers identify Hong Kong, Macao, Singapore and Raleigh."
-          : "蓝色区域代表我去过的国家和地区。可缩放、滚动或拖动查看；圆点标记香港、澳门、新加坡和 Raleigh。"}
+          ? "Visited countries and regions are highlighted in black. Use the +/− controls to zoom, or drag to explore; markers identify Hong Kong, Macao, Singapore and Raleigh."
+          : "黑色区域代表我去过的国家和地区。可使用 +/− 控件缩放或拖动查看；圆点标记香港、澳门、新加坡和 Raleigh。"}
       </p>
 
       <div className="places-grid">

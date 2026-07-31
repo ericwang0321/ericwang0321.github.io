@@ -555,13 +555,27 @@ img {
 }
 
 .places-map .jvm-zoom-btn {
+  align-items: center;
   background: #fff;
   border: 1px solid #d0d0cb;
   border-radius: 50%;
   color: #111;
-  height: 30px;
-  line-height: 27px;
-  width: 30px;
+  display: flex;
+  font-size: 18px;
+  height: 44px;
+  justify-content: center;
+  line-height: 1;
+  width: 44px;
+}
+
+.places-map .jvm-zoomin {
+  left: 14px !important;
+  top: 14px !important;
+}
+
+.places-map .jvm-zoomout {
+  left: 14px !important;
+  top: 66px !important;
 }
 
 .places-country-panel {
@@ -697,14 +711,10 @@ img {
 }
 
 .research-row {
-  align-items: stretch;
   background: var(--surface);
   border-radius: 28px;
   contain-intrinsic-size: auto 210px;
   content-visibility: auto;
-  display: grid;
-  gap: 32px;
-  grid-template-columns: 300px minmax(0, 1fr);
   min-height: 210px;
   padding: 16px;
   transition: background 180ms ease, transform 180ms ease;
@@ -713,6 +723,18 @@ img {
 .research-row:hover {
   background: var(--surface-hover);
   transform: translateY(-2px);
+}
+
+.research-card-link {
+  align-items: stretch;
+  display: grid;
+  gap: 32px;
+  grid-template-columns: 300px minmax(0, 1fr);
+  min-height: 178px;
+}
+
+.research-card-link:focus-visible {
+  border-radius: 20px;
 }
 
 .research-thumbnail {
@@ -759,7 +781,8 @@ img {
   width: 38px;
 }
 
-.research-arrow:hover {
+.research-row:hover .research-arrow,
+.research-card-link:focus-visible .research-arrow {
   background: #111;
   color: #fff;
 }
@@ -773,7 +796,8 @@ img {
   max-width: 720px;
 }
 
-.research-copy h3 a:hover {
+.research-row:hover .research-copy h3,
+.research-card-link:focus-visible .research-copy h3 {
   color: #555551;
 }
 
@@ -974,6 +998,10 @@ img {
 
   .research-row {
     gap: 22px;
+  }
+
+  .research-card-link {
+    gap: 22px;
     grid-template-columns: 240px minmax(0, 1fr);
   }
 
@@ -1159,6 +1187,11 @@ img {
     display: block;
     min-height: 0;
     padding: 12px;
+  }
+
+  .research-card-link {
+    display: block;
+    min-height: 0;
   }
 
   .research-thumbnail {

@@ -34,9 +34,9 @@ export default async function LibraryPage({ params }: { params: Promise<{ slug: 
     <main className={`${styles.shell} ${styles[deck.accent]}`}>
       <header className={styles.header}>
         <Link className={styles.wordmark} href="/">
-          <strong>EW</strong><span>Eric Wang</span>
+          <span>Eric Wang</span>
         </Link>
-        <Link href="/#research">← BACK TO RESEARCH</Link>
+        <Link href="/#research">← Back to research</Link>
       </header>
 
       <section className={styles.hero}>
@@ -46,9 +46,9 @@ export default async function LibraryPage({ params }: { params: Promise<{ slug: 
           <h2>{deck.chineseTitle}</h2>
           <p>{deck.summary}</p>
           <dl>
-            <div><dt>FORMAT</dt><dd>Visual research deck</dd></div>
-            <div><dt>LENGTH</dt><dd>{deck.pages} pages</dd></div>
-            <div><dt>AUTHOR</dt><dd>Eric Wang · 王逸东</dd></div>
+            <div><dt>Format</dt><dd>Visual research deck</dd></div>
+            <div><dt>Length</dt><dd>{deck.pages} pages</dd></div>
+            <div><dt>Author</dt><dd>Eric Wang</dd></div>
           </dl>
         </div>
         <div className={styles.cover} aria-hidden="true">
@@ -57,15 +57,15 @@ export default async function LibraryPage({ params }: { params: Promise<{ slug: 
       </section>
 
       <div className={styles.notice}>
-        <strong>READ IN BROWSER</strong>
+        <strong>Read in browser</strong>
         <p>The original PDF is not published. This web edition preserves every page for reading without a direct source-file download.</p>
       </div>
 
       <DeckReader deck={deck} />
 
       <footer className={styles.footer}>
-        <p>Original research and visual synthesis by Eric Wang · 王逸东</p>
-        <Link href="/#research">MORE RESEARCH ↗</Link>
+        <p>Original research and visual synthesis by Eric Wang</p>
+        <Link href="/#research">More research ↗</Link>
       </footer>
     </main>
   );

@@ -4,17 +4,27 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>AI 公司 GTM 策略研究 | GTM Strategy Research</title>
+<link rel="icon" href="/favicon.png">
 <style>
 :root{
-  --blue:#4472C4; --blue-dark:#2F5496; --bg:#F7F9FC; --card:#FFFFFF; --ink:#1c2b45;
-  --muted:#5d6b84; --line:#DDE5F0; --soft:#EDF2FA; --chip:#DCE6F5; --good:#2e7d32; --warn:#b26a00;
+  --blue:#4472C4; --blue-dark:#2F5496; --bg:#F4F4F1; --card:#FFFFFF; --ink:#111111;
+  --muted:#666661; --line:#DEDED9; --soft:#F1F1ED; --chip:#ECECE8; --good:#2e7d32; --warn:#b26a00;
 }
 *{box-sizing:border-box}
+html,body{max-width:100%;overflow-x:clip}
 html[lang="zh-CN"] .en{display:none!important}
 html[lang="en"] .zh{display:none!important}
-body{margin:0;padding:18px 12px 56px;background:var(--bg);color:var(--ink);
+body{margin:0;background:var(--bg);color:var(--ink);
   font:14px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;}
-.wrap{max-width:1400px;margin:0 auto}
+.wrap{max-width:1400px;margin:0 auto;padding:18px 12px 56px}
+:where(a,button,input,select,summary):focus-visible{outline:2px solid #111;outline-offset:3px}
+.site-chrome{position:sticky;top:0;z-index:100;color:#111;background:rgba(255,255,255,.94);border-bottom:1px solid #deded9;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+.site-chrome-inner{width:min(1440px,100%);height:64px;margin:0 auto;padding:0 24px;display:flex;align-items:center;justify-content:space-between;gap:20px}
+.site-chrome-brand,.site-chrome-links{display:flex;align-items:center}
+.site-chrome-brand{color:#111;text-decoration:none;font-size:17px;font-weight:650;letter-spacing:-.025em}
+.site-chrome-links{gap:20px}
+.site-chrome-links a{color:#5f5f5a;text-decoration:none;font-size:12px;font-weight:650}
+.site-chrome-links a:hover{color:#111}
 h1{font-size:22px;margin:0 0 6px;color:var(--blue-dark)}
 h2{font-size:17px;margin:0 0 4px;color:var(--blue-dark)}
 h3{font-size:14px;margin:0 0 6px;color:var(--blue)}
@@ -29,17 +39,17 @@ h3{font-size:14px;margin:0 0 6px;color:var(--blue)}
 .tabs button{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;
   padding:8px 16px;font-size:13.5px;cursor:pointer}
 .tabs button[aria-pressed="true"]{background:var(--blue);color:#fff;border-color:var(--blue)}
-section[data-panel]{display:grid;gap:14px}
+section[data-panel]{display:grid;gap:14px;min-width:0}
 section[data-panel][hidden]{display:none}
-.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:15px 18px}
+.card{min-width:0;max-width:100%;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:15px 18px}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 @media(max-width:760px){.grid2{grid-template-columns:1fr}}
 table{width:100%;border-collapse:collapse;font-size:13px;background:#fff}
 th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
 th{background:var(--blue);color:#fff;font-weight:600;white-space:nowrap}
 tbody tr:nth-child(even){background:var(--soft)}
-.steps{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:4px 0}
-.steps .s{background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:4px 10px;font-size:12.5px}
+.steps{display:flex;flex-wrap:wrap;gap:6px;align-items:center;min-width:0;max-width:100%;margin:4px 0}
+.steps .s{min-width:0;max-width:100%;background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:4px 10px;font-size:12.5px;overflow-wrap:anywhere}
 .steps .arr{color:var(--blue)}
 .kv{display:grid;grid-template-columns:130px 1fr;gap:6px 14px;font-size:13.5px}
 @media(max-width:600px){.kv{grid-template-columns:1fr}}
@@ -47,7 +57,7 @@ tbody tr:nth-child(even){background:var(--soft)}
 .kv dd{margin:0}
 .select-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:4px}
 select{background:#fff;color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:7px 10px;font-size:14px}
-.badge{font-size:12px;color:var(--muted)}
+.badge{font-size:12px;color:var(--muted);overflow-wrap:anywhere}
 .src a{color:var(--blue);text-decoration:none;font-size:12.5px;margin-right:12px}
 .src a:hover{text-decoration:underline}
 .note{color:var(--muted);font-size:12.5px}
@@ -69,9 +79,26 @@ abbr[title]{text-decoration:none;border-bottom:1px dotted var(--blue);cursor:poi
 abbr[title]:hover{background:var(--soft)}
 @keyframes gloss-flash{0%{background:#FFE9A8}100%{background:transparent}}
 tr.gloss-hit td{animation:gloss-flash 2s ease-out}
+#motions-list,#motions-list>div,.kv,.kv dd,.flow{min-width:0;max-width:100%}
+@media(max-width:600px){
+  .site-chrome-inner{height:64px;padding:0 14px}
+  .site-chrome-links a:first-child{display:none}
+  .wrap{padding:14px 8px 48px}
+  .card{padding:14px}
+  .steps{align-items:flex-start}
+}
 </style>
 </head>
 <body>
+<div class="site-chrome" role="banner">
+  <div class="site-chrome-inner">
+    <a class="site-chrome-brand" href="/" aria-label="Eric Wang home">Eric Wang</a>
+    <nav class="site-chrome-links" aria-label="Portfolio navigation">
+      <a href="/">Home</a>
+      <a href="/#research">← Back to research</a>
+    </nav>
+  </div>
+</div>
 <div class="wrap">
   <div class="topbar">
     <div>

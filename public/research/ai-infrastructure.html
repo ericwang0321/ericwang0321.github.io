@@ -4,22 +4,23 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>AI 基建专有知识可视化</title>
+  <link rel="icon" href="/favicon.png">
   <style>
     :root {
-      --bg: #f5f3ee;
+      --bg: #f4f4f1;
       --paper: #ffffff;
-      --paper-soft: #faf9f5;
-      --ink: #20242a;
-      --muted: #65707c;
-      --line: #dde2e7;
-      --line-soft: #edf0f2;
+      --paper-soft: #f7f7f4;
+      --ink: #111111;
+      --muted: #666661;
+      --line: #deded9;
+      --line-soft: #ecece8;
       --blue: #2563eb;
       --green: #168a61;
       --violet: #7c3aed;
       --amber: #b7791f;
       --red: #c24135;
       --teal: #0f766e;
-      --shadow: 0 20px 54px rgba(32, 36, 42, .08);
+      --shadow: 0 16px 42px rgba(17, 17, 17, .06);
       --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
       --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
     }
@@ -49,6 +50,58 @@
     }
 
     a { color: inherit; }
+
+    :where(a, button, input, select, summary):focus-visible {
+      outline: 2px solid #111;
+      outline-offset: 3px;
+    }
+
+    .site-chrome {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      color: #111;
+      background: rgba(255, 255, 255, .94);
+      border-bottom: 1px solid #deded9;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
+
+    .site-chrome-inner {
+      width: min(1440px, 100%);
+      height: 64px;
+      margin: 0 auto;
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+
+    .site-chrome-brand,
+    .site-chrome-links {
+      display: flex;
+      align-items: center;
+    }
+
+    .site-chrome-brand {
+      color: #111;
+      text-decoration: none;
+      font-size: 17px;
+      font-weight: 650;
+      letter-spacing: -.025em;
+    }
+
+    .site-chrome-links { gap: 20px; }
+
+    .site-chrome-links a {
+      color: #5f5f5a;
+      text-decoration: none;
+      font-size: 12px;
+      font-weight: 650;
+    }
+
+    .site-chrome-links a:hover { color: #111; }
 
     h1, h2, h3, h4, p { margin-top: 0; }
 
@@ -716,6 +769,13 @@
     }
 
     @media (max-width: 760px) {
+      .site-chrome-inner {
+        height: 64px;
+        padding: 0 14px;
+      }
+
+      .site-chrome-links a:first-child { display: none; }
+
       .page {
         width: min(100% - 14px, 1500px);
         padding-top: 8px;
@@ -752,6 +812,15 @@
   </style>
 </head>
 <body>
+  <div class="site-chrome" role="banner">
+    <div class="site-chrome-inner">
+      <a class="site-chrome-brand" href="/" aria-label="Eric Wang home">Eric Wang</a>
+      <nav class="site-chrome-links" aria-label="Portfolio navigation">
+        <a href="/">Home</a>
+        <a href="/#research">← Back to research</a>
+      </nav>
+    </div>
+  </div>
   <main class="page">
     <section class="shell">
       <header>
@@ -1321,7 +1390,7 @@
     function renderVisuals() {
       document.getElementById("visualGrid").innerHTML = visuals.map((item, index) => `
         <article class="visual-card ${index === 0 ? "wide" : ""}">
-          <img src="${escapeHtml(item.image)}" alt="${escapeHtml(lang === "zh" ? item.zhTitle : item.enTitle)}" loading="lazy">
+          <img src="${escapeHtml(item.image)}" alt="${escapeHtml(lang === "zh" ? item.zhTitle : item.enTitle)}" width="1672" height="941" loading="lazy" decoding="async" fetchpriority="low">
           <div class="visual-copy">
             <h3>${escapeHtml(lang === "zh" ? item.zhTitle : item.enTitle)}</h3>
             <p>${escapeHtml(lang === "zh" ? item.zhText : item.enText)}</p>

@@ -1,21 +1,21 @@
 .shell {
-  --accent: #287d80;
-  background: #f1efe9;
-  color: #172126;
+  --accent: #111111;
+  background: #f4f4f1;
+  color: #111111;
   min-height: 100vh;
 }
 
-.blue { --accent: #0d5bd7; }
-.orange { --accent: #d17b2d; }
-.teal { --accent: #287d80; }
+.blue,
+.orange,
+.teal { --accent: #111111; }
 
 .header {
   align-items: center;
   backdrop-filter: blur(18px);
-  background: rgba(247, 245, 239, 0.9);
-  border-bottom: 1px solid rgba(23, 33, 38, 0.12);
+  background: rgba(255, 255, 255, 0.92);
+  border-bottom: 1px solid rgba(17, 17, 17, 0.08);
   display: flex;
-  height: 72px;
+  height: 64px;
   justify-content: space-between;
   padding: 0 clamp(22px, 5vw, 72px);
   position: sticky;
@@ -24,30 +24,13 @@
 }
 
 .header > a:last-child {
-  font-size: 10px;
-  font-weight: 720;
-  letter-spacing: 0.08em;
+  color: #30302e;
+  font-size: 13px;
+  font-weight: 500;
 }
 
-.wordmark {
-  align-items: center;
-  display: flex;
-  gap: 11px;
-}
-
-.wordmark strong {
-  align-items: center;
-  background: #172126;
-  border-radius: 50%;
-  color: white;
-  display: flex;
-  font-size: 10px;
-  height: 34px;
-  justify-content: center;
-  width: 34px;
-}
-
-.wordmark span { font-size: 12px; font-weight: 700; }
+.wordmark { align-items: center; display: flex; }
+.wordmark span { font-size: 17px; font-weight: 650; letter-spacing: -0.025em; }
 
 .hero {
   display: grid;
@@ -55,7 +38,7 @@
   grid-template-columns: minmax(0, 0.88fr) minmax(420px, 1.12fr);
   margin: 0 auto;
   max-width: 1580px;
-  min-height: calc(100svh - 72px);
+  min-height: calc(100svh - 64px);
   padding: clamp(74px, 9vw, 145px) clamp(22px, 6vw, 100px);
 }
 
@@ -90,7 +73,7 @@
 }
 
 .heroCopy > p {
-  color: #536065;
+  color: #555551;
   font-size: 16px;
   line-height: 1.7;
   margin: 31px 0 0;
@@ -106,7 +89,7 @@
   padding-top: 20px;
 }
 
-.hero dt { color: #899194; font-size: 8px; font-weight: 720; letter-spacing: 0.1em; }
+.hero dt { color: #777771; font-size: 9px; font-weight: 650; letter-spacing: 0.04em; }
 .hero dd { font-size: 10px; font-weight: 650; line-height: 1.4; margin: 8px 0 0; }
 
 .cover {
@@ -145,14 +128,14 @@
 
 .readerBar {
   align-items: center;
-  background: rgba(241, 239, 233, 0.92);
+  background: rgba(244, 244, 241, 0.92);
   backdrop-filter: blur(18px);
   border-bottom: 1px solid rgba(23, 33, 38, 0.12);
   display: flex;
   justify-content: space-between;
   padding: 15px clamp(22px, 6vw, 100px);
   position: sticky;
-  top: 72px;
+  top: 64px;
   z-index: 15;
 }
 
@@ -162,32 +145,37 @@
 .readerControls { display: flex; gap: 7px; }
 .readerControls button {
   align-items: center;
-  background: #172126;
+  background: #111111;
   border: 0;
   border-radius: 50%;
   color: white;
   cursor: pointer;
   display: flex;
   font-size: 15px;
-  height: 34px;
+  height: 44px;
   justify-content: center;
-  width: 34px;
+  width: 44px;
 }
 .readerControls button:disabled { cursor: default; opacity: 0.28; }
+.readerControls button:focus-visible { outline: 2px solid #111111; outline-offset: 3px; }
 
 .pages {
   display: grid;
   gap: clamp(34px, 5vw, 70px);
   margin: 0 auto;
   max-width: 1600px;
+  min-width: 0;
   padding: clamp(50px, 7vw, 105px) clamp(15px, 5vw, 80px) clamp(80px, 10vw, 150px);
+  width: 100%;
 }
 
 .page {
   content-visibility: auto;
-  contain-intrinsic-size: 864px;
+  contain-intrinsic-size: 0 864px;
   margin: 0;
+  min-width: 0;
   scroll-margin-top: 145px;
+  width: 100%;
 }
 
 .page img {
@@ -197,6 +185,7 @@
   height: auto;
   pointer-events: none;
   user-select: none;
+  max-width: 100%;
   width: 100%;
 }
 
@@ -226,15 +215,14 @@
 }
 
 @media (max-width: 560px) {
-  .header { height: 66px; }
-  .wordmark span { display: none; }
-  .header > a:last-child { font-size: 8px; }
-  .hero { padding-bottom: 75px; padding-top: 70px; }
-  .hero h1 { font-size: clamp(47px, 14vw, 65px); }
+  .header { height: 64px; padding-inline: 18px; }
+  .header > a:last-child { font-size: 12px; }
+  .hero { gap: 42px; padding-bottom: 52px; padding-top: 52px; }
+  .hero h1 { font-size: clamp(42px, 12vw, 58px); }
   .hero dl { gap: 12px; grid-template-columns: 1fr; }
   .hero dl div { display: grid; grid-template-columns: 80px 1fr; }
   .hero dd { margin: 0; }
-  .readerBar { top: 66px; }
+  .readerBar { top: 64px; }
   .readerBar span { display: none; }
   .pages { gap: 35px; padding-left: 8px; padding-right: 8px; }
   .page { scroll-margin-top: 130px; }

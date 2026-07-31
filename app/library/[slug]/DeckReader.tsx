@@ -30,7 +30,11 @@ export default function DeckReader({ deck }: { deck: ResearchDeck }) {
   }, [deck.pages]);
 
   const goToPage = (page: number) => {
-    document.getElementById(`page-${page}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    document.getElementById(`page-${page}`)?.scrollIntoView({
+      behavior: reduceMotion ? "auto" : "smooth",
+      block: "start",
+    });
   };
 
   return (
@@ -42,8 +46,8 @@ export default function DeckReader({ deck }: { deck: ResearchDeck }) {
     >
       <div className={styles.readerBar}>
         <div>
-          <span>VIEW-ONLY WEB EDITION</span>
-          <strong>{String(currentPage).padStart(2, "0")} / {String(deck.pages).padStart(2, "0")}</strong>
+          <span>View-only web edition</span>
+          <strong aria-live="polite">{String(currentPage).padStart(2, "0")} / {String(deck.pages).padStart(2, "0")}</strong>
         </div>
         <div className={styles.readerControls}>
           <button type="button" disabled={currentPage === 1} onClick={() => goToPage(currentPage - 1)} aria-label="Previous page">↑</button>
@@ -65,7 +69,7 @@ export default function DeckReader({ deck }: { deck: ResearchDeck }) {
               draggable="false"
               unoptimized
             />
-            <figcaption>PAGE {String(page).padStart(2, "0")}</figcaption>
+            <figcaption>Page {String(page).padStart(2, "0")}</figcaption>
           </figure>
         ))}
       </div>

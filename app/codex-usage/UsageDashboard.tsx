@@ -1,14 +1,21 @@
 "use client";
 
 import Image from "next/image";
-import { useMemo, useState } from "react";
+import Link from "next/link";
+import { useMemo, useRef, useState } from "react";
 import styles from "./usage.module.css";
 import type { DailyUsage, UsageData } from "./types";
 
 type View = "daily" | "weekly" | "lifetime";
 type Period = { date: string; totalTokens: number };
 
-const formatChineseTokens = (value: number) => `${new Intl.NumberFormat("zh-CN", { maximumFractionDigits: 1 }).format(value / 100_000_000)}亿`;
+const formatTokens = (value: number) => {
+  if (value === 0) return "0M";
+  if (value < 10_000) return "<0.01M";
+  const divisor = value >= 1_000_000_000 ? 1_000_000_000 : 1_000_000;
+  const unit = value >= 1_000_000_000 ? "B" : "M";
+  return `${new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 }).format(value / divisor)}${unit}`;
+};
 const dateKey = (date: Date) => date.toISOString().slice(0, 10);
 const shiftDate = (date: Date, days: number) => { const result = new Date(date); result.setUTCDate(result.getUTCDate() + days); return result; };
 const startOfWeek = (date: Date) => { const result = new Date(date); result.setUTCDate(result.getUTCDate() - ((result.getUTCDay() + 6) % 7)); return result; };
@@ -20,6 +27,16 @@ const formatDuration = (seconds: number) => {
   return `${hours} 小时 ${minutes} 分`;
 };
 
+const makeDayPeriods = (requestedStart: Date, lastDate: Date, byDate: Map<string, number>) => {
+  const start = startOfWeek(requestedStart);
+  const periods: Period[] = [];
+  for (let cursor = new Date(start); cursor <= lastDate; cursor = shiftDate(cursor, 1)) {
+    const date = dateKey(cursor);
+    periods.push({ date, totalTokens: byDate.get(date) ?? 0 });
+  }
+  return periods;
+};
+
 const pluginMeta: Record<string, { icon: string; tone: string }> = {
   spreadsheets: { icon: "▦", tone: "green" },
   presentations: { icon: "▣", tone: "orange" },
@@ -29,48 +46,113 @@ const pluginMeta: Record<string, { icon: string; tone: string }> = {
 };
 
 function TokenTooltip({ period }: { period: Period }) {
-  return <div className={styles.tooltip} role="tooltip"><strong>{period.date}</strong><span>{formatChineseTokens(period.totalTokens)} Token</span></div>;
+  return <div aria-live="polite" className={styles.tooltip} role="tooltip"><strong>{period.date}</strong><span>{formatTokens(period.totalTokens)} tokens</span></div>;
 }
 
 function DayMap({ periods, setHovered }: { periods: Period[]; setHovered: (period: Period | null) => void }) {
   const max = Math.max(1, ...periods.map((period) => period.totalTokens));
   const columns = Math.ceil(periods.length / 7);
-  let previousMonth = "";
-  const months = periods.reduce<{ label: string; column: number }[]>((result, period, index) => {
+  const [focusIndex, setFocusIndex] = useState(Math.max(0, periods.length - 1));
+  const cellRefs = useRef<Array<HTMLButtonElement | null>>([]);
+  const months = periods.flatMap((period, index) => {
     const date = new Date(`${period.date}T00:00:00Z`);
-    const key = `${date.getUTCFullYear()}-${date.getUTCMonth()}`;
-    if (key !== previousMonth) {
-      previousMonth = key;
-      if (!(index === 0 && date.getUTCDate() > 7)) result.push({ label: monthLabel(date), column: Math.floor(index / 7) + 1 });
-    }
-    return result;
-  }, []);
+    const previousDate = index > 0 ? new Date(`${periods[index - 1].date}T00:00:00Z`) : null;
+    const isNewMonth = !previousDate
+      || date.getUTCFullYear() !== previousDate.getUTCFullYear()
+      || date.getUTCMonth() !== previousDate.getUTCMonth();
+    if (!isNewMonth || (index === 0 && date.getUTCDate() > 7)) return [];
+    return [{ label: monthLabel(date), column: Math.floor(index / 7) + 1 }];
+  });
+
+  const moveFocus = (index: number, key: string) => {
+    const offsets: Record<string, number> = { ArrowUp: -1, ArrowDown: 1, ArrowLeft: -7, ArrowRight: 7 };
+    const requestedIndex = key === "Home" ? 0 : key === "End" ? periods.length - 1 : index + (offsets[key] ?? 0);
+    const nextIndex = Math.max(0, Math.min(periods.length - 1, requestedIndex));
+    setFocusIndex(nextIndex);
+    cellRefs.current[nextIndex]?.focus();
+  };
 
   return <>
-    <div className={styles.heatmap} style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}>{periods.map((period) => {
+    <div aria-label="Daily token activity" className={styles.heatmap} role="group" style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}>{periods.map((period, index) => {
       const level = period.totalTokens ? Math.max(1, Math.ceil((period.totalTokens / max) * 5)) : 0;
-      return <button aria-label={`${period.date} ${formatChineseTokens(period.totalTokens)} Token`} className={`${styles.cell} ${styles[`level${level}`]}`} key={period.date} onBlur={() => setHovered(null)} onFocus={() => setHovered(period)} onMouseEnter={() => setHovered(period)} onMouseLeave={() => setHovered(null)} type="button" />;
+      return <button
+        aria-current={index === focusIndex ? "date" : undefined}
+        aria-label={`${period.date}, ${formatTokens(period.totalTokens)} tokens`}
+        className={`${styles.cell} ${styles[`level${level}`]}`}
+        key={period.date}
+        onBlur={() => setHovered(null)}
+        onClick={() => setHovered(period)}
+        onFocus={() => { setFocusIndex(index); setHovered(period); }}
+        onKeyDown={(event) => {
+          if (!["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
+          event.preventDefault();
+          moveFocus(index, event.key);
+        }}
+        onMouseEnter={() => setHovered(period)}
+        onMouseLeave={(event) => {
+          if (event.currentTarget !== document.activeElement) setHovered(null);
+        }}
+        ref={(element) => { cellRefs.current[index] = element; }}
+        tabIndex={index === focusIndex ? 0 : -1}
+        type="button"
+      />;
     })}</div>
     <div className={styles.months} style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}>{months.map((month) => <span key={`${month.label}-${month.column}`} style={{ gridColumnStart: month.column }}>{month.label}</span>)}</div>
   </>;
 }
 
+function WeekMap({ periods, setHovered }: { periods: Period[]; setHovered: (period: Period | null) => void }) {
+  const max = Math.max(1, ...periods.map((period) => period.totalTokens));
+  const [focusIndex, setFocusIndex] = useState(Math.max(0, periods.length - 1));
+  const cellRefs = useRef<Array<HTMLButtonElement | null>>([]);
+
+  const moveFocus = (index: number, key: string) => {
+    const offsets: Record<string, number> = { ArrowUp: -13, ArrowDown: 13, ArrowLeft: -1, ArrowRight: 1 };
+    const requestedIndex = key === "Home" ? 0 : key === "End" ? periods.length - 1 : index + (offsets[key] ?? 0);
+    const nextIndex = Math.max(0, Math.min(periods.length - 1, requestedIndex));
+    setFocusIndex(nextIndex);
+    cellRefs.current[nextIndex]?.focus();
+  };
+
+  return <div aria-label="Weekly token activity" className={styles.weekMap} role="group">{periods.map((period, index) => {
+    const level = period.totalTokens ? Math.max(1, Math.ceil((period.totalTokens / max) * 5)) : 0;
+    return <button
+      aria-current={index === focusIndex ? "date" : undefined}
+      aria-label={`${period.date} 当周, ${formatTokens(period.totalTokens)} tokens`}
+      className={`${styles.weekCell} ${styles[`level${level}`]}`}
+      key={period.date}
+      onBlur={() => setHovered(null)}
+      onClick={() => setHovered(period)}
+      onFocus={() => { setFocusIndex(index); setHovered(period); }}
+      onKeyDown={(event) => {
+        if (!["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
+        event.preventDefault();
+        moveFocus(index, event.key);
+      }}
+      onMouseEnter={() => setHovered(period)}
+      onMouseLeave={(event) => {
+        if (event.currentTarget !== document.activeElement) setHovered(null);
+      }}
+      ref={(element) => { cellRefs.current[index] = element; }}
+      tabIndex={index === focusIndex ? 0 : -1}
+      type="button"
+    />;
+  })}</div>;
+}
+
 function ActivityHeatmap({ data }: { data: DailyUsage[] }) {
   const [hovered, setHovered] = useState<Period | null>(null);
-  const lastDate = new Date(`${data.at(-1)!.date}T00:00:00Z`);
+  const lastDateKey = data.at(-1)!.date;
   const byDate = useMemo(() => new Map(data.map((day) => [day.date, day.totalTokens])), [data]);
 
-  const makeDayPeriods = (requestedStart: Date) => {
-    const start = startOfWeek(requestedStart);
-    const periods: Period[] = [];
-    for (let cursor = new Date(start); cursor <= lastDate; cursor = shiftDate(cursor, 1)) {
-      const date = dateKey(cursor);
-      periods.push({ date, totalTokens: byDate.get(date) ?? 0 });
-    }
-    return periods;
-  };
-  const dailyPeriods = useMemo(() => makeDayPeriods(shiftDate(lastDate, -364)), [byDate, lastDate]);
-  const lifetimePeriods = useMemo(() => makeDayPeriods(new Date(`${data[0].date}T00:00:00Z`)), [byDate, data, lastDate]);
+  const dailyPeriods = useMemo(() => {
+    const lastDate = new Date(`${lastDateKey}T00:00:00Z`);
+    return makeDayPeriods(shiftDate(lastDate, -364), lastDate, byDate);
+  }, [byDate, lastDateKey]);
+  const lifetimePeriods = useMemo(() => {
+    const lastDate = new Date(`${lastDateKey}T00:00:00Z`);
+    return makeDayPeriods(new Date(`${data[0].date}T00:00:00Z`), lastDate, byDate);
+  }, [byDate, data, lastDateKey]);
 
   const weeks = useMemo(() => {
     const grouped = new Map<string, number>();
@@ -80,8 +162,6 @@ function ActivityHeatmap({ data }: { data: DailyUsage[] }) {
     }
     return [...grouped].slice(-52).map(([date, totalTokens]) => ({ date, totalTokens }));
   }, [data]);
-
-  const weeklyMax = Math.max(1, ...weeks.map((period) => period.totalTokens));
 
   return <section className={styles.activitySection}>
     <div className={styles.activityHeader}>
@@ -96,10 +176,7 @@ function ActivityHeatmap({ data }: { data: DailyUsage[] }) {
     <div className={styles.mapWrap}>
       <div className={`${styles.viewPanel} ${styles.dailyPanel}`}><DayMap periods={dailyPeriods} setHovered={setHovered} /></div>
       <div className={`${styles.viewPanel} ${styles.weeklyPanel}`}>
-        <div className={styles.weekMap}>{weeks.map((period) => {
-          const level = period.totalTokens ? Math.max(1, Math.ceil((period.totalTokens / weeklyMax) * 5)) : 0;
-          return <button aria-label={`${period.date} 当周 ${formatChineseTokens(period.totalTokens)} Token`} className={`${styles.weekCell} ${styles[`level${level}`]}`} key={period.date} onBlur={() => setHovered(null)} onFocus={() => setHovered(period)} onMouseEnter={() => setHovered(period)} onMouseLeave={() => setHovered(null)} type="button" />;
-        })}</div>
+        <WeekMap periods={weeks} setHovered={setHovered} />
         <div className={styles.weekCaption}>最近 {weeks.length} 周</div>
       </div>
       <div className={`${styles.viewPanel} ${styles.lifetimePanel}`}><DayMap periods={lifetimePeriods} setHovered={setHovered} /></div>
@@ -110,22 +187,41 @@ function ActivityHeatmap({ data }: { data: DailyUsage[] }) {
 
 export default function UsageDashboard({ data }: { data: UsageData }) {
   const stats = [
-    { value: formatChineseTokens(data.totals.totalTokens), label: "累计 Token 数" },
-    { value: formatChineseTokens(data.summary.peakChatTokens), label: "峰值 Token 数" },
+    { value: formatTokens(data.totals.totalTokens), label: "累计 Token 数" },
+    { value: formatTokens(data.summary.peakChatTokens), label: "峰值 Token 数" },
     { value: formatDuration(data.summary.longestChatSeconds), label: "最长聊天时长" },
     { value: `${data.summary.currentStreak} 天`, label: "当前连续天数" },
     { value: `${data.summary.longestStreak} 天`, label: "最长连续天数" },
   ];
 
   return <main className={styles.page}>
+    <header className={styles.siteHeader}>
+      <div className={styles.headerInner}>
+        <Link className={styles.brand} href="/">Eric Wang</Link>
+        <nav aria-label="Codex Usage navigation">
+          <Link href="/#research">Research</Link>
+          <span aria-current="page">Codex Usage</span>
+        </nav>
+        <Link className={styles.homeLink} href="/">返回首页 <span aria-hidden="true">↗</span></Link>
+      </div>
+    </header>
     <div className={styles.dashboard}>
-      <section className={styles.profile}>
+      <section className={styles.intro}>
+        <div className={styles.introCopy}>
+          <p>ACTIVITY</p>
+          <h1>Codex Usage</h1>
+          <span>按日记录的 token 使用、活动节奏与工具偏好。</span>
+        </div>
+        <div className={styles.profile}>
         <div className={styles.avatarWrap}>
           <Image alt="Eric Wang" className={styles.avatar} fill priority sizes="82px" src="/eric.png" />
           <span aria-label="布丁，我的 Codex 宠物" className={styles.pet} role="img" />
         </div>
-        <h1>Eric</h1>
-        <div className={styles.handle}>@ericwang0321 <span>Pro</span></div>
+          <div>
+            <strong>Eric Wang</strong>
+            <span className={styles.handle}>@ericwang0321</span>
+          </div>
+        </div>
       </section>
 
       <dl className={styles.summary}>{stats.map((stat) => <div key={stat.label}><dd>{stat.value}</dd><dt>{stat.label}</dt></div>)}</dl>

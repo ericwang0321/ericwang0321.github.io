@@ -4,16 +4,17 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AI 推理公司深度解析 · Inference Deep Dive</title>
+<link rel="icon" href="/favicon.png">
 <style>
   :root {
     --blue: #4472C4;
     --blue-dark: #2f549c;
     --blue-deep: #1e3a6e;
     --blue-light: #e8eefa;
-    --blue-lighter: #f4f7fd;
-    --ink: #1f2a44;
-    --ink-soft: #55618a;
-    --line: #d7e0f2;
+    --blue-lighter: #f4f4f1;
+    --ink: #111111;
+    --ink-soft: #60605b;
+    --line: #deded9;
     --white: #ffffff;
     --green: #2e9e6b;
     --amber: #c98a1e;
@@ -29,11 +30,36 @@
   body.lang-zh .en { display: none !important; }
   body.lang-en .zh { display: none !important; }
 
+  :where(a, button, input, select, summary):focus-visible {
+    outline: 2px solid #111;
+    outline-offset: 3px;
+  }
+
+  .site-chrome {
+    position: sticky; top: 0; z-index: 100;
+    color: #111; background: rgba(255,255,255,.94);
+    border-bottom: 1px solid #deded9;
+    backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+  }
+  .site-chrome-inner {
+    width: min(1440px,100%); height: 64px; margin: 0 auto; padding: 0 24px;
+    display: flex; align-items: center; justify-content: space-between; gap: 20px;
+  }
+  .site-chrome-brand,.site-chrome-links { display: flex; align-items: center; }
+  .site-chrome-brand {
+    color: #111; text-decoration: none; font-size: 17px; font-weight: 650; letter-spacing: -.025em;
+  }
+  .site-chrome-links { gap: 20px; }
+  .site-chrome-links a {
+    color: #5f5f5a; text-decoration: none; font-size: 12px; font-weight: 650;
+  }
+  .site-chrome-links a:hover { color: #111; }
+
   .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px 64px; }
 
   /* Header */
   header {
-    background: linear-gradient(135deg, var(--blue-deep) 0%, var(--blue) 75%, #5a86d6 100%);
+    background: #111;
     color: var(--white);
     padding: 44px 24px 48px;
   }
@@ -224,9 +250,26 @@
   .risk-strip b { color: var(--red); }
 
   footer { margin-top: 48px; font-size: 12px; color: var(--ink-soft); text-align: center; }
+
+  @media (max-width: 560px) {
+    .site-chrome-inner { height: 64px; padding: 0 14px; }
+    .site-chrome-links a:first-child { display: none; }
+    .wrap { padding-inline: 14px; }
+    header { padding: 32px 14px 36px; }
+  }
 </style>
 </head>
 <body class="lang-zh">
+
+<div class="site-chrome" role="banner">
+  <div class="site-chrome-inner">
+    <a class="site-chrome-brand" href="/" aria-label="Eric Wang home">Eric Wang</a>
+    <nav class="site-chrome-links" aria-label="Portfolio navigation">
+      <a href="/">Home</a>
+      <a href="/#research">← Back to research</a>
+    </nav>
+  </div>
+</div>
 
 <header>
   <div class="header-inner">
@@ -293,10 +336,6 @@
       <span class="en"><b>Analogy:</b> prefill is skimming an essay in one glance; decode is writing a reply one word at a time — and <b>rereading the entire dictionary before each word</b>. During decode, the GPU's massive compute units mostly sit idle waiting for data; utilization can drop to single digits. <b>Nearly every technique these companies build boils down to "stop making the GPU wait."</b></span>
     </div>
   </div>
-  <figure class="visual-figure">
-    <img src="../generated_visuals/llm-prefill-decode-infographic.png" alt="模型生成回答分为 Prefill 和 Decode 两个阶段的可视化说明" loading="lazy">
-  </figure>
-
   <h3 class="block-title"><span class="n">2</span><span class="zh">KV Cache：省下重复计算的"记忆"，但要吃掉海量显存</span><span class="en">The KV cache: memory that saves recomputation — and devours VRAM</span></h3>
   <div class="panel">
     <p>
@@ -321,10 +360,6 @@
       <span class="en"><b>Why this is money:</b> the KV cache directly caps how many users one GPU can serve at once. Whoever manages it most frugally — compressing, paging, reusing — wins on unit cost. Each of the three companies has its own bag of KV-cache tricks, as you'll see.</span>
     </div>
   </div>
-  <figure class="visual-figure">
-    <img src="../generated_visuals/kv-cache-memory-infographic.png" alt="KV Cache 如何节省重复计算但占用 GPU 显存的可视化说明" loading="lazy">
-  </figure>
-
   <h3 class="block-title"><span class="n">3</span><span class="zh">生意的本质：一道除法题</span><span class="en">The business is one division problem</span></h3>
   <div class="panel">
     <div class="diagram">
@@ -429,10 +464,6 @@
       <span class="en"><b>What "rewriting a kernel" means:</b> a kernel is the small program that actually executes math on the GPU. For the same equation, a naive kernel shuttles data endlessly between the warehouse (VRAM) and the workbench (compute cores); a smart one slices the work into tiles that finish entirely in the drawer next to the bench (on-chip SRAM). Identical math, wildly different time.</span>
     </div>
   </div>
-  <figure class="visual-figure">
-    <img src="generated/fireworks_part02/A_fireattention_kernel_hbm.png" alt="FireAttention 从零重写专有注意力内核的可视化说明" loading="lazy">
-  </figure>
-
   <h3 class="block-title"><span class="n">B</span><span class="zh">"无损量化"：FP8/FP4 的艺术</span><span class="en">"Lossless" quantization: the art of FP8/FP4</span></h3>
   <div class="panel">
     <p>
@@ -448,10 +479,6 @@
       <span class="en"><b>What's standard here, and what's proprietary?</b> The FP8/FP4 formats are industry standards, and the base algorithms (GPTQ, AWQ, etc.) are public research — anyone can build a workable version. What's uniquely Fireworks is three things: per-model <b>compression recipes</b> (which layers are untouchable — never published), <b>in-house kernels</b> that execute mixed precision fast (knowing you should use FP8 and writing a fast FP8 kernel are different problems), and an industrialized <b>quality-validation pipeline</b>. Note also that "lossless" is marketing-lossless — quantization is inherently lossy; the actual promise is "no measurable benchmark regression," a weaker guarantee than FlashAttention's bit-for-bit exactness (see the Part 01 glossary).</span>
     </p>
   </div>
-  <figure class="visual-figure">
-    <img src="generated/fireworks_part02/B_lossless_quantization_hbm.png" alt="Fireworks 无损量化 FP8 和 FP4 的可视化说明" loading="lazy">
-  </figure>
-
   <h3 class="block-title"><span class="n">C</span><span class="zh">P/D 分离架构：让两种工作各回各家</span><span class="en">Disaggregated serving: send the two workloads to separate homes</span></h3>
   <div class="panel">
     <p>
@@ -468,10 +495,6 @@
       <div class="dg-box"><div class="t"><span class="zh">流式输出</span><span class="en">Streamed output</span></div><div class="d"><span class="zh">稳定的逐字速度</span><span class="en">Steady tokens/sec</span></div></div>
     </div>
   </div>
-  <figure class="visual-figure">
-    <img src="generated/fireworks_part02/C_pd_disaggregation.png" alt="Fireworks P/D 分离架构的可视化说明" loading="lazy">
-  </figure>
-
   <h3 class="block-title"><span class="n">D</span><span class="zh">FireOptimizer：为每个客户"私人订制"一套推理</span><span class="en">FireOptimizer: a bespoke inference setup per customer</span></h3>
   <div class="panel">
     <p>
@@ -498,10 +521,6 @@
       </div>
     </details>
   </div>
-  <figure class="visual-figure">
-    <img src="generated/fireworks_part02/D_fireoptimizer_custom_inference.png" alt="FireOptimizer 为每个客户私人订制推理优化的可视化说明" loading="lazy">
-  </figure>
-
   <div class="biz-read">
     <b class="h"><span class="zh">生意解读：这些技术如何变成商业价值</span><span class="en">Business read: how the tech becomes money</span></b>
     <span class="zh">Fireworks 是<b>轻资产 + 纯软件溢价</b>模式：GPU 向云厂商租，利润来自"优化差价"（工具箱全套 + 定制化）。速度是它的品牌——Cursor、Perplexity 这类对首字延迟极度敏感的明星应用选它，又反过来成为最好的广告。软肋也在这里：内核优化的领先是"保鲜期资产"，开源引擎（vLLM/SGLang）每年都在缩小差距，所以它拼命把竞争从"跑分"引向"按客户定制"（FireOptimizer）——跑分会被追平，飞轮不容易。</span>
@@ -561,10 +580,6 @@
       </div>
     </details>
   </div>
-  <figure class="visual-figure">
-    <img src="generated/together_part03/A_flashattention.png" alt="Together AI FlashAttention：不改数学，只减少 HBM 与 SRAM 之间的数据搬运" loading="lazy">
-  </figure>
-
   <h3 class="block-title"><span class="n">B</span><span class="zh">KV Cache 的三重管理：分页、压缩、复用</span><span class="en">Triple-managing the KV cache: paging, compression, reuse</span></h3>
   <div class="panel">
     <p>
@@ -603,10 +618,6 @@
       </div>
     </details>
   </div>
-  <figure class="visual-figure">
-    <img src="generated/together_part03/B_kv_cache_management.png" alt="Together AI KV Cache 管理：分页、FP8 压缩、前缀复用和 ATLAS 自适应投机解码" loading="lazy">
-  </figure>
-
   <h3 class="block-title"><span class="n">C</span><span class="zh">另一半生意：自建 GPU 集群的"新型云"（Neocloud）</span><span class="en">The other half: owned GPU fleets — the "neocloud" business</span></h3>
   <div class="panel">
     <p>
@@ -627,10 +638,6 @@
       <span class="en">The commercial meaning: a customer starts with a $20 API experiment and ends up signing an eight-figure cluster contract as it scales — <b>never once switching vendors</b>. Within the $1.15B+ in annualized bookings, cluster deals are the ballast (prepaid, long-term, predictable) while the API drives growth. The cost is heavy capex: GPU generations turn over fast (Hopper→Blackwell in under two years), depreciation risk sits on Together's own books — which is exactly why it raises aggressively and courts sovereign capital like Aramco.</span>
     </p>
   </div>
-  <figure class="visual-figure">
-    <img src="generated/together_part03/C_neocloud_gpu_fleet.png" alt="Together AI Neocloud：自建或长租 GPU 集群与 Serverless API 到整租集群的升级阶梯" loading="lazy">
-  </figure>
-
   <div class="biz-read">
     <b class="h"><span class="zh">生意解读</span><span class="en">Business read</span></b>
     <span class="zh">Together 是三家中<b>纵向一体化</b>最深的：算法（科研团队）+ 引擎（内核）+ 硬件（自有集群）层层叠加。算法领先降低单位成本，自有硬件再降一层，双重优势让它在价格战中有最深的"血条"。风险同样双重：科研明星可能被挖走，重资产可能在 GPU 换代或需求波动时变成包袱。它赌的是规模——足够大的机群 + 足够满的利用率，重资产才是优势而非枷锁。</span>
@@ -686,10 +693,6 @@
       </div>
     </details>
   </div>
-  <figure class="visual-figure">
-    <img src="generated/baseten_part04/A_model_onboarding.png" alt="Baseten 模型上架流程：Truss 打包、Engine Builder 定制、API 上线" loading="lazy">
-  </figure>
-
   <h3 class="block-title"><span class="n">B</span><span class="zh">开店之后：一块 GPU 怎么又快又稳地同时服务很多人</span><span class="en">Running the shop: serving many people on one GPU, fast and without falling over</span></h3>
   <div class="panel">
     <p>
@@ -705,10 +708,6 @@
       <span class="en"><b>Regulars should get their usual clerk (KV-aware routing).</b> Recall Inference 101: the "memory" of your conversation (its KV cache) lives on <b>one specific GPU</b>. A naive load balancer tosses your second message to any random machine — which has no memory of you, so it <b>recomputes your entire history from scratch</b> while you wait. Baseten's router remembers which GPU holds your conversation and sends every follow-up <b>straight back to it</b> — the memory is still warm, the chat just continues, and time-to-first-token plummets. For long conversations and agents (dozens of round trips per task), the gap is an order of magnitude.</span>
     </p>
   </div>
-  <figure class="visual-figure">
-    <img src="generated/baseten_part04/B_gpu_serving_scheduler.png" alt="Baseten GPU 调度：连续批处理、HBM 装车、KV 感知路由" loading="lazy">
-  </figure>
-
   <h3 class="block-title"><span class="n">C</span><span class="zh">生意最难的两关：流量突然暴涨、云突然挂掉</span><span class="en">The two hardest moments in the business: traffic spikes and clouds dying</span></h3>
   <div class="panel">
     <p>
@@ -735,10 +734,6 @@
       </div>
     </details>
   </div>
-  <figure class="visual-figure">
-    <img src="generated/baseten_part04/C_cold_start_multicloud.png" alt="Baseten 冷启动和多云容灾：分钟内扩容、18 云 87 集群自动调度" loading="lazy">
-  </figure>
-
   <div class="biz-read">
     <b class="h"><span class="zh">生意解读</span><span class="en">Business read</span></b>
     <span class="zh">Baseten 卖的不是 token，是<b>"部署 + 可靠性 + 省心"</b>，按副本运行时长与平台费收钱。这带来两个结构性好处：① <b>避开 token 价格战主战场</b>——客户模型是独有的，没有"同款比价"；② <b>粘性极深</b>——客户的部署管线、自动扩缩配置、监控告警、SLA 全长在平台上，迁移等于重建整套生产基础设施。收入同比约 20 倍、日均 10 亿+ 请求的增长，验证了"自有模型公司"这个客群正在爆发。风险在于客群上限：如果未来多数公司直接用公共模型 API 而不再微调自有模型，它的池子会比对手小。</span>

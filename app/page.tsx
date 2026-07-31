@@ -321,23 +321,25 @@ function ResearchList({ entries, language }: { entries: PortfolioEntry[]; langua
     <div className="research-list">
       {entries.map((item) => (
         <article className="research-row" key={item.number}>
-          <a className="research-thumbnail" href={item.href} aria-label={t(item.title, language)}>
-            <Image
-              src={item.image}
-              alt=""
-              fill
-              sizes="(max-width: 720px) calc(100vw - 48px), 300px"
-              style={{ objectPosition: item.imagePosition ?? "center" }}
-            />
-          </a>
-          <div className="research-copy">
-            <div className="research-topline">
-              <p className="research-meta">{item.number} · {t(item.sourceType, language)} · {t(item.meta, language)}</p>
-              <a className="research-arrow" href={item.href} aria-label={`${t(item.title, language)} ↗`}>↗</a>
+          <a className="research-card-link" href={item.href}>
+            <span className="research-thumbnail" aria-hidden="true">
+              <Image
+                src={item.image}
+                alt=""
+                fill
+                sizes="(max-width: 720px) calc(100vw - 48px), 300px"
+                style={{ objectPosition: item.imagePosition ?? "center" }}
+              />
+            </span>
+            <div className="research-copy">
+              <div className="research-topline">
+                <p className="research-meta">{item.number} · {t(item.sourceType, language)} · {t(item.meta, language)}</p>
+                <span className="research-arrow" aria-hidden="true">↗</span>
+              </div>
+              <h3>{t(item.title, language)}</h3>
+              <p>{t(item.excerpt, language)}</p>
             </div>
-            <h3><a href={item.href}>{t(item.title, language)}</a></h3>
-            <p>{t(item.excerpt, language)}</p>
-          </div>
+          </a>
         </article>
       ))}
     </div>
