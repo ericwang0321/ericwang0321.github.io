@@ -32,14 +32,35 @@ function TokenTooltip({ period }: { period: Period }) {
   return <div className={styles.tooltip} role="tooltip"><strong>{period.date}</strong><span>{formatChineseTokens(period.totalTokens)} Token</span></div>;
 }
 
+function DayMap({ periods, setHovered }: { periods: Period[]; setHovered: (period: Period | null) => void }) {
+  const max = Math.max(1, ...periods.map((period) => period.totalTokens));
+  const columns = Math.ceil(periods.length / 7);
+  let previousMonth = "";
+  const months = periods.reduce<{ label: string; column: number }[]>((result, period, index) => {
+    const date = new Date(`${period.date}T00:00:00Z`);
+    const key = `${date.getUTCFullYear()}-${date.getUTCMonth()}`;
+    if (key !== previousMonth) {
+      previousMonth = key;
+      if (!(index === 0 && date.getUTCDate() > 7)) result.push({ label: monthLabel(date), column: Math.floor(index / 7) + 1 });
+    }
+    return result;
+  }, []);
+
+  return <>
+    <div className={styles.heatmap} style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}>{periods.map((period) => {
+      const level = period.totalTokens ? Math.max(1, Math.ceil((period.totalTokens / max) * 5)) : 0;
+      return <button aria-label={`${period.date} ${formatChineseTokens(period.totalTokens)} Token`} className={`${styles.cell} ${styles[`level${level}`]}`} key={period.date} onBlur={() => setHovered(null)} onFocus={() => setHovered(period)} onMouseEnter={() => setHovered(period)} onMouseLeave={() => setHovered(null)} type="button" />;
+    })}</div>
+    <div className={styles.months} style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}>{months.map((month) => <span key={`${month.label}-${month.column}`} style={{ gridColumnStart: month.column }}>{month.label}</span>)}</div>
+  </>;
+}
+
 function ActivityHeatmap({ data }: { data: DailyUsage[] }) {
-  const [view, setView] = useState<View>("daily");
   const [hovered, setHovered] = useState<Period | null>(null);
   const lastDate = new Date(`${data.at(-1)!.date}T00:00:00Z`);
   const byDate = useMemo(() => new Map(data.map((day) => [day.date, day.totalTokens])), [data]);
 
-  const dayPeriods = useMemo(() => {
-    const requestedStart = view === "lifetime" ? new Date(`${data[0].date}T00:00:00Z`) : shiftDate(lastDate, -364);
+  const makeDayPeriods = (requestedStart: Date) => {
     const start = startOfWeek(requestedStart);
     const periods: Period[] = [];
     for (let cursor = new Date(start); cursor <= lastDate; cursor = shiftDate(cursor, 1)) {
@@ -47,7 +68,9 @@ function ActivityHeatmap({ data }: { data: DailyUsage[] }) {
       periods.push({ date, totalTokens: byDate.get(date) ?? 0 });
     }
     return periods;
-  }, [byDate, data, lastDate, view]);
+  };
+  const dailyPeriods = useMemo(() => makeDayPeriods(shiftDate(lastDate, -364)), [byDate, lastDate]);
+  const lifetimePeriods = useMemo(() => makeDayPeriods(new Date(`${data[0].date}T00:00:00Z`)), [byDate, data, lastDate]);
 
   const weeks = useMemo(() => {
     const grouped = new Map<string, number>();
@@ -58,39 +81,28 @@ function ActivityHeatmap({ data }: { data: DailyUsage[] }) {
     return [...grouped].slice(-52).map(([date, totalTokens]) => ({ date, totalTokens }));
   }, [data]);
 
-  const periods = view === "weekly" ? weeks : dayPeriods;
-  const max = Math.max(1, ...periods.map((period) => period.totalTokens));
-  const columns = Math.ceil(dayPeriods.length / 7);
-  let previousMonth = "";
-  const months = dayPeriods.reduce<{ label: string; column: number }[]>((result, period, index) => {
-    const date = new Date(`${period.date}T00:00:00Z`);
-    const key = `${date.getUTCFullYear()}-${date.getUTCMonth()}`;
-    if (key !== previousMonth) {
-      previousMonth = key;
-      if (!(index === 0 && date.getUTCDate() > 7)) result.push({ label: monthLabel(date), column: Math.floor(index / 7) + 1 });
-    }
-    return result;
-  }, []);
+  const weeklyMax = Math.max(1, ...weeks.map((period) => period.totalTokens));
 
   return <section className={styles.activitySection}>
     <div className={styles.activityHeader}>
       <h2>Token 活动</h2>
-      <div className={styles.tabs} role="tablist" aria-label="Token 活动视图">
-        {(["daily", "weekly", "lifetime"] as View[]).map((option) => <button aria-selected={view === option} className={view === option ? styles.activeTab : ""} key={option} onClick={() => { setView(option); setHovered(null); }} role="tab" type="button">{option === "daily" ? "每日" : option === "weekly" ? "每周" : "累计"}</button>)}
+      <div aria-label="Token 活动视图" className={styles.tabs} role="radiogroup">
+        {(["daily", "weekly", "lifetime"] as View[]).map((option) => <span key={option}>
+          <input className={styles[`${option}Toggle`]} defaultChecked={option === "daily"} id={`token-view-${option}`} name="token-view" onChange={() => setHovered(null)} type="radio" />
+          <label htmlFor={`token-view-${option}`}>{option === "daily" ? "每日" : option === "weekly" ? "每周" : "累计"}</label>
+        </span>)}
       </div>
     </div>
     <div className={styles.mapWrap}>
-      {view === "weekly" ? <div className={styles.weekMap}>{weeks.map((period) => {
-        const level = period.totalTokens ? Math.max(1, Math.ceil((period.totalTokens / max) * 5)) : 0;
-        return <button aria-label={`${period.date} 当周 ${formatChineseTokens(period.totalTokens)} Token`} className={`${styles.weekCell} ${styles[`level${level}`]}`} key={period.date} onBlur={() => setHovered(null)} onFocus={() => setHovered(period)} onMouseEnter={() => setHovered(period)} onMouseLeave={() => setHovered(null)} type="button" />;
-      })}</div> : <>
-        <div className={styles.heatmap} style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}>{dayPeriods.map((period) => {
-          const level = period.totalTokens ? Math.max(1, Math.ceil((period.totalTokens / max) * 5)) : 0;
-          return <button aria-label={`${period.date} ${formatChineseTokens(period.totalTokens)} Token`} className={`${styles.cell} ${styles[`level${level}`]}`} key={period.date} onBlur={() => setHovered(null)} onFocus={() => setHovered(period)} onMouseEnter={() => setHovered(period)} onMouseLeave={() => setHovered(null)} type="button" />;
+      <div className={`${styles.viewPanel} ${styles.dailyPanel}`}><DayMap periods={dailyPeriods} setHovered={setHovered} /></div>
+      <div className={`${styles.viewPanel} ${styles.weeklyPanel}`}>
+        <div className={styles.weekMap}>{weeks.map((period) => {
+          const level = period.totalTokens ? Math.max(1, Math.ceil((period.totalTokens / weeklyMax) * 5)) : 0;
+          return <button aria-label={`${period.date} 当周 ${formatChineseTokens(period.totalTokens)} Token`} className={`${styles.weekCell} ${styles[`level${level}`]}`} key={period.date} onBlur={() => setHovered(null)} onFocus={() => setHovered(period)} onMouseEnter={() => setHovered(period)} onMouseLeave={() => setHovered(null)} type="button" />;
         })}</div>
-        <div className={styles.months} style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}>{months.map((month) => <span key={`${month.label}-${month.column}`} style={{ gridColumnStart: month.column }}>{month.label}</span>)}</div>
-      </>}
-      {view === "weekly" ? <div className={styles.weekCaption}>最近 {weeks.length} 周</div> : null}
+        <div className={styles.weekCaption}>最近 {weeks.length} 周</div>
+      </div>
+      <div className={`${styles.viewPanel} ${styles.lifetimePanel}`}><DayMap periods={lifetimePeriods} setHovered={setHovered} /></div>
       {hovered ? <TokenTooltip period={hovered} /> : null}
     </div>
   </section>;
@@ -108,7 +120,10 @@ export default function UsageDashboard({ data }: { data: UsageData }) {
   return <main className={styles.page}>
     <div className={styles.dashboard}>
       <section className={styles.profile}>
-        <div className={styles.avatarWrap}><Image alt="Eric Wang" className={styles.avatar} fill priority sizes="82px" src="/eric.png" /><span aria-hidden="true" className={styles.pet}>🐈</span></div>
+        <div className={styles.avatarWrap}>
+          <Image alt="Eric Wang" className={styles.avatar} fill priority sizes="82px" src="/eric.png" />
+          <span aria-label="布丁，我的 Codex 宠物" className={styles.pet} role="img" />
+        </div>
         <h1>Eric</h1>
         <div className={styles.handle}>@ericwang0321 <span>Pro</span></div>
       </section>
