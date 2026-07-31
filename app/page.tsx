@@ -321,17 +321,20 @@ function ResearchList({ entries, language }: { entries: PortfolioEntry[]; langua
     <div className="research-list">
       {entries.map((item) => (
         <article className="research-row" key={item.number}>
-          <a className="research-thumbnail" href={item.href} tabIndex={-1} aria-hidden="true">
+          <a className="research-thumbnail" href={item.href} aria-label={t(item.title, language)}>
             <Image
               src={item.image}
               alt=""
               fill
-              sizes="(max-width: 720px) calc(100vw - 40px), 210px"
+              sizes="(max-width: 720px) calc(100vw - 48px), 300px"
               style={{ objectPosition: item.imagePosition ?? "center" }}
             />
           </a>
           <div className="research-copy">
-            <p className="research-meta">{t(item.sourceType, language)} · {t(item.meta, language)}</p>
+            <div className="research-topline">
+              <p className="research-meta">{item.number} · {t(item.sourceType, language)} · {t(item.meta, language)}</p>
+              <a className="research-arrow" href={item.href} aria-label={`${t(item.title, language)} ↗`}>↗</a>
+            </div>
             <h3><a href={item.href}>{t(item.title, language)}</a></h3>
             <p>{t(item.excerpt, language)}</p>
           </div>
@@ -357,66 +360,91 @@ export default function Home() {
   }, [language]);
 
   return (
-    <main className="academic-site" id="top">
-      <header className="academic-header">
+    <main className="portfolio-site" id="top">
+      <header className="site-header">
         <div className="header-inner">
-          <a className="header-brand" href="#top">Eric Wang&apos;s Page</a>
+          <a className="header-brand" href="#top">Eric Wang</a>
           <nav className="header-nav" aria-label="Primary navigation">
             <a href="#education">{t(copy.nav.education, language)}</a>
             <a href="#honors">{t(copy.nav.honors, language)}</a>
             <a href="#about">{t(copy.nav.about, language)}</a>
-            <a href="#places">{t(copy.nav.places, language)}</a>
-            <a href="#publication">{t(copy.nav.publication, language)}</a>
             <a href="#research">{t(copy.nav.research, language)}</a>
-            <a href="#experience">{t(copy.nav.experience, language)}</a>
-            <a href="/codex-usage/">{t(copy.nav.usage, language)}</a>
+            <a href="#publication">{t(copy.nav.publication, language)}</a>
+            <a href="#places">{t(copy.nav.places, language)}</a>
           </nav>
-          <button
-            className="plain-language-toggle"
-            type="button"
-            onClick={() => setLanguage((current) => (current === "en" ? "zh" : "en"))}
-            aria-label={language === "en" ? "切换至中文" : "Switch to English"}
-          >
-            {language === "en" ? "中文" : "EN"}
-          </button>
+          <div className="header-actions">
+            <a className="usage-link" href="/codex-usage/">{t(copy.nav.usage, language)}</a>
+            <button
+              className="language-toggle"
+              type="button"
+              onClick={() => setLanguage((current) => (current === "en" ? "zh" : "en"))}
+              aria-label={language === "en" ? "切换至中文" : "Switch to English"}
+            >
+              {language === "en" ? "中文" : "EN"}
+            </button>
+            <a className="header-cta" href="mailto:wangyidong020321@gmail.com">
+              {language === "en" ? "Let’s talk" : "联系我"} ↗
+            </a>
+          </div>
         </div>
       </header>
 
-      <div className="academic-layout">
-        <aside className="profile-sidebar" aria-label="Profile">
+      <section className="hero-section" aria-labelledby="hero-title">
+        <div className="hero-identity">
           <Image
-            className="profile-avatar"
+            className="hero-avatar"
             src="/eric.png"
             alt="Eric Wang"
             width={538}
             height={720}
             priority
           />
-          <h1>Eric Wang</h1>
-          <p className="profile-tagline">
-            {language === "en" ? "AI Infrastructure × Markets" : "AI 基础设施 × 资本市场"}
-          </p>
-          <p className="profile-quote">
-            {language === "en" ? "From silicon to systems to signals." : "从芯片、系统到市场信号。"}
-          </p>
-          <ul className="profile-facts">
-            <li><span aria-hidden="true">●</span> Hong Kong / Singapore</li>
-            <li><span aria-hidden="true">◆</span> AI &amp; Equity Research</li>
-          </ul>
-          <nav className="profile-links" aria-label="Profile links">
-            <a href="mailto:wangyidong020321@gmail.com">Email</a>
-            <a href="https://www.linkedin.com/in/eric-wangyidong/" target="_blank" rel="noreferrer">LinkedIn</a>
-            <a href="https://github.com/ericwang0321" target="_blank" rel="noreferrer">GitHub</a>
-            <a href="/codex-usage/">Codex Usage</a>
-          </nav>
-        </aside>
+          <div>
+            <strong>Eric Wang</strong>
+            <span>{language === "en" ? "Hong Kong · Singapore" : "香港 · 新加坡"}</span>
+          </div>
+        </div>
+        <h1 id="hero-title">
+          {language === "en" ? (
+            <>AI infrastructure, markets,<br />and the systems in between.</>
+          ) : (
+            <>AI 基础设施、资本市场，<br />以及连接两者的系统。</>
+          )}
+        </h1>
+        <p className="hero-description">
+          {language === "en"
+            ? "I study how power, silicon, networks, and models become products, competitive advantages, and market signals."
+            : "我研究电力、芯片、网络与模型如何转化为产品、竞争优势和市场信号。"}
+        </p>
+        <nav className="explore-panel" aria-label={language === "en" ? "Explore Eric Wang’s work" : "浏览 Eric Wang 的研究"}>
+          <a className="explore-primary" href="#research">
+            <span>{language === "en" ? "Explore my work" : "浏览我的研究"}</span>
+            <span className="explore-arrow" aria-hidden="true">↗</span>
+          </a>
+          <div className="explore-chips">
+            <a href="#research">{language === "en" ? "Company research" : "公司研究"}</a>
+            <a href="#technology-research">{language === "en" ? "Technology" : "技术研究"}</a>
+            <a href="#publication">{t(copy.nav.publication, language)}</a>
+            <a href="/codex-usage/">Codex {t(copy.nav.usage, language)}</a>
+          </div>
+        </nav>
+        <div className="hero-links" aria-label="Profile links">
+          <a href="mailto:wangyidong020321@gmail.com">Email ↗</a>
+          <a href="https://www.linkedin.com/in/eric-wangyidong/" target="_blank" rel="noreferrer">LinkedIn ↗</a>
+          <a href="https://github.com/ericwang0321" target="_blank" rel="noreferrer">GitHub ↗</a>
+        </div>
+      </section>
 
-        <div className="academic-content">
-          <section id="education" className="content-section">
-            <h2>{language === "en" ? "Education" : "教育"}</h2>
-            <div className="plain-timeline">
-              {education.map((item) => (
-                <article className="education-entry" key={item.school.en}>
+      <div className="site-container">
+        <section id="education" className="page-section">
+          <div className="section-heading">
+            <p className="section-kicker">{language === "en" ? "Education" : "教育"}</p>
+            <h2>{language === "en" ? "Physics, statistics, and financial engineering." : "物理、统计与金融工程。"}</h2>
+          </div>
+          <div className="education-grid">
+            {education.map((item) => (
+              <article className="education-card" key={item.school.en}>
+                <div className="education-card-top">
                   <time>{item.year}</time>
                   <a
                     className="education-logo"
@@ -427,177 +455,189 @@ export default function Home() {
                   >
                     <Image src={item.logo} alt={item.logoAlt} fill sizes="110px" />
                   </a>
-                  <div>
-                    <h3>{t(item.school, language)}</h3>
-                    <p>{t(item.degree, language)}</p>
-                  </div>
-                </article>
-              ))}
-            </div>
-          </section>
+                </div>
+                <h3>{t(item.school, language)}</h3>
+                <p>{t(item.degree, language)}</p>
+              </article>
+            ))}
+          </div>
+        </section>
 
-          <section id="honors" className="content-section">
-            <h2>{language === "en" ? "Honors and Awards" : "荣誉与奖项"}</h2>
-            <ul className="dated-list">
-              <li>
-                <time>2023</time>
-                <a href={officialOutstandingStudentProof} target="_blank" rel="noreferrer">
-                  Faculty Outstanding Student, The Hong Kong Polytechnic University
-                </a>
-              </li>
-              <li>
-                <time>2023</time>
-                <a href={officialLeadershipAwardNews} target="_blank" rel="noreferrer">
-                  Presidential Student Leadership Award, The Hong Kong Polytechnic University
-                </a>
-              </li>
-              <li>
-                <time>2023/24</time>
-                <span>Scholarship for Outstanding Performance, Hong Kong SAR Government Scholarship Fund</span>
-              </li>
-              <li>
-                <time>2022/23</time>
-                <span>Scholarship for Outstanding Performance, Hong Kong SAR Government Scholarship Fund</span>
-              </li>
-              <li>
-                <time>2022/23</time>
-                <span>Hong Kong, China – Asia-Pacific Economic Cooperation Scholarship (HK–APEC Scholarship)</span>
-              </li>
-              <li>
-                <time>2022/23</time>
-                <span>Reaching Out Award, Hong Kong SAR Government Scholarship Fund</span>
-              </li>
-            </ul>
-          </section>
+        <section id="honors" className="page-section">
+          <div className="section-heading">
+            <p className="section-kicker">{language === "en" ? "Recognition" : "认可"}</p>
+            <h2>{language === "en" ? "Honors and awards." : "荣誉与奖项。"}</h2>
+          </div>
+          <ul className="awards-panel">
+            <li>
+              <time>2023</time>
+              <a href={officialOutstandingStudentProof} target="_blank" rel="noreferrer">
+                <span>Faculty Outstanding Student, The Hong Kong Polytechnic University</span><b aria-hidden="true">↗</b>
+              </a>
+            </li>
+            <li>
+              <time>2023</time>
+              <a href={officialLeadershipAwardNews} target="_blank" rel="noreferrer">
+                <span>Presidential Student Leadership Award, The Hong Kong Polytechnic University</span><b aria-hidden="true">↗</b>
+              </a>
+            </li>
+            <li>
+              <time>2023/24</time>
+              <span>Scholarship for Outstanding Performance, Hong Kong SAR Government Scholarship Fund</span>
+            </li>
+            <li>
+              <time>2022/23</time>
+              <span>Scholarship for Outstanding Performance, Hong Kong SAR Government Scholarship Fund</span>
+            </li>
+            <li>
+              <time>2022/23</time>
+              <span>Hong Kong, China – Asia-Pacific Economic Cooperation Scholarship (HK–APEC Scholarship)</span>
+            </li>
+            <li>
+              <time>2022/23</time>
+              <span>Reaching Out Award, Hong Kong SAR Government Scholarship Fund</span>
+            </li>
+          </ul>
+        </section>
 
-          <section id="about" className="content-section">
-            <h2>{language === "en" ? "About Me" : "关于我"}</h2>
+        <section id="about" className="page-section about-section">
+          <div className="section-heading about-heading">
+            <p className="section-kicker">{language === "en" ? "About" : "关于我"}</p>
+            <h2>{language === "en" ? "Research built around the hard constraints." : "围绕真实约束展开研究。"}</h2>
+          </div>
+          <div className="about-copy">
             {language === "en" ? (
               <>
                 <p>
-                  Hi, I am <strong>Eric Wang</strong>. I work at the intersection of
-                  <strong> AI infrastructure</strong>, <strong>public markets</strong>, and quantitative research.
-                  My work follows the AI value chain from power and silicon to systems, applications, and market signals.
-                  I am especially interested in how physical constraints—power, memory bandwidth, networking, and
-                  cooling—become product economics, competitive advantages, and investment signals.
+                  I work at the intersection of <strong>AI infrastructure</strong>, <strong>public markets</strong>,
+                  and quantitative research. I follow the AI value chain from power and silicon to systems,
+                  applications, and market signals.
                 </p>
                 <p>
-                  I enjoy turning complex technical systems into clear, evidence-backed maps, models, and decision
-                  tools. Across both research and investing, I care about connecting first-principles understanding
-                  with questions that matter in the real world.
+                  I care about how physical constraints—power, memory bandwidth, networking, and cooling—become
+                  product economics and competitive advantages. I turn complex systems into evidence-backed maps,
+                  models, and decision tools.
                 </p>
-                <p>My current research interests include:</p>
-                <ul>
-                  <li>AI compute, memory, networking, power, and cooling supply chains</li>
-                  <li>Inference economics, agent systems, and model deployment</li>
-                  <li>Data-driven equity research and market-monitoring systems</li>
-                </ul>
-                <p>
-                  Outside research, I enjoy playing <strong>tennis</strong> and <strong>Texas Hold&apos;em</strong>—two
-                  different ways to practice patience, discipline, and decision-making under uncertainty.
-                </p>
+                <div className="interest-list" aria-label="Research interests">
+                  <span>Compute · Memory · Networking</span>
+                  <span>Inference economics · Agents</span>
+                  <span>Equity research · Market systems</span>
+                </div>
+                <p className="about-personal">Away from research: tennis, Texas Hold&apos;em, and decisions under uncertainty.</p>
               </>
             ) : (
               <>
                 <p>
-                  你好，我是 <strong>Eric Wang</strong>。我的研究聚焦于
-                  <strong> AI 基础设施</strong>、<strong>资本市场</strong>与量化研究的交叉领域，
-                  沿着电力、芯片、系统、应用到市场信号研究完整的 AI 产业链。我尤其关注电力、内存带宽、
-                  网络与散热等物理约束，如何进一步转化为产品经济性、竞争优势和投资信号。
+                  我的研究位于 <strong>AI 基础设施</strong>、<strong>资本市场</strong>与量化研究的交叉点，
+                  沿着电力、芯片、系统、应用直到市场信号观察完整的 AI 价值链。
                 </p>
                 <p>
-                  我喜欢把复杂的技术系统拆解为清晰、有证据支持的产业链地图、模型和决策工具，
-                  将第一性原理的技术理解与真实世界中的研究和投资问题连接起来。
+                  我关注电力、内存带宽、网络和散热等物理约束如何转化为产品经济性和竞争优势，
+                  并把复杂系统整理成有证据支持的产业地图、模型与决策工具。
                 </p>
-                <p>目前主要关注：</p>
-                <ul>
-                  <li>AI 算力、内存、网络、电力与液冷产业链</li>
-                  <li>推理经济性、Agent 系统与模型部署</li>
-                  <li>数据驱动的股票研究与市场监控系统</li>
-                </ul>
-                <p>
-                  研究之外，我喜欢打<strong>网球</strong>和玩<strong>德州扑克</strong>；它们以不同的方式训练耐心、
-                  纪律，以及在不完全信息下做决策的能力。
-                </p>
+                <div className="interest-list" aria-label="研究方向">
+                  <span>算力 · 内存 · 网络</span>
+                  <span>推理经济性 · Agent</span>
+                  <span>股票研究 · 市场系统</span>
+                </div>
+                <p className="about-personal">研究之外：网球、德州扑克，以及在不确定性下做决策。</p>
               </>
             )}
-          </section>
+          </div>
+        </section>
 
-          <VisitedPlacesMap language={language} />
+        <VisitedPlacesMap language={language} />
 
-          <section id="publication" className="content-section">
-            <h2>{language === "en" ? "Publication" : "论文"}</h2>
-            <div className="publication-feature">
-              <figure className="publication-figure">
-                <Image
-                  src="/papers/fair-single-index-model-figure-1.jpg"
-                  alt="Fairness-accuracy tradeoffs for FSIM and baseline models on the Arrhythmia and Compas datasets"
-                  width={398}
-                  height={500}
-                  sizes="(max-width: 720px) calc(100vw - 36px), 250px"
-                />
-                <figcaption>
-                  {language === "en"
-                    ? "Figure 1 · Fairness-accuracy tradeoffs on Arrhythmia and Compas."
-                    : "图 1 · Arrhythmia 与 Compas 数据集上的公平性—准确率权衡。"}
-                </figcaption>
-              </figure>
-              <article className="publication-entry">
-                <h3>
-                  <a href="https://doi.org/10.1145/3690646" target="_blank" rel="noreferrer">
-                    Fair Single Index Model
-                  </a>
-                </h3>
-                <p><strong>Yidong Wang</strong>, Meng Ding, Jinhui Xu, Di Wang</p>
-                <p><em>ACM Transactions on Knowledge Discovery from Data</em>, 2024.</p>
-                <ul>
-                  <li>{t(copy.publication.abstract, language)}</li>
-                </ul>
-                <div className="inline-links">
-                  <a href="https://doi.org/10.1145/3690646" target="_blank" rel="noreferrer">DOI</a>
-                  <a href="https://repository.kaust.edu.sa/items/9b87637c-4279-4a0c-a64f-0d29b5acc2c1" target="_blank" rel="noreferrer">KAUST</a>
-                  <a href="/papers/fair-single-index-model.bib" download>BibTeX</a>
-                </div>
+        <section id="publication" className="page-section publication-section">
+          <div className="section-heading">
+            <p className="section-kicker">{language === "en" ? "Peer-reviewed publication" : "同行评审论文"}</p>
+            <h2>{language === "en" ? "Fairness, made interpretable." : "让公平性保持可解释。"}</h2>
+          </div>
+          <div className="publication-feature">
+            <figure className="publication-figure">
+              <Image
+                src="/papers/fair-single-index-model-figure-1.jpg"
+                alt="Fairness-accuracy tradeoffs for FSIM and baseline models on the Arrhythmia and Compas datasets"
+                width={398}
+                height={500}
+                sizes="(max-width: 720px) calc(100vw - 48px), 420px"
+              />
+              <figcaption>
+                {language === "en"
+                  ? "Figure 1 · Fairness-accuracy tradeoffs on Arrhythmia and Compas."
+                  : "图 1 · Arrhythmia 与 Compas 数据集上的公平性—准确率权衡。"}
+              </figcaption>
+            </figure>
+            <article className="publication-entry">
+              <p className="publication-meta">ACM TKDD · 2024</p>
+              <h3>
+                <a href="https://doi.org/10.1145/3690646" target="_blank" rel="noreferrer">
+                  Fair Single Index Model
+                </a>
+              </h3>
+              <p className="publication-authors"><strong>Yidong Wang</strong>, Meng Ding, Jinhui Xu, Di Wang</p>
+              <p>{t(copy.publication.abstract, language)}</p>
+              <div className="inline-links">
+                <a href="https://doi.org/10.1145/3690646" target="_blank" rel="noreferrer">DOI ↗</a>
+                <a href="https://repository.kaust.edu.sa/items/9b87637c-4279-4a0c-a64f-0d29b5acc2c1" target="_blank" rel="noreferrer">KAUST ↗</a>
+                <a href="/papers/fair-single-index-model.bib" download>BibTeX ↓</a>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section id="research" className="page-section research-section">
+          <div className="section-heading section-heading-inline">
+            <div>
+              <p className="section-kicker">{language === "en" ? "Selected work" : "精选作品"}</p>
+              <h2>{language === "en" ? "Company research." : "公司研究。"}</h2>
+            </div>
+            <span>{companyResearch.length} {language === "en" ? "works" : "项成果"}</span>
+          </div>
+          <ResearchList entries={companyResearch} language={language} />
+        </section>
+
+        <section id="technology-research" className="page-section research-section">
+          <div className="section-heading section-heading-inline">
+            <div>
+              <p className="section-kicker">{language === "en" ? "Systems and infrastructure" : "系统与基础设施"}</p>
+              <h2>{language === "en" ? "Technology and industry research." : "技术与产业研究。"}</h2>
+            </div>
+            <span>{technologyResearch.length} {language === "en" ? "works" : "项成果"}</span>
+          </div>
+          <ResearchList entries={technologyResearch} language={language} />
+        </section>
+
+        <section id="experience" className="page-section">
+          <div className="section-heading">
+            <p className="section-kicker">{language === "en" ? "Experience" : "经历"}</p>
+            <h2>{language === "en" ? "Research built for decisions." : "让研究服务于决策。"}</h2>
+          </div>
+          <div className="experience-grid">
+            {timeline.map((item) => (
+              <article className="experience-card" key={`${item.period}-${item.organization.en}`}>
+                <time>{item.period}</time>
+                <p>{t(item.role, language)}</p>
+                <h3>{t(item.organization, language)}</h3>
+                <p>{t(item.detail, language)}</p>
               </article>
-            </div>
-          </section>
+            ))}
+          </div>
+        </section>
 
-          <section id="research" className="content-section">
-            <div className="simple-section-heading">
-              <h2>{language === "en" ? "Company Research" : "公司研究"}</h2>
-              <span>{companyResearch.length} {language === "en" ? "works" : "项成果"}</span>
-            </div>
-            <ResearchList entries={companyResearch} language={language} />
-          </section>
-
-          <section id="technology-research" className="content-section">
-            <div className="simple-section-heading">
-              <h2>{language === "en" ? "Technology & Industry Research" : "技术与产业研究"}</h2>
-              <span>{technologyResearch.length} {language === "en" ? "works" : "项成果"}</span>
-            </div>
-            <ResearchList entries={technologyResearch} language={language} />
-          </section>
-
-          <section id="experience" className="content-section">
-            <h2>{language === "en" ? "Experience" : "经历"}</h2>
-            <div className="plain-timeline">
-              {timeline.map((item) => (
-                <article key={`${item.period}-${item.organization.en}`}>
-                  <time>{item.period}</time>
-                  <div>
-                    <h3>{t(item.organization, language)}</h3>
-                    <p><strong>{t(item.role, language)}</strong></p>
-                    <p>{t(item.detail, language)}</p>
-                  </div>
-                </article>
-              ))}
-            </div>
-          </section>
-
-        </div>
+        <section id="contact" className="contact-section">
+          <p className="section-kicker">{t(copy.contact.label, language)}</p>
+          <h2>{t(copy.contact.title, language)}</h2>
+          <p>{t(copy.contact.body, language)}</p>
+          <div className="contact-links">
+            <a href="mailto:wangyidong020321@gmail.com">Email ↗</a>
+            <a href="https://www.linkedin.com/in/eric-wangyidong/" target="_blank" rel="noreferrer">LinkedIn ↗</a>
+            <a href="https://github.com/ericwang0321" target="_blank" rel="noreferrer">GitHub ↗</a>
+          </div>
+        </section>
       </div>
 
-      <footer className="academic-footer">
+      <footer className="site-footer">
         <p>© {new Date().getFullYear()} Eric Wang · Hong Kong / Singapore</p>
         <a href="#top">{language === "en" ? "Back to top" : "返回顶部"} ↑</a>
       </footer>

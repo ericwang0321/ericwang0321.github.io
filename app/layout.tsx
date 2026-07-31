@@ -23,13 +23,13 @@ export const metadata: Metadata = {
     type: "website",
     url: "/",
     siteName: "Eric Wang",
-    images: [{ url: "/og.png", width: 1536, height: 1024, alt: "Eric Wang — AI Infrastructure and Markets" }],
+    images: [{ url: "/og-v2.png", width: 1536, height: 1024, alt: "Eric Wang — AI Infrastructure and Markets" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "Eric Wang — AI Infrastructure × Markets",
     description: "From silicon to systems to signals.",
-    images: ["/og.png"],
+    images: ["/og-v2.png"],
   },
   icons: {
     icon: "/favicon.png",

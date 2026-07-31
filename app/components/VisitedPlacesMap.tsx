@@ -176,20 +176,20 @@ export default function VisitedPlacesMap({ language }: { language: Language }) {
           selectedRegions: mapCodes,
           regionStyle: {
             initial: {
-              fill: "#dfe4e8",
+              fill: "#d9d9d4",
               stroke: "#ffffff",
               strokeWidth: 0.65,
               fillOpacity: 1,
             },
             hover: {
-              fill: "#aab9c6",
+              fill: "#8f8f89",
               cursor: "grab",
             },
             selected: {
-              fill: "#315f8f",
+              fill: "#111111",
             },
             selectedHover: {
-              fill: "#244b73",
+              fill: "#3a3a37",
             },
           },
           markers: [
@@ -200,13 +200,13 @@ export default function VisitedPlacesMap({ language }: { language: Language }) {
           ],
           markerStyle: {
             initial: {
-              fill: "#c77c2d",
+              fill: "#111111",
               stroke: "#ffffff",
               strokeWidth: 1.8,
               r: 4,
             },
             hover: {
-              fill: "#a96520",
+              fill: "#555551",
               stroke: "#ffffff",
               r: 5,
             },
