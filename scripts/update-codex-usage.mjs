@@ -8,7 +8,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const TIME_ZONE = "Asia/Hong_Kong";
-const CACHE_VERSION = 3;
+const CACHE_VERSION = 5;
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const codexLogRoot = process.env.CODEX_USAGE_LOG_ROOT || path.join(homedir(), ".codex");
 const sourceRoots = [
@@ -31,7 +31,13 @@ const emptyUsage = () => ({
   requests: 0,
 });
 
-const emptyActivity = () => ({ toolCounts: {}, skillCounts: {} });
+const emptyActivity = () => ({
+  toolCounts: {},
+  skillCounts: {},
+  reasoningCounts: {},
+  serviceTierCounts: {},
+  maxChatSeconds: 0,
+});
 
 const incrementCount = (counts, name) => {
   counts[name] = (counts[name] || 0) + 1;
@@ -100,13 +106,22 @@ const writeJsonAtomic = async (targetPath, value, compact = false) => {
 };
 
 const scanFiles = async (files) => {
-  const perFile = new Map(files.map((file) => [file, { daily: {}, activityDaily: {}, previous: emptyUsage(), invalidLines: 0 }]));
+  const perFile = new Map(files.map((file) => [file, {
+    daily: {}, activityDaily: {}, previous: emptyUsage(), lastTokenTimestamp: null, currentChatSeconds: 0, invalidLines: 0,
+  }]));
   if (files.length === 0) return perFile;
 
   const batchSize = 72;
   for (let start = 0; start < files.length; start += batchSize) {
     const batch = files.slice(start, start + batchSize);
-    const child = spawn("rg", ["--json", "--no-messages", "-e", '"type":"token_count"', "-e", '"type":"function_call"', ...batch], {
+    const child = spawn("rg", [
+      "--json", "--no-messages",
+      "-e", '"type":"token_count"',
+      "-e", '"type":"function_call"',
+      "-e", '"type":"turn_context"',
+      "-e", '"thread_settings"',
+      ...batch,
+    ], {
       stdio: ["ignore", "pipe", "pipe"],
     });
     const exitPromise = new Promise((resolve, reject) => {
@@ -135,6 +150,26 @@ const scanFiles = async (files) => {
         fileState.invalidLines += 1;
         continue;
       }
+      if (event?.type === "turn_context" && event.timestamp) {
+        const effort = typeof event.payload?.effort === "string" ? event.payload.effort : "";
+        if (/^[A-Za-z0-9_-]{1,40}$/.test(effort)) {
+          const date = dateInTimeZone(event.timestamp);
+          const activity = fileState.activityDaily[date] || emptyActivity();
+          incrementCount(activity.reasoningCounts, effort);
+          fileState.activityDaily[date] = activity;
+        }
+        continue;
+      }
+      if (event?.type === "event_msg" && event.timestamp) {
+        const serviceTier = event.payload?.thread_settings?.service_tier;
+        if (typeof serviceTier === "string" && /^[A-Za-z0-9_-]{1,40}$/.test(serviceTier)) {
+          const date = dateInTimeZone(event.timestamp);
+          const activity = fileState.activityDaily[date] || emptyActivity();
+          incrementCount(activity.serviceTierCounts, serviceTier);
+          fileState.activityDaily[date] = activity;
+          continue;
+        }
+      }
       if (event?.payload?.type === "function_call" && event.timestamp) {
         const toolName = typeof event.payload.name === "string" ? event.payload.name : "";
         if (!/^[A-Za-z0-9_.:-]{1,120}$/.test(toolName)) continue;
@@ -143,7 +178,7 @@ const scanFiles = async (files) => {
         incrementCount(activity.toolCounts, toolName);
 
         const args = typeof event.payload.arguments === "string" ? event.payload.arguments : "";
-        if (toolName === "exec_command" && args.includes("SKILL.md")) {
+        if (args.includes("SKILL.md")) {
           const skillNames = new Set(
             [...args.matchAll(/(?:^|\/)([A-Za-z0-9][A-Za-z0-9._-]*)\/SKILL\.md/g)].map((match) => match[1]),
           );
@@ -183,6 +218,19 @@ const scanFiles = async (files) => {
 
       const date = dateInTimeZone(event.timestamp);
       const day = fileState.daily[date] || emptyUsage();
+      const timestamp = Date.parse(event.timestamp);
+      if (Number.isFinite(timestamp) && fileState.lastTokenTimestamp !== null) {
+        const gapSeconds = Math.max(0, (timestamp - fileState.lastTokenTimestamp) / 1000);
+        if (gapSeconds <= 10 * 60) {
+          fileState.currentChatSeconds += gapSeconds;
+          const activity = fileState.activityDaily[date] || emptyActivity();
+          activity.maxChatSeconds = Math.max(activity.maxChatSeconds, fileState.currentChatSeconds);
+          fileState.activityDaily[date] = activity;
+        } else {
+          fileState.currentChatSeconds = 0;
+        }
+      }
+      if (Number.isFinite(timestamp)) fileState.lastTokenTimestamp = timestamp;
       day.inputTokens += delta.inputTokens;
       day.cachedInputTokens += Math.min(delta.inputTokens, delta.cachedInputTokens);
       day.cacheWriteInputTokens += delta.cacheWriteInputTokens;
@@ -259,10 +307,16 @@ const main = async () => {
   const combined = {};
   const toolCounts = {};
   const skillCounts = {};
+  const reasoningCounts = {};
+  const serviceTierCounts = {};
   let sourceSessions = 0;
   let invalidLines = 0;
+  let peakChatTokens = 0;
+  let longestChatSeconds = 0;
   for (const file of Object.values(cache.files)) {
     let included = false;
+    let fileTokens = 0;
+    let fileActiveSeconds = 0;
     invalidLines += numeric(file.invalidLines);
     for (const [date, usage] of Object.entries(file.daily || {})) {
       if (date > throughDate) continue;
@@ -271,14 +325,22 @@ const main = async () => {
       day.sessions += 1;
       day.uncachedInputTokens = Math.max(0, day.inputTokens - day.cachedInputTokens);
       combined[date] = day;
+      fileTokens += numeric(usage.totalTokens);
       included = true;
     }
     for (const [date, activity] of Object.entries(file.activityDaily || {})) {
       if (date > throughDate) continue;
       for (const [name, count] of Object.entries(activity.toolCounts || {})) toolCounts[name] = (toolCounts[name] || 0) + numeric(count);
       for (const [name, count] of Object.entries(activity.skillCounts || {})) skillCounts[name] = (skillCounts[name] || 0) + numeric(count);
+      for (const [name, count] of Object.entries(activity.reasoningCounts || {})) reasoningCounts[name] = (reasoningCounts[name] || 0) + numeric(count);
+      for (const [name, count] of Object.entries(activity.serviceTierCounts || {})) serviceTierCounts[name] = (serviceTierCounts[name] || 0) + numeric(count);
+      fileActiveSeconds = Math.max(fileActiveSeconds, numeric(activity.maxChatSeconds));
     }
-    if (included) sourceSessions += 1;
+    if (included) {
+      sourceSessions += 1;
+      peakChatTokens = Math.max(peakChatTokens, fileTokens);
+      longestChatSeconds = Math.max(longestChatSeconds, fileActiveSeconds);
+    }
   }
 
   const activeDates = Object.keys(combined).filter((date) => combined[date].totalTokens > 0).sort();
@@ -316,7 +378,7 @@ const main = async () => {
   }
 
   const output = {
-    schemaVersion: 2,
+    schemaVersion: 3,
     generatedAt: new Date().toISOString(),
     timezone: TIME_ZONE,
     throughDate,
@@ -337,8 +399,19 @@ const main = async () => {
       sevenDayChangePercent: percentChange(lastSeven, previousSeven),
       peakDate: peakDay.date,
       peakTokens: peakDay.totalTokens,
+      peakChatTokens,
+      longestChatSeconds: Math.round(longestChatSeconds),
       currentStreak,
       longestStreak,
+    },
+    behavior: {
+      fastModePercent: (numeric(serviceTierCounts.priority) + numeric(serviceTierCounts.default)) > 0
+        ? Number(((numeric(serviceTierCounts.priority) / (numeric(serviceTierCounts.priority) + numeric(serviceTierCounts.default))) * 100).toFixed(1))
+        : 0,
+      reasoningLabel: "极高",
+      reasoningPercent: Object.values(reasoningCounts).reduce((sum, count) => sum + numeric(count), 0) > 0
+        ? Number((((numeric(reasoningCounts.high) + numeric(reasoningCounts.xhigh) + numeric(reasoningCounts.ultra)) / Object.values(reasoningCounts).reduce((sum, count) => sum + numeric(count), 0)) * 100).toFixed(1))
+        : 0,
     },
     activity: {
       toolCalls: Object.values(toolCounts).reduce((sum, count) => sum + count, 0),
@@ -347,6 +420,13 @@ const main = async () => {
       uniqueSkills: Object.keys(skillCounts).length,
       topTools: Object.entries(toolCounts).sort((a, b) => b[1] - a[1]).slice(0, 12).map(([name, count]) => ({ name, count })),
       topSkills: Object.entries(skillCounts).sort((a, b) => b[1] - a[1]).slice(0, 12).map(([name, count]) => ({ name, count })),
+      topPlugins: [
+        { name: "spreadsheets", count: numeric(skillCounts.spreadsheets) },
+        { name: "presentations", count: Object.entries(skillCounts).filter(([name]) => /presentation|pptx|slide|pitch-deck|deck-refresh|ib-check-deck/.test(name)).reduce((sum, [, count]) => sum + numeric(count), 0) },
+        { name: "company-model-harness", count: numeric(skillCounts["company-model-harness"]) },
+        { name: "documents", count: Object.entries(skillCounts).filter(([name]) => /document|pdf/.test(name)).reduce((sum, [, count]) => sum + numeric(count), 0) },
+        { name: "sites", count: Object.entries(skillCounts).filter(([name]) => /site|browser/.test(name)).reduce((sum, [, count]) => sum + numeric(count), 0) },
+      ].filter((item) => item.count > 0),
     },
     daily,
   };

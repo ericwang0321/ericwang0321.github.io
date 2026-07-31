@@ -34,8 +34,15 @@ export type UsageData = {
     sevenDayChangePercent: number | null;
     peakDate: string;
     peakTokens: number;
+    peakChatTokens: number;
+    longestChatSeconds: number;
     currentStreak: number;
     longestStreak: number;
+  };
+  behavior: {
+    fastModePercent: number;
+    reasoningLabel: string;
+    reasoningPercent: number;
   };
   activity: {
     toolCalls: number;
@@ -44,6 +51,7 @@ export type UsageData = {
     uniqueSkills: number;
     topTools: { name: string; count: number }[];
     topSkills: { name: string; count: number }[];
+    topPlugins: { name: string; count: number }[];
   };
   daily: DailyUsage[];
 };

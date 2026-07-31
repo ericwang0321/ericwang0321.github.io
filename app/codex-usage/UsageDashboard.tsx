@@ -1,144 +1,144 @@
 "use client";
 
-import Link from "next/link";
+import Image from "next/image";
 import { useMemo, useState } from "react";
 import styles from "./usage.module.css";
 import type { DailyUsage, UsageData } from "./types";
 
-type Language = "en" | "zh";
-type ActivityView = "daily" | "weekly" | "lifetime";
-type ActivityPeriod = { date: string; endDate?: string; totalTokens: number; inputTokens: number; cachedInputTokens: number; outputTokens: number };
+type View = "daily" | "weekly" | "lifetime";
+type Period = { date: string; totalTokens: number };
 
-const compactTokens = (value: number) => {
-  const unit = value >= 1_000_000_000 ? "B" : value >= 1_000_000 ? "M" : value >= 1_000 ? "K" : "";
-  const divisor = unit === "B" ? 1_000_000_000 : unit === "M" ? 1_000_000 : unit === "K" ? 1_000 : 1;
-  return `${new Intl.NumberFormat("en", { maximumFractionDigits: value / divisor >= 100 ? 0 : 1 }).format(value / divisor)}${unit}`;
-};
-
-const formatDate = (date: string, language: Language, includeYear = true) => new Intl.DateTimeFormat(language === "zh" ? "zh-CN" : "en", {
-  ...(includeYear ? { year: "numeric" } : {}), month: "short", day: "numeric", timeZone: "UTC",
-}).format(new Date(`${date}T00:00:00Z`));
-
-const copy = {
-  en: {
-    title: "Eric's Codex activity", subtitle: "A local-first record of how Codex gets used.", total: "Total tokens", peak: "Peak-day tokens",
-    current: "Current streak", longest: "Longest streak", toolCalls: "Tool calls", activity: "Token activity", daily: "Daily", weekly: "Weekly", lifetime: "Lifetime",
-    insights: "Activity insights", sessions: "Sessions with usage", active: "Active days", cache: "Cache hit rate", uniqueTools: "Tools used", uniqueSkills: "Skills explored", skillReads: "Skill uses",
-    topTools: "Most-used tools", topSkills: "Most-used skills", privacy: "Privacy by design", privacyText: "Published data contains timestamps, token counters, tool names, and Skill names only. Prompts, responses, arguments, files, and tool output stay private.",
-    updated: "Complete through", days: "days", tokens: "tokens", input: "Input", cached: "Cached input", output: "Output", totalLabel: "Total", less: "Less", more: "More", weekOf: "Week of",
-  },
-  zh: {
-    title: "Eric 的 Codex 活动", subtitle: "Codex 使用情况的本地优先记录。", total: "累计 Token 数", peak: "峰值单日 Token 数",
-    current: "当前连续天数", longest: "最长连续天数", toolCalls: "工具调用总数", activity: "Token 活动", daily: "每日", weekly: "每周", lifetime: "累计",
-    insights: "活动洞察", sessions: "有用量的会话", active: "活跃天数", cache: "缓存命中率", uniqueTools: "使用过的工具", uniqueSkills: "探索过的 Skill", skillReads: "Skill 使用次数",
-    topTools: "最常用的工具", topSkills: "最常用的 Skill", privacy: "隐私保护", privacyText: "公开数据仅包含时间戳、Token 计数、工具名称与 Skill 名称；提示词、回答、参数、文件及工具输出均不会公开。",
-    updated: "完整统计截至", days: "天", tokens: "Token", input: "输入", cached: "缓存输入", output: "输出", totalLabel: "总计", less: "少", more: "多", weekOf: "该周始于",
-  },
-};
-
+const formatChineseTokens = (value: number) => `${new Intl.NumberFormat("zh-CN", { maximumFractionDigits: 1 }).format(value / 100_000_000)}亿`;
 const dateKey = (date: Date) => date.toISOString().slice(0, 10);
-const startOfWeek = (date: Date) => {
-  const result = new Date(date);
-  result.setUTCDate(result.getUTCDate() - ((result.getUTCDay() + 6) % 7));
-  return result;
-};
 const shiftDate = (date: Date, days: number) => { const result = new Date(date); result.setUTCDate(result.getUTCDate() + days); return result; };
+const startOfWeek = (date: Date) => { const result = new Date(date); result.setUTCDate(result.getUTCDate() - ((result.getUTCDay() + 6) % 7)); return result; };
+const monthLabel = (date: Date) => `${date.getUTCMonth() + 1}月`;
+const compactCount = (value: number) => value.toLocaleString("zh-CN");
+const formatDuration = (seconds: number) => {
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.round((seconds % 3600) / 60);
+  return `${hours} 小时 ${minutes} 分`;
+};
 
-function PeriodTooltip({ period, language, weekly }: { period: ActivityPeriod; language: Language; weekly: boolean }) {
-  const label = copy[language];
-  return <div className={styles.tooltip} role="tooltip">
-    <strong>{weekly ? `${label.weekOf} ${formatDate(period.date, language)}` : formatDate(period.date, language)}</strong>
-    <span>{label.totalLabel}<b>{compactTokens(period.totalTokens)}</b></span>
-    <span>{label.input}<b>{compactTokens(period.inputTokens)}</b></span>
-    <span>{label.cached}<b>{compactTokens(period.cachedInputTokens)}</b></span>
-    <span>{label.output}<b>{compactTokens(period.outputTokens)}</b></span>
-  </div>;
+const pluginMeta: Record<string, { icon: string; tone: string }> = {
+  spreadsheets: { icon: "▦", tone: "green" },
+  presentations: { icon: "▣", tone: "orange" },
+  "company-model-harness": { icon: "◆", tone: "violet" },
+  documents: { icon: "▤", tone: "blue" },
+  sites: { icon: "✣", tone: "cyan" },
+};
+
+function TokenTooltip({ period }: { period: Period }) {
+  return <div className={styles.tooltip} role="tooltip"><strong>{period.date}</strong><span>{formatChineseTokens(period.totalTokens)} Token</span></div>;
 }
 
-function Activity({ daily, language }: { daily: DailyUsage[]; language: Language }) {
-  const [view, setView] = useState<ActivityView>("daily");
-  const [hovered, setHovered] = useState<ActivityPeriod | null>(null);
-  const label = copy[language];
-  const lastDate = new Date(`${daily.at(-1)!.date}T00:00:00Z`);
-  const byDate = useMemo(() => new Map(daily.map((day) => [day.date, day])), [daily]);
+function ActivityHeatmap({ data }: { data: DailyUsage[] }) {
+  const [view, setView] = useState<View>("daily");
+  const [hovered, setHovered] = useState<Period | null>(null);
+  const lastDate = new Date(`${data.at(-1)!.date}T00:00:00Z`);
+  const byDate = useMemo(() => new Map(data.map((day) => [day.date, day.totalTokens])), [data]);
 
-  const dailyPeriods = useMemo(() => {
-    const first = view === "lifetime" ? new Date(`${daily[0].date}T00:00:00Z`) : shiftDate(lastDate, -364);
-    const start = startOfWeek(first);
-    const periods: ActivityPeriod[] = [];
+  const dayPeriods = useMemo(() => {
+    const requestedStart = view === "lifetime" ? new Date(`${data[0].date}T00:00:00Z`) : shiftDate(lastDate, -364);
+    const start = startOfWeek(requestedStart);
+    const periods: Period[] = [];
     for (let cursor = new Date(start); cursor <= lastDate; cursor = shiftDate(cursor, 1)) {
-      const day = byDate.get(dateKey(cursor));
-      periods.push(day ?? { date: dateKey(cursor), totalTokens: 0, inputTokens: 0, cachedInputTokens: 0, outputTokens: 0 });
+      const date = dateKey(cursor);
+      periods.push({ date, totalTokens: byDate.get(date) ?? 0 });
     }
     return periods;
-  }, [byDate, daily, lastDate, view]);
+  }, [byDate, data, lastDate, view]);
 
-  const weeklyPeriods = useMemo(() => {
-    const weeks = new Map<string, ActivityPeriod>();
-    for (const day of daily) {
+  const weeks = useMemo(() => {
+    const grouped = new Map<string, number>();
+    for (const day of data) {
       const week = dateKey(startOfWeek(new Date(`${day.date}T00:00:00Z`)));
-      const period = weeks.get(week) ?? { date: week, totalTokens: 0, inputTokens: 0, cachedInputTokens: 0, outputTokens: 0 };
-      period.totalTokens += day.totalTokens; period.inputTokens += day.inputTokens; period.cachedInputTokens += day.cachedInputTokens; period.outputTokens += day.outputTokens;
-      weeks.set(week, period);
+      grouped.set(week, (grouped.get(week) ?? 0) + day.totalTokens);
     }
-    return [...weeks.values()].slice(-52);
-  }, [daily]);
+    return [...grouped].slice(-52).map(([date, totalTokens]) => ({ date, totalTokens }));
+  }, [data]);
 
-  const periods = view === "weekly" ? weeklyPeriods : dailyPeriods;
+  const periods = view === "weekly" ? weeks : dayPeriods;
   const max = Math.max(1, ...periods.map((period) => period.totalTokens));
+  const columns = Math.ceil(dayPeriods.length / 7);
   let previousMonth = "";
-  const months = view === "weekly" ? [] : dailyPeriods.reduce<{ text: string; column: number }[]>((items, period, index) => {
+  const months = dayPeriods.reduce<{ label: string; column: number }[]>((result, period, index) => {
     const date = new Date(`${period.date}T00:00:00Z`);
-    const monthKey = `${date.getUTCFullYear()}-${date.getUTCMonth()}`;
-    if (monthKey !== previousMonth) {
-      previousMonth = monthKey;
-      items.push({ text: new Intl.DateTimeFormat(language === "zh" ? "zh-CN" : "en", { month: "short", timeZone: "UTC" }).format(date), column: Math.floor(index / 7) });
+    const key = `${date.getUTCFullYear()}-${date.getUTCMonth()}`;
+    if (key !== previousMonth) {
+      previousMonth = key;
+      if (!(index === 0 && date.getUTCDate() > 7)) result.push({ label: monthLabel(date), column: Math.floor(index / 7) + 1 });
     }
-    return items;
+    return result;
   }, []);
 
-  return <section className={styles.activityArea}>
-    <div className={styles.activityTop}>
-      <h2>{label.activity}</h2>
-      <div role="tablist" aria-label={label.activity}>{(["daily", "weekly", "lifetime"] as ActivityView[]).map((option) => <button aria-selected={view === option} className={view === option ? styles.selected : ""} key={option} onClick={() => { setView(option); setHovered(null); }} role="tab" type="button">{label[option]}</button>)}</div>
+  return <section className={styles.activitySection}>
+    <div className={styles.activityHeader}>
+      <h2>Token 活动</h2>
+      <div className={styles.tabs} role="tablist" aria-label="Token 活动视图">
+        {(["daily", "weekly", "lifetime"] as View[]).map((option) => <button aria-selected={view === option} className={view === option ? styles.activeTab : ""} key={option} onClick={() => { setView(option); setHovered(null); }} role="tab" type="button">{option === "daily" ? "每日" : option === "weekly" ? "每周" : "累计"}</button>)}
+      </div>
     </div>
-    <div className={styles.heatmapWrap}>
-      {view === "weekly" ? <div className={styles.weeklyGrid}>{weeklyPeriods.map((period) => {
+    <div className={styles.mapWrap}>
+      {view === "weekly" ? <div className={styles.weekMap}>{weeks.map((period) => {
         const level = period.totalTokens ? Math.max(1, Math.ceil((period.totalTokens / max) * 5)) : 0;
-        return <button aria-label={`${label.weekOf} ${period.date}: ${compactTokens(period.totalTokens)} ${label.tokens}`} className={`${styles.weekCell} ${styles[`level${level}`]}`} key={period.date} onBlur={() => setHovered(null)} onFocus={() => setHovered(period)} onMouseEnter={() => setHovered(period)} onMouseLeave={() => setHovered(null)} type="button"><span>{compactTokens(period.totalTokens)}</span><small>{formatDate(period.date, language, false)}</small></button>;
+        return <button aria-label={`${period.date} 当周 ${formatChineseTokens(period.totalTokens)} Token`} className={`${styles.weekCell} ${styles[`level${level}`]}`} key={period.date} onBlur={() => setHovered(null)} onFocus={() => setHovered(period)} onMouseEnter={() => setHovered(period)} onMouseLeave={() => setHovered(null)} type="button" />;
       })}</div> : <>
-        <div className={styles.months} style={{ gridTemplateColumns: `repeat(${Math.ceil(dailyPeriods.length / 7)}, minmax(0, 1fr))` }}>{months.map((month) => <span key={`${month.text}-${month.column}`} style={{ gridColumnStart: month.column + 1 }}>{month.text}</span>)}</div>
-        <div className={styles.heatmap} style={{ gridTemplateColumns: `repeat(${Math.ceil(dailyPeriods.length / 7)}, minmax(8px, 1fr))` }}>{dailyPeriods.map((period) => {
+        <div className={styles.heatmap} style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}>{dayPeriods.map((period) => {
           const level = period.totalTokens ? Math.max(1, Math.ceil((period.totalTokens / max) * 5)) : 0;
-          return <button aria-label={`${period.date}: ${compactTokens(period.totalTokens)} ${label.tokens}`} className={`${styles.cell} ${styles[`level${level}`]}`} key={period.date} onBlur={() => setHovered(null)} onFocus={() => setHovered(period)} onMouseEnter={() => setHovered(period)} onMouseLeave={() => setHovered(null)} type="button" />;
+          return <button aria-label={`${period.date} ${formatChineseTokens(period.totalTokens)} Token`} className={`${styles.cell} ${styles[`level${level}`]}`} key={period.date} onBlur={() => setHovered(null)} onFocus={() => setHovered(period)} onMouseEnter={() => setHovered(period)} onMouseLeave={() => setHovered(null)} type="button" />;
         })}</div>
+        <div className={styles.months} style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}>{months.map((month) => <span key={`${month.label}-${month.column}`} style={{ gridColumnStart: month.column }}>{month.label}</span>)}</div>
       </>}
-      <div className={styles.heatmapFooter}><span>{view === "weekly" ? `${weeklyPeriods.length} ${label.weekly.toLowerCase()}` : `${formatDate(periods[0].date, language)} — ${formatDate(periods.at(-1)!.date, language)}`}</span><span className={styles.scale}>{label.less}<i className={styles.level0} /><i className={styles.level1} /><i className={styles.level3} /><i className={styles.level5} />{label.more}</span></div>
-      {hovered ? <PeriodTooltip language={language} period={hovered} weekly={view === "weekly"} /> : null}
+      {view === "weekly" ? <div className={styles.weekCaption}>最近 {weeks.length} 周</div> : null}
+      {hovered ? <TokenTooltip period={hovered} /> : null}
     </div>
   </section>;
 }
 
-function RankedList({ entries }: { entries: { name: string; count: number }[] }) {
-  return <ol className={styles.rankedList}>{entries.slice(0, 7).map((entry, index) => <li key={entry.name}><i>{index + 1}</i><span>@{entry.name}</span><b>{entry.count.toLocaleString()} 次运行</b></li>)}</ol>;
-}
-
 export default function UsageDashboard({ data }: { data: UsageData }) {
-  const [language, setLanguage] = useState<Language>("zh");
-  const label = copy[language];
-  const stats = [[compactTokens(data.totals.totalTokens), label.total], [compactTokens(data.summary.peakTokens), label.peak], [`${data.summary.currentStreak} ${label.days}`, label.current], [`${data.summary.longestStreak} ${label.days}`, label.longest], [compactTokens(data.activity.toolCalls), label.toolCalls]];
-  return <main className={styles.shell}>
-    <header className={styles.header}><Link href="/">Eric Wang</Link><button onClick={() => setLanguage(language === "zh" ? "en" : "zh")} type="button">{language === "zh" ? "EN" : "中文"}</button></header>
-    <section className={styles.profile}><div className={styles.avatar}>EW</div><h1>{label.title}</h1><p>{label.subtitle}</p><small>{label.updated} {formatDate(data.throughDate, language)} · {data.timezone}</small></section>
-    <section className={styles.content}>
-      <dl className={styles.stats}>{stats.map(([value, name]) => <div key={name}><dd>{value}</dd><dt>{name}</dt></div>)}</dl>
-      <Activity daily={data.daily} language={language} />
-      <section className={styles.lower}>
-        <div><h2>{label.insights}</h2><dl className={styles.insights}><div><dt>{label.sessions}</dt><dd>{data.source.sessionsWithUsage.toLocaleString()}</dd></div><div><dt>{label.active}</dt><dd>{data.summary.activeDays} / {data.summary.calendarDays}</dd></div><div><dt>{label.cache}</dt><dd>{data.totals.cacheHitRate.toFixed(1)}%</dd></div><div><dt>{label.uniqueTools}</dt><dd>{data.activity.uniqueTools}</dd></div><div><dt>{label.uniqueSkills}</dt><dd>{data.activity.uniqueSkills}</dd></div><div><dt>{label.skillReads}</dt><dd>{data.activity.skillReads.toLocaleString()}</dd></div></dl></div>
-        <div><h2>{label.topTools}</h2><RankedList entries={data.activity.topTools} /></div>
-        <div><h2>{label.topSkills}</h2><RankedList entries={data.activity.topSkills} /></div>
+  const stats = [
+    { value: formatChineseTokens(data.totals.totalTokens), label: "累计 Token 数" },
+    { value: formatChineseTokens(data.summary.peakChatTokens), label: "峰值 Token 数" },
+    { value: formatDuration(data.summary.longestChatSeconds), label: "最长聊天时长" },
+    { value: `${data.summary.currentStreak} 天`, label: "当前连续天数" },
+    { value: `${data.summary.longestStreak} 天`, label: "最长连续天数" },
+  ];
+
+  return <main className={styles.page}>
+    <div className={styles.dashboard}>
+      <section className={styles.profile}>
+        <div className={styles.avatarWrap}><Image alt="Eric Wang" className={styles.avatar} fill priority sizes="82px" src="/eric.png" /><span aria-hidden="true" className={styles.pet}>🐈</span></div>
+        <h1>Eric</h1>
+        <div className={styles.handle}>@ericwang0321 <span>Pro</span></div>
       </section>
-      <footer className={styles.privacy}><div><h2>{label.privacy}</h2><p>{label.privacyText}</p></div><a href="/data/codex-usage.json">JSON ↗</a></footer>
-    </section>
+
+      <dl className={styles.summary}>{stats.map((stat) => <div key={stat.label}><dd>{stat.value}</dd><dt>{stat.label}</dt></div>)}</dl>
+
+      <ActivityHeatmap data={data.daily} />
+
+      <section className={styles.details}>
+        <div className={styles.insights}>
+          <h2>活动洞察</h2>
+          <dl>
+            <div><dt>快速模式</dt><dd>{Math.round(data.behavior.fastModePercent)}%</dd></div>
+            <div><dt>最常用的推理强度</dt><dd><strong>{data.behavior.reasoningLabel}</strong> · {Math.round(data.behavior.reasoningPercent)}%</dd></div>
+            <div><dt>已探索的技能</dt><dd>{data.activity.uniqueSkills}</dd></div>
+            <div><dt>使用的技能总数</dt><dd>{compactCount(data.activity.skillReads)}</dd></div>
+            <div><dt>聊天总数</dt><dd>{compactCount(data.source.sessionsWithUsage)}</dd></div>
+          </dl>
+        </div>
+
+        <div className={styles.plugins}>
+          <h2>最常用的插件</h2>
+          <ol>{data.activity.topPlugins.map((plugin) => {
+            const meta = pluginMeta[plugin.name] ?? { icon: "◆", tone: "blue" };
+            return <li key={plugin.name}><i className={styles[meta.tone]}>{meta.icon}</i><span>@{plugin.name}</span><b>{compactCount(plugin.count)} 次运行</b></li>;
+          })}</ol>
+        </div>
+      </section>
+
+      <footer>统计截至 {data.throughDate} · 仅公开时间、计数与调用名称，不包含对话内容</footer>
+    </div>
   </main>;
 }
