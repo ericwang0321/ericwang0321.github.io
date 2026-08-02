@@ -1,63 +1,63 @@
 {
   "schemaVersion": 3,
-  "generatedAt": "2026-07-31T07:10:57.583Z",
+  "generatedAt": "2026-08-02T02:30:58.464Z",
   "timezone": "Asia/Hong_Kong",
-  "throughDate": "2026-07-30",
+  "throughDate": "2026-08-01",
   "source": {
     "firstDate": "2026-05-04",
-    "filesIndexed": 610,
-    "sessionsWithUsage": 588,
+    "filesIndexed": 912,
+    "sessionsWithUsage": 828,
     "invalidTokenLines": 0,
     "contentRead": false
   },
   "totals": {
-    "inputTokens": 18084003912,
-    "cachedInputTokens": 17064632192,
-    "uncachedInputTokens": 1019371720,
+    "inputTokens": 69443841515,
+    "cachedInputTokens": 67184893824,
+    "uncachedInputTokens": 2258947691,
     "cacheWriteInputTokens": 0,
-    "outputTokens": 69417863,
-    "reasoningOutputTokens": 23537389,
-    "totalTokens": 18153421775,
-    "requests": 129191,
-    "sessions": 588,
-    "cacheHitRate": 94.4
+    "outputTokens": 216284800,
+    "reasoningOutputTokens": 74954075,
+    "totalTokens": 69660126315,
+    "requests": 442834,
+    "sessions": 828,
+    "cacheHitRate": 96.7
   },
   "summary": {
-    "calendarDays": 88,
-    "activeDays": 80,
-    "averagePerActiveDay": 226917772,
-    "lastSevenDaysTokens": 4922513192,
-    "previousSevenDaysTokens": 6259826559,
-    "sevenDayChangePercent": -21.4,
-    "peakDate": "2026-07-17",
-    "peakTokens": 2711668592,
-    "peakChatTokens": 771767959,
-    "longestChatSeconds": 16105,
-    "currentStreak": 19,
-    "longestStreak": 20
+    "calendarDays": 90,
+    "activeDays": 82,
+    "averagePerActiveDay": 849513736,
+    "lastSevenDaysTokens": 56390066561,
+    "previousSevenDaysTokens": 3577443665,
+    "sevenDayChangePercent": 1476.3,
+    "peakDate": "2026-08-01",
+    "peakTokens": 28922159133,
+    "peakChatTokens": 843251610,
+    "longestChatSeconds": 21196,
+    "currentStreak": 21,
+    "longestStreak": 21
   },
   "behavior": {
-    "fastModePercent": 41.4,
+    "fastModePercent": 56.5,
     "reasoningLabel": "极高",
-    "reasoningPercent": 60.3
+    "reasoningPercent": 70.7
   },
   "activity": {
-    "toolCalls": 50967,
+    "toolCalls": 53382,
     "uniqueTools": 47,
     "skillReads": 918,
     "uniqueSkills": 36,
     "topTools": [
       {
         "name": "exec_command",
-        "count": 36452
+        "count": 36454
       },
       {
         "name": "write_stdin",
-        "count": 5192
+        "count": 5193
       },
       {
         "name": "wait",
-        "count": 3262
+        "count": 4000
       },
       {
         "name": "view_image",
@@ -68,32 +68,32 @@
         "count": 987
       },
       {
+        "name": "send_message",
+        "count": 932
+      },
+      {
+        "name": "wait_agent",
+        "count": 820
+      },
+      {
         "name": "js",
         "count": 518
       },
       {
+        "name": "spawn_agent",
+        "count": 456
+      },
+      {
+        "name": "list_agents",
+        "count": 397
+      },
+      {
         "name": "load_workspace_dependencies",
-        "count": 393
+        "count": 394
       },
       {
         "name": "get_stock_info",
         "count": 391
-      },
-      {
-        "name": "wait_agent",
-        "count": 352
-      },
-      {
-        "name": "request_user_input",
-        "count": 303
-      },
-      {
-        "name": "spawn_agent",
-        "count": 281
-      },
-      {
-        "name": "send_message",
-        "count": 267
       }
     ],
     "topSkills": [
@@ -1313,6 +1313,32 @@
       "requests": 14247,
       "sessions": 48,
       "cacheHitRate": 96.1
+    },
+    {
+      "date": "2026-07-31",
+      "inputTokens": 22517460404,
+      "cachedInputTokens": 21927040512,
+      "uncachedInputTokens": 590419892,
+      "cacheWriteInputTokens": 0,
+      "outputTokens": 67085003,
+      "reasoningOutputTokens": 23563995,
+      "totalTokens": 22584545407,
+      "requests": 152553,
+      "sessions": 126,
+      "cacheHitRate": 97.4
+    },
+    {
+      "date": "2026-08-01",
+      "inputTokens": 28842377199,
+      "cachedInputTokens": 28193221120,
+      "uncachedInputTokens": 649156079,
+      "cacheWriteInputTokens": 0,
+      "outputTokens": 79781934,
+      "reasoningOutputTokens": 27852691,
+      "totalTokens": 28922159133,
+      "requests": 161090,
+      "sessions": 124,
+      "cacheHitRate": 97.7
     }
   ]
 }
