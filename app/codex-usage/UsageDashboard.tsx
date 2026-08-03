@@ -187,9 +187,9 @@ function ActivityHeatmap({ data }: { data: DailyUsage[] }) {
 
 export default function UsageDashboard({ data }: { data: UsageData }) {
   const stats = [
-    { value: formatTokens(data.totals.totalTokens), label: "累计 Token 数" },
-    { value: formatTokens(data.summary.peakChatTokens), label: "峰值 Token 数" },
-    { value: formatDuration(data.summary.longestChatSeconds), label: "最长聊天时长" },
+    { value: formatTokens(data.totals.totalTokens), label: "累计 Token" },
+    { value: formatTokens(data.summary.peakChatTokens), label: "单聊天峰值 Token" },
+    { value: formatDuration(data.summary.longestChatSeconds), label: "最长连续聊天时长" },
     { value: `${data.summary.currentStreak} 天`, label: "当前连续天数" },
     { value: `${data.summary.longestStreak} 天`, label: "最长连续天数" },
   ];
@@ -218,8 +218,9 @@ export default function UsageDashboard({ data }: { data: UsageData }) {
           <span aria-label="布丁，我的 Codex 宠物" className={styles.pet} role="img" />
         </div>
           <div>
-            <strong>Eric Wang</strong>
+            <strong>Eric</strong>
             <span className={styles.handle}>@ericwang0321</span>
+            <span className={styles.plan}>Pro</span>
           </div>
         </div>
       </section>
@@ -233,9 +234,9 @@ export default function UsageDashboard({ data }: { data: UsageData }) {
           <h2>活动洞察</h2>
           <dl>
             <div><dt>快速模式</dt><dd>{Math.round(data.behavior.fastModePercent)}%</dd></div>
-            <div><dt>最常用的推理强度</dt><dd><strong>{data.behavior.reasoningLabel}</strong> · {Math.round(data.behavior.reasoningPercent)}%</dd></div>
-            <div><dt>已探索的技能</dt><dd>{data.activity.uniqueSkills}</dd></div>
-            <div><dt>使用的技能总数</dt><dd>{compactCount(data.activity.skillReads)}</dd></div>
+            <div><dt>最常用推理强度</dt><dd><strong>{data.behavior.reasoningLabel}</strong> · {Math.round(data.behavior.reasoningPercent)}%</dd></div>
+            <div><dt>已探索 Skill</dt><dd>{data.activity.uniqueSkills}</dd></div>
+            <div><dt>Skill 使用总数</dt><dd>{compactCount(data.activity.skillReads)}</dd></div>
             <div><dt>聊天总数</dt><dd>{compactCount(data.source.sessionsWithUsage)}</dd></div>
           </dl>
         </div>

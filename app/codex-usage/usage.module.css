@@ -180,6 +180,13 @@
   font-size: 12px;
 }
 
+.plan {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
 .summary {
   display: grid;
   gap: 10px;
