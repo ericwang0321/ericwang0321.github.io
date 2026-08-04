@@ -1,55 +1,55 @@
 {
   "schemaVersion": 3,
-  "generatedAt": "2026-08-03T02:32:29.604Z",
+  "generatedAt": "2026-08-04T02:31:41.748Z",
   "timezone": "Asia/Hong_Kong",
-  "throughDate": "2026-08-02",
+  "throughDate": "2026-08-03",
   "source": {
     "firstDate": "2026-05-04",
-    "filesIndexed": 1094,
-    "sessionsWithUsage": 1010,
+    "filesIndexed": 1127,
+    "sessionsWithUsage": 1114,
     "invalidTokenLines": 0,
     "contentRead": false
   },
   "totals": {
-    "inputTokens": 129182216171,
-    "cachedInputTokens": 125558754176,
-    "uncachedInputTokens": 3623461995,
+    "inputTokens": 158509284074,
+    "cachedInputTokens": 154177289600,
+    "uncachedInputTokens": 4331994474,
     "cacheWriteInputTokens": 0,
-    "outputTokens": 366328793,
-    "reasoningOutputTokens": 128740148,
-    "totalTokens": 129548544964,
-    "requests": 700533,
-    "sessions": 1010,
-    "cacheHitRate": 97.2
+    "outputTokens": 436271285,
+    "reasoningOutputTokens": 153517042,
+    "totalTokens": 158945555359,
+    "requests": 780158,
+    "sessions": 1114,
+    "cacheHitRate": 97.3
   },
   "summary": {
-    "calendarDays": 91,
-    "activeDays": 83,
-    "averagePerActiveDay": 1560825843,
-    "lastSevenDaysTokens": 116259756363,
-    "previousSevenDaysTokens": 3065460939,
-    "sevenDayChangePercent": 3692.6,
+    "calendarDays": 92,
+    "activeDays": 84,
+    "averagePerActiveDay": 1892208992,
+    "lastSevenDaysTokens": 145290915059,
+    "previousSevenDaysTokens": 1520279293,
+    "sevenDayChangePercent": 9456.9,
     "peakDate": "2026-08-02",
     "peakTokens": 59888418649,
-    "peakChatTokens": 1481893772,
-    "longestChatSeconds": 60106,
-    "currentStreak": 22,
-    "longestStreak": 22
+    "peakChatTokens": 1805628445,
+    "longestChatSeconds": 70357,
+    "currentStreak": 23,
+    "longestStreak": 23
   },
   "behavior": {
-    "fastModePercent": 57.5,
+    "fastModePercent": 56.7,
     "reasoningLabel": "极高",
-    "reasoningPercent": 68.5
+    "reasoningPercent": 65.9
   },
   "activity": {
-    "toolCalls": 56205,
+    "toolCalls": 57320,
     "uniqueTools": 47,
     "skillReads": 918,
     "uniqueSkills": 36,
     "topTools": [
       {
         "name": "exec_command",
-        "count": 36461
+        "count": 36479
       },
       {
         "name": "write_stdin",
@@ -57,19 +57,19 @@
       },
       {
         "name": "wait",
-        "count": 4566
+        "count": 5070
       },
       {
         "name": "send_message",
-        "count": 1857
+        "count": 2064
+      },
+      {
+        "name": "wait_agent",
+        "count": 1829
       },
       {
         "name": "view_image",
         "count": 1796
-      },
-      {
-        "name": "wait_agent",
-        "count": 1645
       },
       {
         "name": "update_plan",
@@ -77,11 +77,11 @@
       },
       {
         "name": "list_agents",
-        "count": 650
+        "count": 752
       },
       {
         "name": "spawn_agent",
-        "count": 597
+        "count": 656
       },
       {
         "name": "js",
@@ -1352,6 +1352,19 @@
       "requests": 257699,
       "sessions": 192,
       "cacheHitRate": 97.7
+    },
+    {
+      "date": "2026-08-03",
+      "inputTokens": 29327067903,
+      "cachedInputTokens": 28618535424,
+      "uncachedInputTokens": 708532479,
+      "cacheWriteInputTokens": 0,
+      "outputTokens": 69942492,
+      "reasoningOutputTokens": 24776894,
+      "totalTokens": 29397010395,
+      "requests": 79625,
+      "sessions": 110,
+      "cacheHitRate": 97.6
     }
   ]
 }
