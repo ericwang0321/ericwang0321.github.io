@@ -1,48 +1,48 @@
 {
   "schemaVersion": 3,
-  "generatedAt": "2026-08-06T02:32:14.564Z",
+  "generatedAt": "2026-08-07T02:32:45.944Z",
   "timezone": "Asia/Hong_Kong",
-  "throughDate": "2026-08-05",
+  "throughDate": "2026-08-06",
   "source": {
     "firstDate": "2026-05-04",
-    "filesIndexed": 1147,
-    "sessionsWithUsage": 1135,
+    "filesIndexed": 1163,
+    "sessionsWithUsage": 1150,
     "invalidTokenLines": 0,
     "contentRead": false
   },
   "totals": {
-    "inputTokens": 158767297533,
-    "cachedInputTokens": 154421937536,
-    "uncachedInputTokens": 4345359997,
+    "inputTokens": 158822067738,
+    "cachedInputTokens": 154472914560,
+    "uncachedInputTokens": 4349153178,
     "cacheWriteInputTokens": 0,
-    "outputTokens": 437243893,
-    "reasoningOutputTokens": 153940972,
-    "totalTokens": 159204541426,
-    "requests": 782185,
-    "sessions": 1135,
+    "outputTokens": 437520584,
+    "reasoningOutputTokens": 154038816,
+    "totalTokens": 159259588322,
+    "requests": 782740,
+    "sessions": 1150,
     "cacheHitRate": 97.3
   },
   "summary": {
-    "calendarDays": 94,
-    "activeDays": 86,
-    "averagePerActiveDay": 1851215598,
-    "lastSevenDaysTokens": 142903505298,
-    "previousSevenDaysTokens": 3956384263,
-    "sevenDayChangePercent": 3512,
+    "calendarDays": 95,
+    "activeDays": 87,
+    "averagePerActiveDay": 1830569981,
+    "lastSevenDaysTokens": 141106166547,
+    "previousSevenDaysTokens": 4922513192,
+    "sevenDayChangePercent": 2766.5,
     "peakDate": "2026-08-02",
     "peakTokens": 59888418649,
     "peakChatTokens": 1805628445,
     "longestChatSeconds": 70357,
-    "currentStreak": 25,
-    "longestStreak": 25
+    "currentStreak": 26,
+    "longestStreak": 26
   },
   "behavior": {
-    "fastModePercent": 55.9,
+    "fastModePercent": 55.7,
     "reasoningLabel": "极高",
-    "reasoningPercent": 65.8
+    "reasoningPercent": 65.7
   },
   "activity": {
-    "toolCalls": 57534,
+    "toolCalls": 57570,
     "uniqueTools": 47,
     "skillReads": 918,
     "uniqueSkills": 36,
@@ -53,7 +53,7 @@
       },
       {
         "name": "wait",
-        "count": 5274
+        "count": 5310
       },
       {
         "name": "write_stdin",
@@ -1391,6 +1391,19 @@
       "requests": 383,
       "sessions": 8,
       "cacheHitRate": 91.7
+    },
+    {
+      "date": "2026-08-06",
+      "inputTokens": 54770205,
+      "cachedInputTokens": 50977024,
+      "uncachedInputTokens": 3793181,
+      "cacheWriteInputTokens": 0,
+      "outputTokens": 276691,
+      "reasoningOutputTokens": 97844,
+      "totalTokens": 55046896,
+      "requests": 555,
+      "sessions": 16,
+      "cacheHitRate": 93.1
     }
   ]
 }
