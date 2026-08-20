@@ -331,65 +331,114 @@ img {
   padding-bottom: 6px;
 }
 
-.education-grid {
-  display: grid;
-  gap: 16px;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
-.education-card {
+.timeline-board {
   background: var(--surface);
-  border-radius: 28px;
-  display: flex;
-  flex-direction: column;
-  min-height: 310px;
-  padding: 26px;
-  transition: background 180ms ease, transform 180ms ease;
+  border-radius: 32px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  overflow: hidden;
 }
 
-.education-card:hover {
-  background: var(--surface-hover);
-  transform: translateY(-3px);
+.timeline-column {
+  padding: 34px 38px 40px;
 }
 
-.education-card-top {
+.timeline-column + .timeline-column {
+  border-left: 1px solid #d9d9d4;
+}
+
+.timeline-column > h3 {
+  font-size: 15px;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+  margin: 0 0 28px 32px;
+}
+
+.timeline-list {
+  position: relative;
+}
+
+.timeline-list::before {
+  background: #c9c9c3;
+  bottom: 14px;
+  content: "";
+  left: 6px;
+  position: absolute;
+  top: 8px;
+  width: 1px;
+}
+
+.timeline-item {
+  padding: 0 0 40px 32px;
+  position: relative;
+}
+
+.timeline-item:last-child {
+  padding-bottom: 0;
+}
+
+.timeline-dot {
+  background: #111;
+  border: 4px solid var(--surface);
+  border-radius: 50%;
+  height: 13px;
+  left: 0;
+  position: absolute;
+  top: 5px;
+  width: 13px;
+}
+
+.timeline-item time {
+  color: var(--muted);
+  display: block;
+  font-size: 13px;
+  margin-bottom: 10px;
+}
+
+.timeline-item-heading {
   align-items: flex-start;
   display: flex;
+  gap: 18px;
   justify-content: space-between;
 }
 
-.education-card time,
-.experience-card time {
-  border: 1px solid #d4d4cf;
-  border-radius: 999px;
-  color: #555551;
-  font-size: 13px;
-  padding: 6px 11px;
+.timeline-item-heading > div {
+  min-width: 0;
 }
 
-.education-logo {
-  height: 58px;
+.timeline-item-heading p {
+  color: var(--muted);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  margin: 0 0 7px;
+  text-transform: uppercase;
+}
+
+.timeline-item h4 {
+  font-size: 21px;
+  font-weight: 550;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+  margin: 0;
+}
+
+.timeline-logo {
+  flex: 0 0 auto;
+  height: 42px;
   position: relative;
-  width: 116px;
+  width: 82px;
 }
 
-.education-logo img {
+.timeline-logo img {
   object-fit: contain;
 }
 
-.education-card h3 {
-  font-size: 25px;
-  font-weight: 550;
-  letter-spacing: -0.035em;
-  line-height: 1.12;
-  margin: auto 0 12px;
-}
-
-.education-card p {
+.timeline-detail {
   color: var(--muted);
   font-size: 14px;
-  line-height: 1.45;
-  margin: 0;
+  line-height: 1.5;
+  margin: 12px 0 0;
+  max-width: 440px;
 }
 
 .awards-panel {
@@ -813,48 +862,6 @@ img {
   -webkit-line-clamp: 2;
 }
 
-.experience-grid {
-  display: grid;
-  gap: 16px;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
-.experience-card {
-  background: var(--surface);
-  border-radius: 28px;
-  display: flex;
-  flex-direction: column;
-  min-height: 340px;
-  padding: 26px;
-}
-
-.experience-card time {
-  align-self: flex-start;
-}
-
-.experience-card > p:first-of-type {
-  color: var(--muted);
-  font-size: 12px;
-  letter-spacing: 0.045em;
-  margin: auto 0 12px;
-  text-transform: uppercase;
-}
-
-.experience-card h3 {
-  font-size: 24px;
-  font-weight: 550;
-  letter-spacing: -0.035em;
-  line-height: 1.15;
-  margin: 0 0 16px;
-}
-
-.experience-card > p:last-child {
-  color: var(--muted);
-  font-size: 14px;
-  line-height: 1.5;
-  margin: 0;
-}
-
 .contact-section {
   background: #111;
   border-radius: 36px;
@@ -926,10 +933,6 @@ img {
     display: none;
   }
 
-  .education-card h3 {
-    font-size: 22px;
-  }
-
   .publication-feature {
     gap: 42px;
   }
@@ -953,14 +956,13 @@ img {
     padding-top: 82px;
   }
 
-  .education-grid,
-  .experience-grid {
+  .timeline-board {
     grid-template-columns: 1fr;
   }
 
-  .education-card,
-  .experience-card {
-    min-height: 250px;
+  .timeline-column + .timeline-column {
+    border-left: 0;
+    border-top: 1px solid #d9d9d4;
   }
 
   .about-section {
@@ -1121,10 +1123,24 @@ img {
     white-space: nowrap;
   }
 
-  .education-card {
+  .timeline-board {
     border-radius: 24px;
-    min-height: 240px;
-    padding: 22px;
+  }
+
+  .timeline-column {
+    padding: 28px 22px 32px;
+  }
+
+  .timeline-column > h3 {
+    margin-left: 28px;
+  }
+
+  .timeline-item {
+    padding-left: 28px;
+  }
+
+  .timeline-item h4 {
+    font-size: 19px;
   }
 
   .awards-panel {
@@ -1212,10 +1228,6 @@ img {
 
   .research-copy > p:last-child {
     -webkit-line-clamp: 3;
-  }
-
-  .experience-card {
-    min-height: 290px;
   }
 
   .contact-section {

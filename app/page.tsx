@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import VisitedPlacesMap from "./components/VisitedPlacesMap";
 
 type Language = "en" | "zh";
 
@@ -36,7 +35,6 @@ const copy = {
     research: { en: "Research", zh: "研究" },
     publication: { en: "Publication", zh: "论文" },
     honors: { en: "Honors", zh: "荣誉" },
-    places: { en: "Places", zh: "足迹" },
     experience: { en: "Experience", zh: "经历" },
     education: { en: "Education", zh: "教育" },
     usage: { en: "Usage", zh: "用量" },
@@ -81,10 +79,10 @@ const copy = {
   },
   contact: {
     label: { en: "Contact", zh: "联系" },
-    title: { en: "Let’s discuss the next constraint.", zh: "一起研究下一个关键约束。" },
+    title: { en: "Feel free to get in touch.", zh: "欢迎联系我。" },
     body: {
-      en: "AI infrastructure, public markets, quantitative research—and the difficult questions between them.",
-      zh: "关于 AI 基础设施、资本市场、量化研究，以及它们交叉处的复杂问题。",
+      en: "You can reach me by email or connect with me on LinkedIn.",
+      zh: "可以通过邮件或 LinkedIn 联系我。",
     },
   },
 };
@@ -249,17 +247,16 @@ const portfolioEntries: PortfolioEntry[] = [
   },
 ];
 
-const companyResearch = portfolioEntries.filter((entry) => entry.group === "company");
 const technologyResearch = portfolioEntries.filter((entry) => entry.group === "technology");
 
-const timeline = [
+const workExperience = [
   {
     period: "2026",
     organization: { en: "China Asset Management (Hong Kong)", zh: "华夏基金（香港）" },
     role: { en: "AI & Equity Research", zh: "AI 与股票研究" },
     detail: {
-      en: "Built AI-assisted IPO research, capital-flow dashboards and automated CCASS monitoring across 500+ Hong Kong-listed companies.",
-      zh: "搭建 AI 辅助 IPO 研究、资金流仪表板，并自动追踪 500+ 家港股公司的 CCASS 持仓变化。",
+      en: "Worked on IPO research, capital-flow dashboards and CCASS data tracking.",
+      zh: "参与 IPO 研究、资金流仪表板和 CCASS 数据追踪。",
     },
   },
   {
@@ -267,8 +264,8 @@ const timeline = [
     organization: { en: "GaoTeng Global Asset Management", zh: "高腾环球资产管理" },
     role: { en: "Quantitative Research · ETFs", zh: "量化研究 · ETF" },
     detail: {
-      en: "Redesigned multi-factor research and cross-asset pipelines, reducing backtest runtime by approximately 90%.",
-      zh: "重构多因子研究与跨资产数据管线，使回测运行时间降低约 90%。",
+      en: "Worked on multi-factor research, ETF analysis and backtesting pipelines.",
+      zh: "参与多因子研究、ETF 分析和回测数据管线搭建。",
     },
   },
   {
@@ -276,8 +273,8 @@ const timeline = [
     organization: { en: "Hengli Petrochemical International", zh: "恒力石化国际" },
     role: { en: "Trading Analytics · Crude Oil", zh: "原油交易分析" },
     detail: {
-      en: "Integrated shipping, refinery and market data into real-time analytics for physical crude-oil trading decisions.",
-      zh: "整合航运、炼厂与市场数据，为实体原油交易构建实时决策分析。",
+      en: "Analyzed shipping, refinery and market data for physical crude-oil trading.",
+      zh: "整理航运、炼厂和市场数据，支持实体原油交易分析。",
     },
   },
 ];
@@ -311,6 +308,57 @@ const education = [
     website: "https://www.ncsu.edu/",
   },
 ];
+
+function TimelineColumn({
+  title,
+  items,
+  language,
+}: {
+  title: Localized;
+  items: Array<{
+    period?: string;
+    year?: string;
+    organization?: Localized;
+    school?: Localized;
+    role?: Localized;
+    degree?: Localized;
+    detail?: Localized;
+    logo?: string;
+    logoAlt?: string;
+    website?: string;
+  }>;
+  language: Language;
+}) {
+  return (
+    <div className="timeline-column">
+      <h3>{t(title, language)}</h3>
+      <div className="timeline-list">
+        {items.map((item) => {
+          const name = item.organization ?? item.school;
+          const description = item.detail ?? item.degree;
+          return (
+            <article className="timeline-item" key={`${item.period ?? item.year}-${name?.en}`}>
+              <span className="timeline-dot" aria-hidden="true" />
+              <time>{item.period ?? item.year}</time>
+              <div className="timeline-item-heading">
+                <div>
+                  <p>{item.role ? t(item.role, language) : language === "en" ? "Education" : "教育经历"}</p>
+                  <h4>{name ? t(name, language) : ""}</h4>
+                </div>
+                {item.logo && item.website ? (
+                  <a className="timeline-logo" href={item.website} target="_blank" rel="noreferrer" aria-label={item.logoAlt}>
+                    <Image src={item.logo} alt={item.logoAlt ?? ""} fill sizes="88px" />
+                  </a>
+                ) : null}
+              </div>
+              <p className="timeline-detail">{description ? t(description, language) : ""}</p>
+            </article>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
 function t(value: Localized, language: Language) {
   return value[language];
@@ -367,12 +415,11 @@ export default function Home() {
         <div className="header-inner">
           <a className="header-brand" href="#top">Eric Wang</a>
           <nav className="header-nav" aria-label="Primary navigation">
-            <a href="#education">{t(copy.nav.education, language)}</a>
+            <a href="#experience">{t(copy.nav.experience, language)}</a>
             <a href="#honors">{t(copy.nav.honors, language)}</a>
             <a href="#about">{t(copy.nav.about, language)}</a>
             <a href="#research">{t(copy.nav.research, language)}</a>
             <a href="#publication">{t(copy.nav.publication, language)}</a>
-            <a href="#places">{t(copy.nav.places, language)}</a>
           </nav>
           <div className="header-actions">
             <a className="usage-link" href="/codex-usage/">{t(copy.nav.usage, language)}</a>
@@ -408,24 +455,23 @@ export default function Home() {
         </div>
         <h1 id="hero-title">
           {language === "en" ? (
-            <>AI infrastructure, markets,<br />{" "}and the systems in between.</>
+            <>AI infrastructure,<br />technology and markets.</>
           ) : (
-            <>AI 基础设施、资本市场，<br />以及连接两者的系统。</>
+            <>AI 基础设施、技术<br />与资本市场。</>
           )}
         </h1>
         <p className="hero-description">
           {language === "en"
-            ? "I study how power, silicon, networks, and models become products, competitive advantages, and market signals."
-            : "我研究电力、芯片、网络与模型如何转化为产品、竞争优势和市场信号。"}
+            ? "This site collects my research notes, visual explainers, academic work and experience."
+            : "这里整理了我写过的研究笔记、可视化内容、学术论文，以及我的学习和实习经历。"}
         </p>
         <nav className="explore-panel" aria-label={language === "en" ? "Explore Eric Wang’s work" : "浏览 Eric Wang 的研究"}>
           <a className="explore-primary" href="#research">
-            <span>{language === "en" ? "Explore my work" : "浏览我的研究"}</span>
+            <span>{language === "en" ? "Read my work" : "看看我写的内容"}</span>
             <span className="explore-arrow" aria-hidden="true">↗</span>
           </a>
           <div className="explore-chips">
-            <a href="#research">{language === "en" ? "Company research" : "公司研究"}</a>
-            <a href="#technology-research">{language === "en" ? "Technology" : "技术研究"}</a>
+            <a href="#research">{language === "en" ? "Writing" : "文章与研究"}</a>
             <a href="#publication">{t(copy.nav.publication, language)}</a>
             <a href="/codex-usage/">Codex {t(copy.nav.usage, language)}</a>
           </div>
@@ -438,30 +484,14 @@ export default function Home() {
       </section>
 
       <div className="site-container">
-        <section id="education" className="page-section">
+        <section id="experience" className="page-section experience-section">
           <div className="section-heading">
-            <p className="section-kicker">{language === "en" ? "Education" : "教育"}</p>
-            <h2>{language === "en" ? "Physics, statistics, and financial engineering." : "物理、统计与金融工程。"}</h2>
+            <p className="section-kicker">{language === "en" ? "Experience" : "经历"}</p>
+            <h2>{language === "en" ? "Education and internships." : "教育与实习经历。"}</h2>
           </div>
-          <div className="education-grid">
-            {education.map((item) => (
-              <article className="education-card" key={item.school.en}>
-                <div className="education-card-top">
-                  <time>{item.year}</time>
-                  <a
-                    className="education-logo"
-                    href={item.website}
-                    target="_blank"
-                    rel="noreferrer"
-                    aria-label={item.school.en}
-                  >
-                    <Image src={item.logo} alt={item.logoAlt} fill sizes="110px" />
-                  </a>
-                </div>
-                <h3>{t(item.school, language)}</h3>
-                <p>{t(item.degree, language)}</p>
-              </article>
-            ))}
+          <div className="timeline-board">
+            <TimelineColumn title={{ en: "Education", zh: "教育经历" }} items={education} language={language} />
+            <TimelineColumn title={{ en: "Internships", zh: "实习经历" }} items={workExperience} language={language} />
           </div>
         </section>
 
@@ -505,50 +535,56 @@ export default function Home() {
         <section id="about" className="page-section about-section">
           <div className="section-heading about-heading">
             <p className="section-kicker">{language === "en" ? "About" : "关于我"}</p>
-            <h2>{language === "en" ? "Research built around the hard constraints." : "围绕真实约束展开研究。"}</h2>
+            <h2>{language === "en" ? "How I approach AI." : "我如何理解 AI。"}</h2>
           </div>
           <div className="about-copy">
             {language === "en" ? (
               <>
                 <p>
-                  I work at the intersection of <strong>AI infrastructure</strong>, <strong>public markets</strong>,
-                  and quantitative research. I follow the AI value chain from power and silicon to systems,
-                  applications, and market signals.
+                  AI is moving quickly. New tools and applications appear all the time, so I spend part of each day
+                  trying different AI products—learning what they can do, where they fall short, and how their limits
+                  keep changing.
                 </p>
                 <p>
-                  I care about how physical constraints—power, memory bandwidth, networking, and cooling—become
-                  product economics and competitive advantages. I turn complex systems into evidence-backed maps,
-                  models, and decision tools.
+                  I also want to understand what sits behind the tools: models, compute, data and infrastructure, as
+                  well as the industries and companies shaped by them. I use this site to organize what I learn into
+                  research notes and visual explainers.
+                </p>
+                <p>
+                  My physics training taught me to work from first principles. Financial engineering, internships in
+                  asset management and trading, and study experiences across Hong Kong, Singapore and the United
+                  States give me different ways to look at the same technology—from how it works to how it is used and
+                  valued.
                 </p>
                 <div className="interest-list" aria-label="Research interests">
-                  <span>Compute · Memory · Networking</span>
-                  <span>Inference economics · Agents</span>
-                  <span>Equity research · Market systems</span>
+                  <span>AI tools · Applications</span>
+                  <span>Models · Compute · Infrastructure</span>
+                  <span>Industries · Companies · Markets</span>
                 </div>
-                <p className="about-personal">Away from research: tennis, Texas Hold&apos;em, and decisions under uncertainty.</p>
               </>
             ) : (
               <>
                 <p>
-                  我的研究位于 <strong>AI 基础设施</strong>、<strong>资本市场</strong>与量化研究的交叉点，
-                  沿着电力、芯片、系统、应用直到市场信号观察完整的 AI 价值链。
+                  AI 发展得很快，新的工具和应用不断出现。我每天都会实际使用不同的 AI 产品，了解它们能做什么、
+                  暂时做不到什么，以及这些能力边界如何变化。
                 </p>
                 <p>
-                  我关注电力、内存带宽、网络和散热等物理约束如何转化为产品经济性和竞争优势，
-                  并把复杂系统整理成有证据支持的产业地图、模型与决策工具。
+                  除了使用工具，我也想理解它们背后的模型、算力、数据和基础设施，以及这些变化涉及的产业和公司。
+                  我会把学习过程整理成研究笔记和可视化内容，放在这个网站上。
+                </p>
+                <p>
+                  物理训练让我习惯从基本原理出发拆解问题；金融工程学习，以及在资管和交易相关岗位的实习，
+                  让我也能从数据和市场角度理解技术。在香港、新加坡和美国的学习经历，则给了我不同的文化背景和观察视角。
                 </p>
                 <div className="interest-list" aria-label="研究方向">
-                  <span>算力 · 内存 · 网络</span>
-                  <span>推理经济性 · Agent</span>
-                  <span>股票研究 · 市场系统</span>
+                  <span>AI 工具 · 应用</span>
+                  <span>模型 · 算力 · 基础设施</span>
+                  <span>产业 · 公司 · 市场</span>
                 </div>
-                <p className="about-personal">研究之外：网球、德州扑克，以及在不确定性下做决策。</p>
               </>
             )}
           </div>
         </section>
-
-        <VisitedPlacesMap language={language} />
 
         <section id="publication" className="page-section publication-section">
           <div className="section-heading">
@@ -591,40 +627,12 @@ export default function Home() {
         <section id="research" className="page-section research-section">
           <div className="section-heading section-heading-inline">
             <div>
-              <p className="section-kicker">{language === "en" ? "Selected work" : "精选作品"}</p>
-              <h2>{language === "en" ? "Company research." : "公司研究。"}</h2>
-            </div>
-            <span>{companyResearch.length} {language === "en" ? "works" : "项成果"}</span>
-          </div>
-          <ResearchList entries={companyResearch} language={language} />
-        </section>
-
-        <section id="technology-research" className="page-section research-section">
-          <div className="section-heading section-heading-inline">
-            <div>
-              <p className="section-kicker">{language === "en" ? "Systems and infrastructure" : "系统与基础设施"}</p>
-              <h2>{language === "en" ? "Technology and industry research." : "技术与产业研究。"}</h2>
+              <p className="section-kicker">{language === "en" ? "Selected writing" : "部分内容"}</p>
+              <h2>{language === "en" ? "Notes and visual explainers." : "研究笔记与可视化内容。"}</h2>
             </div>
             <span>{technologyResearch.length} {language === "en" ? "works" : "项成果"}</span>
           </div>
           <ResearchList entries={technologyResearch} language={language} />
-        </section>
-
-        <section id="experience" className="page-section">
-          <div className="section-heading">
-            <p className="section-kicker">{language === "en" ? "Experience" : "经历"}</p>
-            <h2>{language === "en" ? "Research built for decisions." : "让研究服务于决策。"}</h2>
-          </div>
-          <div className="experience-grid">
-            {timeline.map((item) => (
-              <article className="experience-card" key={`${item.period}-${item.organization.en}`}>
-                <time>{item.period}</time>
-                <p>{t(item.role, language)}</p>
-                <h3>{t(item.organization, language)}</h3>
-                <p>{t(item.detail, language)}</p>
-              </article>
-            ))}
-          </div>
         </section>
 
         <section id="contact" className="contact-section">
