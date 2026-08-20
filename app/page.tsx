@@ -307,6 +307,20 @@ const education = [
     logoAlt: "NC State University logo",
     website: "https://www.ncsu.edu/",
   },
+  {
+    year: "2022",
+    school: {
+      en: "King Abdullah University of Science and Technology",
+      zh: "阿卜杜拉国王科技大学（KAUST）",
+    },
+    degree: {
+      en: "Visiting Research Student · Summer Research",
+      zh: "访问研究学生 · 暑期研究",
+    },
+    logo: "/schools/kaust.svg",
+    logoAlt: "King Abdullah University of Science and Technology logo",
+    website: "https://www.kaust.edu.sa/",
+  },
 ];
 
 function TimelineColumn({
