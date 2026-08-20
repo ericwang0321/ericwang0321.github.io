@@ -90,7 +90,7 @@ const copy = {
 const portfolioEntries: PortfolioEntry[] = [
   {
     number: "01",
-    title: { en: "Interactive AI Value Chain Loop", zh: "AI 全产业链闭环交互信息图" },
+    title: { en: "AI Value Chain", zh: "AI 价值链" },
     excerpt: {
       en: "Start from who pays for AI, then trace the demand signal through applications, models, compute infrastructure, semiconductor manufacturing, and finally power and data-center resources.",
       zh: "从“谁为 AI 付费”开始，沿着应用需求、模型服务、算力基础设施、半导体制造、能源和数据中心资源逐层下钻。",
@@ -104,7 +104,7 @@ const portfolioEntries: PortfolioEntry[] = [
   },
   {
     number: "02",
-    title: { en: "AI Infrastructure Knowledge Map", zh: "AI 基建专有知识可视化" },
+    title: { en: "AI Infrastructure Knowledge", zh: "AI 基础设施知识" },
     excerpt: {
       en: "Think of AI infrastructure as an engineering chain: power enters the site, GPUs and servers turn electricity into compute, cooling removes the heat, and networking connects GPUs into clusters.",
       zh: "把 AI 基建看成一条工程链：电力进来，GPU/服务器把电变成算力，散热系统把热带走，网络把 GPU 连成集群。",
@@ -460,16 +460,7 @@ export default function Home() {
             <>AI 基础设施、技术<br />与资本市场。</>
           )}
         </h1>
-        <p className="hero-description">
-          {language === "en"
-            ? "This site collects my research notes, visual explainers, academic work and experience."
-            : "这里整理了我写过的研究笔记、可视化内容、学术论文，以及我的学习和实习经历。"}
-        </p>
         <nav className="explore-panel" aria-label={language === "en" ? "Explore Eric Wang’s work" : "浏览 Eric Wang 的研究"}>
-          <a className="explore-primary" href="#research">
-            <span>{language === "en" ? "Read my work" : "看看我写的内容"}</span>
-            <span className="explore-arrow" aria-hidden="true">↗</span>
-          </a>
           <div className="explore-chips">
             <a href="#research">{language === "en" ? "Writing" : "文章与研究"}</a>
             <a href="#publication">{t(copy.nav.publication, language)}</a>
@@ -556,11 +547,6 @@ export default function Home() {
                   States give me different ways to look at the same technology—from how it works to how it is used and
                   valued.
                 </p>
-                <div className="interest-list" aria-label="Research interests">
-                  <span>AI tools · Applications</span>
-                  <span>Models · Compute · Infrastructure</span>
-                  <span>Industries · Companies · Markets</span>
-                </div>
               </>
             ) : (
               <>
@@ -576,11 +562,6 @@ export default function Home() {
                   物理训练让我习惯从基本原理出发拆解问题；金融工程学习，以及在资管和交易相关岗位的实习，
                   让我也能从数据和市场角度理解技术。在香港、新加坡和美国的学习经历，则给了我不同的文化背景和观察视角。
                 </p>
-                <div className="interest-list" aria-label="研究方向">
-                  <span>AI 工具 · 应用</span>
-                  <span>模型 · 算力 · 基础设施</span>
-                  <span>产业 · 公司 · 市场</span>
-                </div>
               </>
             )}
           </div>

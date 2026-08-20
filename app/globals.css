@@ -192,53 +192,10 @@ img {
   text-wrap: balance;
 }
 
-.hero-description {
-  color: #4f4f4b;
-  font-size: clamp(18px, 2vw, 22px);
-  letter-spacing: -0.02em;
-  line-height: 1.45;
-  margin: 30px auto 0;
-  max-width: 760px;
-}
-
 .explore-panel {
   margin-top: 48px;
   max-width: 790px;
   width: 100%;
-}
-
-.explore-primary {
-  align-items: center;
-  background: #fff;
-  border: 1px solid #d7d7d2;
-  border-radius: 28px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.06);
-  display: flex;
-  font-size: 19px;
-  justify-content: space-between;
-  min-height: 106px;
-  padding: 24px 22px 24px 28px;
-  text-align: left;
-  transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
-}
-
-.explore-primary:hover {
-  border-color: #b7b7b1;
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.09);
-  transform: translateY(-2px);
-}
-
-.explore-arrow {
-  align-items: center;
-  background: #111;
-  border-radius: 50%;
-  color: #fff;
-  display: flex;
-  flex: 0 0 auto;
-  font-size: 18px;
-  height: 44px;
-  justify-content: center;
-  width: 44px;
 }
 
 .explore-chips {
@@ -246,7 +203,7 @@ img {
   flex-wrap: wrap;
   gap: 10px;
   justify-content: center;
-  margin-top: 16px;
+  margin-top: 0;
 }
 
 .explore-chips a {
@@ -523,27 +480,6 @@ img {
 
 .about-copy strong {
   font-weight: 650;
-}
-
-.interest-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 9px;
-  margin: 34px 0;
-}
-
-.interest-list span {
-  background: var(--surface);
-  border-radius: 999px;
-  color: #444440;
-  font-size: 13px;
-  padding: 10px 15px;
-}
-
-.about-copy .about-personal {
-  color: var(--muted);
-  font-size: 15px;
-  margin-bottom: 0;
 }
 
 .places-section > h2 {
@@ -1056,25 +992,8 @@ img {
     display: none;
   }
 
-  .hero-description {
-    font-size: 17px;
-    margin-top: 24px;
-  }
-
   .explore-panel {
     margin-top: 38px;
-  }
-
-  .explore-primary {
-    border-radius: 24px;
-    font-size: 17px;
-    min-height: 88px;
-    padding: 20px;
-  }
-
-  .explore-arrow {
-    height: 40px;
-    width: 40px;
   }
 
   .explore-chips {
