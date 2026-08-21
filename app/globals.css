@@ -299,7 +299,6 @@ img {
 }
 
 .timeline-board {
-  background: var(--surface);
   border-radius: 32px;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -429,7 +428,6 @@ img {
 }
 
 .awards-panel {
-  background: var(--surface);
   border-radius: 28px;
   list-style: none;
   margin: 0;
@@ -683,7 +681,6 @@ img {
 
 .publication-feature {
   align-items: center;
-  background: var(--surface);
   border-radius: 32px;
   display: grid;
   gap: clamp(38px, 7vw, 90px);
