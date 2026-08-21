@@ -353,9 +353,9 @@ img {
 }
 
 .timeline-item-heading {
-  align-items: flex-start;
+  align-items: center;
   display: flex;
-  gap: 18px;
+  gap: 20px;
   justify-content: space-between;
 }
 
@@ -381,19 +381,18 @@ img {
 
 .timeline-logo {
   align-items: center;
-  border-radius: 8px;
+  border-radius: 10px;
   display: flex;
   flex: 0 0 auto;
-  height: 42px;
+  height: 64px;
   justify-content: center;
-  padding: 4px;
   position: relative;
-  width: 82px;
+  width: 128px;
 }
 
 .timeline-logo img {
   object-fit: contain;
-  padding: 4px;
+  padding: 2px;
 }
 
 .timeline-detail {
@@ -1066,6 +1065,15 @@ img {
 
   .timeline-item h4 {
     font-size: 19px;
+  }
+
+  .timeline-item-heading {
+    gap: 12px;
+  }
+
+  .timeline-logo {
+    height: 52px;
+    width: 104px;
   }
 
   .awards-panel {

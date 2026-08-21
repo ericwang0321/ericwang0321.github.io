@@ -383,7 +383,7 @@ function TimelineColumn({
                 </div>
                 {item.logo && item.website ? (
                   <a className="timeline-logo" href={item.website} target="_blank" rel="noreferrer" aria-label={item.logoAlt}>
-                    <Image src={item.logo} alt={item.logoAlt ?? ""} fill sizes="88px" />
+                    <Image src={item.logo} alt={item.logoAlt ?? ""} fill sizes="(max-width: 640px) 104px, 128px" />
                   </a>
                 ) : null}
               </div>
