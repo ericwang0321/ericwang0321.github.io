@@ -516,11 +516,16 @@ export default function Home() {
         </div>
         <h1 id="hero-title">
           {language === "en" ? (
-            <>AI infrastructure,<br />technology and markets.</>
+            <>AI infrastructure,<br /> technology and markets.</>
           ) : (
             <>AI 基础设施、技术<br />与资本市场。</>
           )}
         </h1>
+        <p className="hero-thesis">
+          {language === "en"
+            ? "I follow AI from first principles to real-world consequences—because I believe it will change both how we build and how we live."
+            : "我从基本原理一路追到现实影响，因为我相信，AI 会同时改变我们构建技术和生活的方式。"}
+        </p>
         <nav className="explore-panel" aria-label={language === "en" ? "Explore Eric Wang’s work" : "浏览 Eric Wang 的研究"}>
           <div className="explore-chips">
             <a href="#research">{language === "en" ? "Writing" : "文章与研究"}</a>
@@ -536,6 +541,70 @@ export default function Home() {
       </section>
 
       <div className="site-container">
+        <section id="about" className="page-section about-section">
+          <div className="about-shell">
+            <div className="about-header">
+              <div className="section-heading about-heading">
+                <p className="section-kicker">{language === "en" ? "About" : "关于我"}</p>
+                <h2>{language === "en" ? "Curiosity, across worlds." : "在不同世界之间，保持好奇。"}</h2>
+              </div>
+              <p className="about-standfirst">
+                {language === "en"
+                  ? "I’m Eric. I enjoy moving between technical systems, markets and everyday life—the questions get better when those worlds meet."
+                  : "我是 Eric。我喜欢在技术系统、市场和日常生活之间来回切换；不同世界相遇时，问题往往会变得更有意思。"}
+              </p>
+            </div>
+
+            <div className="about-belief">
+              <span>{language === "en" ? "01 / A conviction" : "01 / 一个判断"}</span>
+              <p>
+                {language === "en"
+                  ? "AI, to me, is more than another technology cycle. I think it will reshape the world at a fundamental level. That is why I want to understand both how the systems actually work and how they will change industries, companies and people’s choices."
+                  : "对我来说，AI 不只是又一轮技术周期。我相信它会从根本上重塑世界，所以我既想弄清系统究竟如何运作，也想理解它将怎样改变产业、公司与人的选择。"}
+              </p>
+            </div>
+
+            <div className="about-notes">
+              <article className="about-note">
+                <span>02</span>
+                <h3>{language === "en" ? "Four languages, more ways to listen." : "四种语言，也是四种倾听方式。"}</h3>
+                <p>
+                  {language === "en"
+                    ? "I speak Mandarin, Cantonese, English and French. I value languages less as badges than as different ways into a culture, a conversation and a way of seeing the world."
+                    : "我会普通话、粤语、英语和法语。语言对我不是标签，而是进入一种文化、一场对话和一种世界观的不同入口。"}
+                </p>
+              </article>
+              <article className="about-note">
+                <span>03</span>
+                <h3>{language === "en" ? "New places reset my assumptions." : "新的地方，会刷新我的预设。"}</h3>
+                <p>
+                  {language === "en"
+                    ? "I like traveling and spending time with cultures different from my own. The point is not collecting destinations; it is noticing how differently people can organize a life."
+                    : "我喜欢旅行，也喜欢接触与自己不同的文化。重要的不是去过多少地方，而是看到人们可以用多么不同的方式安排生活。"}
+                </p>
+              </article>
+              <article className="about-note">
+                <span>04</span>
+                <h3>{language === "en" ? "Away from the screen." : "屏幕之外。"}</h3>
+                <p>
+                  {language === "en"
+                    ? "Most days are simple: tennis, the gym, and occasionally a game of Texas Hold’em. I enjoy the mix of focus, uncertainty and reading the room."
+                    : "日常其实很简单：打网球、健身，偶尔玩一局德州扑克。我喜欢其中专注、不确定性和观察现场的混合感。"}
+                </p>
+              </article>
+            </div>
+
+            <div className="about-curiosity">
+              <span>{language === "en" ? "A constant" : "不变的一点"}</span>
+              <p>
+                {language === "en"
+                  ? "I keep trying new technologies—not for novelty alone, but to understand what has genuinely changed."
+                  : "我会持续尝试新的技术，不只是追逐新鲜感，而是想弄清楚：究竟什么真的发生了变化。"}
+              </p>
+            </div>
+          </div>
+        </section>
+
         <section id="experience" className="page-section experience-section">
           <div className="section-heading">
             <p className="section-kicker">{language === "en" ? "Experience" : "经历"}</p>
@@ -582,50 +651,6 @@ export default function Home() {
               <span>Reaching Out Award, Hong Kong SAR Government Scholarship Fund</span>
             </li>
           </ul>
-        </section>
-
-        <section id="about" className="page-section about-section">
-          <div className="section-heading about-heading">
-            <p className="section-kicker">{language === "en" ? "About" : "关于我"}</p>
-            <h2>{language === "en" ? "How I approach AI." : "我如何理解 AI。"}</h2>
-          </div>
-          <div className="about-copy">
-            {language === "en" ? (
-              <>
-                <p>
-                  AI is moving quickly. New tools and applications appear all the time, so I spend part of each day
-                  trying different AI products—learning what they can do, where they fall short, and how their limits
-                  keep changing.
-                </p>
-                <p>
-                  I also want to understand what sits behind the tools: models, compute, data and infrastructure, as
-                  well as the industries and companies shaped by them. I use this site to organize what I learn into
-                  research notes and visual explainers.
-                </p>
-                <p>
-                  My physics training taught me to work from first principles. Financial engineering, internships in
-                  asset management and trading, and study experiences across Hong Kong, Singapore and the United
-                  States give me different ways to look at the same technology—from how it works to how it is used and
-                  valued.
-                </p>
-              </>
-            ) : (
-              <>
-                <p>
-                  AI 发展得很快，新的工具和应用不断出现。我每天都会实际使用不同的 AI 产品，了解它们能做什么、
-                  暂时做不到什么，以及这些能力边界如何变化。
-                </p>
-                <p>
-                  除了使用工具，我也想理解它们背后的模型、算力、数据和基础设施，以及这些变化涉及的产业和公司。
-                  我会把学习过程整理成研究笔记和可视化内容，放在这个网站上。
-                </p>
-                <p>
-                  物理训练让我习惯从基本原理出发拆解问题；金融工程学习，以及在资管和交易相关岗位的实习，
-                  让我也能从数据和市场角度理解技术。在香港、新加坡和美国的学习经历，则给了我不同的文化背景和观察视角。
-                </p>
-              </>
-            )}
-          </div>
         </section>
 
         <section id="publication" className="page-section publication-section">
