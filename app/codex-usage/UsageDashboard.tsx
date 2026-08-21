@@ -26,9 +26,12 @@ const tooltipDate = (date: string) => {
   const value = new Date(`${date}T00:00:00Z`);
   return `${value.getUTCMonth() + 1}月${value.getUTCDate()}日`;
 };
-const tooltipTokens = (value: number) => value >= 10_000
-  ? `${new Intl.NumberFormat("zh-CN", { maximumFractionDigits: 1 }).format(value / 10_000)}万`
-  : new Intl.NumberFormat("zh-CN").format(value);
+const tooltipTokens = (value: number) => {
+  const formatter = new Intl.NumberFormat("zh-CN", { maximumFractionDigits: 1, useGrouping: false });
+  if (value >= 100_000_000) return `${formatter.format(value / 100_000_000)}亿`;
+  if (value >= 10_000) return `${formatter.format(value / 10_000)}万`;
+  return new Intl.NumberFormat("zh-CN").format(value);
+};
 const formatDuration = (seconds: number) => {
   const hours = Math.floor(seconds / 3600);
   const minutes = Math.round((seconds % 3600) / 60);
