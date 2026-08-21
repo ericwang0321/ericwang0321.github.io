@@ -260,6 +260,7 @@ const workExperience = [
     },
     logo: "/companies/yuanbao.png",
     logoAlt: "Yuanbao logo",
+    logoScale: "compact" as const,
     website: "https://ir.yb-inc.com/",
   },
   {
@@ -307,6 +308,7 @@ const education = [
     degree: { en: "MSc, Financial Engineering · Distinction", zh: "金融工程硕士 · Distinction" },
     logo: "/schools/nus.png",
     logoAlt: "National University of Singapore logo",
+    logoScale: "large" as const,
     website: "https://nus.edu.sg/",
   },
   {
@@ -315,6 +317,7 @@ const education = [
     degree: { en: "BSc (Hons), Physics · First Class · Top 5%", zh: "物理学荣誉学士 · 一等荣誉 · 前 5%" },
     logo: "/schools/polyu.png",
     logoAlt: "The Hong Kong Polytechnic University logo",
+    logoScale: "large" as const,
     website: "https://www.polyu.edu.hk/",
   },
   {
@@ -326,6 +329,7 @@ const education = [
     },
     logo: "/schools/nc-state.png",
     logoAlt: "NC State University logo",
+    logoScale: "large" as const,
     website: "https://www.ncsu.edu/",
   },
   {
@@ -360,6 +364,7 @@ function TimelineColumn({
     detail?: Localized;
     logo?: string;
     logoAlt?: string;
+    logoScale?: "compact" | "large";
     website?: string;
   }>;
   language: Language;
@@ -382,8 +387,25 @@ function TimelineColumn({
                   <h4>{name ? t(name, language) : ""}</h4>
                 </div>
                 {item.logo && item.website ? (
-                  <a className="timeline-logo" href={item.website} target="_blank" rel="noreferrer" aria-label={item.logoAlt}>
-                    <Image src={item.logo} alt={item.logoAlt ?? ""} fill sizes="(max-width: 640px) 104px, 128px" />
+                  <a
+                    className={`timeline-logo${item.logoScale ? ` timeline-logo--${item.logoScale}` : ""}`}
+                    href={item.website}
+                    target="_blank"
+                    rel="noreferrer"
+                    aria-label={item.logoAlt}
+                  >
+                    <Image
+                      src={item.logo}
+                      alt={item.logoAlt ?? ""}
+                      fill
+                      sizes={
+                        item.logoScale === "large"
+                          ? "(max-width: 640px) 125px, 154px"
+                          : item.logoScale === "compact"
+                            ? "(max-width: 640px) 83px, 102px"
+                            : "(max-width: 640px) 104px, 128px"
+                      }
+                    />
                   </a>
                 ) : null}
               </div>

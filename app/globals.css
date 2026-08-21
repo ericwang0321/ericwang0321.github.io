@@ -395,6 +395,16 @@ img {
   padding: 2px;
 }
 
+.timeline-logo--compact {
+  height: 51.2px;
+  width: 102.4px;
+}
+
+.timeline-logo--large {
+  height: 76.8px;
+  width: 153.6px;
+}
+
 .timeline-detail {
   color: var(--muted);
   font-size: 14px;
@@ -1074,6 +1084,16 @@ img {
   .timeline-logo {
     height: 52px;
     width: 104px;
+  }
+
+  .timeline-logo--compact {
+    height: 41.6px;
+    width: 83.2px;
+  }
+
+  .timeline-logo--large {
+    height: 62.4px;
+    width: 124.8px;
   }
 
   .awards-panel {
