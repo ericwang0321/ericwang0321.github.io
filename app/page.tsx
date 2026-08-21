@@ -251,13 +251,28 @@ const technologyResearch = portfolioEntries.filter((entry) => entry.group === "t
 
 const workExperience = [
   {
-    period: "2026",
+    period: { en: "Apr 2026—Present", zh: "2026 年 4 月—至今" },
+    organization: { en: "Yuanbao (Hong Kong)", zh: "元保（香港）" },
+    role: { en: "AI Investment Analyst · Capital Markets", zh: "AI 投资分析 · 资本市场" },
+    detail: {
+      en: "Research the AI value chain and related companies across private and public markets, combining technical, business-model and market analysis.",
+      zh: "研究 AI 价值链及相关公司，结合技术、商业模式与市场变化，分析一级和公开市场机会。",
+    },
+    logo: "/companies/yuanbao.jpg",
+    logoAlt: "Yuanbao logo",
+    website: "https://ir.yb-inc.com/",
+  },
+  {
+    period: { en: "Feb—Mar 2026", zh: "2026 年 2—3 月" },
     organization: { en: "China Asset Management (Hong Kong)", zh: "华夏基金（香港）" },
     role: { en: "AI & Equity Research", zh: "AI 与股票研究" },
     detail: {
       en: "Worked on IPO research, capital-flow dashboards and CCASS data tracking.",
       zh: "参与 IPO 研究、资金流仪表板和 CCASS 数据追踪。",
     },
+    logo: "/companies/chinaamc.png",
+    logoAlt: "China Asset Management (Hong Kong) logo",
+    website: "https://www.chinaamc.com.hk/",
   },
   {
     period: "2025",
@@ -267,6 +282,10 @@ const workExperience = [
       en: "Worked on multi-factor research, ETF analysis and backtesting pipelines.",
       zh: "参与多因子研究、ETF 分析和回测数据管线搭建。",
     },
+    logo: "/companies/gaoteng.svg",
+    logoAlt: "GaoTeng Global Asset Management logo",
+    logoTone: "dark" as const,
+    website: "https://www.gaotengasset.com/",
   },
   {
     period: "2024—25",
@@ -276,6 +295,10 @@ const workExperience = [
       en: "Analyzed shipping, refinery and market data for physical crude-oil trading.",
       zh: "整理航运、炼厂和市场数据，支持实体原油交易分析。",
     },
+    logo: "/companies/hengli.png",
+    logoAlt: "Hengli Group logo",
+    logoTone: "dark" as const,
+    website: "https://www.hengli.com/global/",
   },
 ];
 
@@ -330,7 +353,7 @@ function TimelineColumn({
 }: {
   title: Localized;
   items: Array<{
-    period?: string;
+    period?: string | Localized;
     year?: string;
     organization?: Localized;
     school?: Localized;
@@ -339,6 +362,7 @@ function TimelineColumn({
     detail?: Localized;
     logo?: string;
     logoAlt?: string;
+    logoTone?: "dark";
     website?: string;
   }>;
   language: Language;
@@ -350,17 +374,24 @@ function TimelineColumn({
         {items.map((item) => {
           const name = item.organization ?? item.school;
           const description = item.detail ?? item.degree;
+          const date = typeof item.period === "string" ? item.period : item.period ? t(item.period, language) : item.year;
           return (
-            <article className="timeline-item" key={`${item.period ?? item.year}-${name?.en}`}>
+            <article className="timeline-item" key={`${date}-${name?.en}`}>
               <span className="timeline-dot" aria-hidden="true" />
-              <time>{item.period ?? item.year}</time>
+              <time>{date}</time>
               <div className="timeline-item-heading">
                 <div>
                   <p>{item.role ? t(item.role, language) : language === "en" ? "Education" : "教育经历"}</p>
                   <h4>{name ? t(name, language) : ""}</h4>
                 </div>
                 {item.logo && item.website ? (
-                  <a className="timeline-logo" href={item.website} target="_blank" rel="noreferrer" aria-label={item.logoAlt}>
+                  <a
+                    className={`timeline-logo${item.logoTone === "dark" ? " timeline-logo--dark" : ""}`}
+                    href={item.website}
+                    target="_blank"
+                    rel="noreferrer"
+                    aria-label={item.logoAlt}
+                  >
                     <Image src={item.logo} alt={item.logoAlt ?? ""} fill sizes="88px" />
                   </a>
                 ) : null}
