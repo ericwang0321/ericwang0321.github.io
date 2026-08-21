@@ -297,6 +297,7 @@ const workExperience = [
     },
     logo: "/companies/hengli.png",
     logoAlt: "Hengli Group logo",
+    logoScale: "subtle" as const,
     website: "https://www.hengli.com/global/",
   },
 ];
@@ -364,7 +365,7 @@ function TimelineColumn({
     detail?: Localized;
     logo?: string;
     logoAlt?: string;
-    logoScale?: "compact" | "large";
+    logoScale?: "compact" | "subtle" | "large";
     website?: string;
   }>;
   language: Language;
@@ -403,6 +404,8 @@ function TimelineColumn({
                           ? "(max-width: 640px) 125px, 154px"
                           : item.logoScale === "compact"
                             ? "(max-width: 640px) 83px, 102px"
+                            : item.logoScale === "subtle"
+                              ? "(max-width: 640px) 94px, 115px"
                             : "(max-width: 640px) 104px, 128px"
                       }
                     />

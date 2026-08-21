@@ -400,6 +400,11 @@ img {
   width: 102.4px;
 }
 
+.timeline-logo--subtle {
+  height: 57.6px;
+  width: 115.2px;
+}
+
 .timeline-logo--large {
   height: 76.8px;
   width: 153.6px;
@@ -1089,6 +1094,11 @@ img {
   .timeline-logo--compact {
     height: 41.6px;
     width: 83.2px;
+  }
+
+  .timeline-logo--subtle {
+    height: 46.8px;
+    width: 93.6px;
   }
 
   .timeline-logo--large {
