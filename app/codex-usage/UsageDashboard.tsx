@@ -8,6 +8,7 @@ import type { DailyUsage, UsageData } from "./types";
 
 type View = "daily" | "weekly" | "lifetime";
 type Period = { date: string; totalTokens: number };
+type HoveredPeriod = Period & { left: number; top: number };
 
 const formatTokens = (value: number) => {
   if (value === 0) return "0M";
@@ -21,6 +22,13 @@ const shiftDate = (date: Date, days: number) => { const result = new Date(date);
 const startOfWeek = (date: Date) => { const result = new Date(date); result.setUTCDate(result.getUTCDate() - ((result.getUTCDay() + 6) % 7)); return result; };
 const monthLabel = (date: Date) => `${date.getUTCMonth() + 1}月`;
 const compactCount = (value: number) => value.toLocaleString("zh-CN");
+const tooltipDate = (date: string) => {
+  const value = new Date(`${date}T00:00:00Z`);
+  return `${value.getUTCMonth() + 1}月${value.getUTCDate()}日`;
+};
+const tooltipTokens = (value: number) => value >= 10_000
+  ? `${new Intl.NumberFormat("zh-CN", { maximumFractionDigits: 1 }).format(value / 10_000)}万`
+  : new Intl.NumberFormat("zh-CN").format(value);
 const formatDuration = (seconds: number) => {
   const hours = Math.floor(seconds / 3600);
   const minutes = Math.round((seconds % 3600) / 60);
@@ -45,11 +53,29 @@ const pluginMeta: Record<string, { icon?: string; label?: string }> = {
   sites: { icon: "/plugin-icons/sites.svg" },
 };
 
-function TokenTooltip({ period }: { period: Period }) {
-  return <div aria-live="polite" className={styles.tooltip} role="tooltip"><strong>{period.date}</strong><span>{formatTokens(period.totalTokens)} tokens</span></div>;
+const anchoredPeriod = (element: HTMLElement, period: Period): HoveredPeriod => {
+  const wrap = element.closest(`.${styles.mapWrap}`) as HTMLElement | null;
+  const cellRect = element.getBoundingClientRect();
+  const wrapRect = wrap?.getBoundingClientRect();
+  const rawLeft = cellRect.left - (wrapRect?.left ?? 0) + cellRect.width / 2;
+  const width = wrapRect?.width ?? 260;
+  return {
+    ...period,
+    left: Math.max(116, Math.min(width - 116, rawLeft)),
+    top: cellRect.top - (wrapRect?.top ?? 0),
+  };
+};
+
+function TokenTooltip({ period }: { period: HoveredPeriod }) {
+  return <div
+    aria-live="polite"
+    className={styles.tooltip}
+    role="tooltip"
+    style={{ left: period.left, top: period.top }}
+  >{tooltipDate(period.date)} 使用了 {tooltipTokens(period.totalTokens)} 个 Token</div>;
 }
 
-function DayMap({ periods, setHovered }: { periods: Period[]; setHovered: (period: Period | null) => void }) {
+function DayMap({ periods, setHovered }: { periods: Period[]; setHovered: (period: HoveredPeriod | null) => void }) {
   const max = Math.max(1, ...periods.map((period) => period.totalTokens));
   const columns = Math.ceil(periods.length / 7);
   const [focusIndex, setFocusIndex] = useState(Math.max(0, periods.length - 1));
@@ -81,14 +107,14 @@ function DayMap({ periods, setHovered }: { periods: Period[]; setHovered: (perio
         className={`${styles.cell} ${styles[`level${level}`]}`}
         key={period.date}
         onBlur={() => setHovered(null)}
-        onClick={() => setHovered(period)}
-        onFocus={() => { setFocusIndex(index); setHovered(period); }}
+        onClick={(event) => setHovered(anchoredPeriod(event.currentTarget, period))}
+        onFocus={(event) => { setFocusIndex(index); setHovered(anchoredPeriod(event.currentTarget, period)); }}
         onKeyDown={(event) => {
           if (!["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
           event.preventDefault();
           moveFocus(index, event.key);
         }}
-        onMouseEnter={() => setHovered(period)}
+        onMouseEnter={(event) => setHovered(anchoredPeriod(event.currentTarget, period))}
         onMouseLeave={(event) => {
           if (event.currentTarget !== document.activeElement) setHovered(null);
         }}
@@ -101,7 +127,7 @@ function DayMap({ periods, setHovered }: { periods: Period[]; setHovered: (perio
   </>;
 }
 
-function WeekMap({ periods, setHovered }: { periods: Period[]; setHovered: (period: Period | null) => void }) {
+function WeekMap({ periods, setHovered }: { periods: Period[]; setHovered: (period: HoveredPeriod | null) => void }) {
   const max = Math.max(1, ...periods.map((period) => period.totalTokens));
   const [focusIndex, setFocusIndex] = useState(Math.max(0, periods.length - 1));
   const cellRefs = useRef<Array<HTMLButtonElement | null>>([]);
@@ -122,14 +148,14 @@ function WeekMap({ periods, setHovered }: { periods: Period[]; setHovered: (peri
       className={`${styles.weekCell} ${styles[`level${level}`]}`}
       key={period.date}
       onBlur={() => setHovered(null)}
-      onClick={() => setHovered(period)}
-      onFocus={() => { setFocusIndex(index); setHovered(period); }}
+      onClick={(event) => setHovered(anchoredPeriod(event.currentTarget, period))}
+      onFocus={(event) => { setFocusIndex(index); setHovered(anchoredPeriod(event.currentTarget, period)); }}
       onKeyDown={(event) => {
         if (!["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
         event.preventDefault();
         moveFocus(index, event.key);
       }}
-      onMouseEnter={() => setHovered(period)}
+      onMouseEnter={(event) => setHovered(anchoredPeriod(event.currentTarget, period))}
       onMouseLeave={(event) => {
         if (event.currentTarget !== document.activeElement) setHovered(null);
       }}
@@ -141,7 +167,7 @@ function WeekMap({ periods, setHovered }: { periods: Period[]; setHovered: (peri
 }
 
 function ActivityHeatmap({ data }: { data: DailyUsage[] }) {
-  const [hovered, setHovered] = useState<Period | null>(null);
+  const [hovered, setHovered] = useState<HoveredPeriod | null>(null);
   const lastDateKey = data.at(-1)!.date;
   const byDate = useMemo(() => new Map(data.map((day) => [day.date, day.totalTokens])), [data]);
 

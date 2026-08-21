@@ -331,18 +331,18 @@
 .cell:focus-visible,
 .weekCell:hover,
 .weekCell:focus-visible {
-  box-shadow: 0 0 0 2px var(--ink);
+  box-shadow: 0 0 0 2px #fff, 0 0 0 3px #2563eb;
   outline: none;
   position: relative;
   z-index: 2;
 }
 
-.level0 { background: #e9e9e5; }
-.level1 { background: #d7d7d1; }
-.level2 { background: #bcbcb4; }
-.level3 { background: #96968e; }
-.level4 { background: #66665f; }
-.level5 { background: #171715; }
+.level0 { background: #eeeeec; }
+.level1 { background: #dbeafe; }
+.level2 { background: #bfdbfe; }
+.level3 { background: #93c5fd; }
+.level4 { background: #3b82f6; }
+.level5 { background: #1d4ed8; }
 
 .months {
   color: var(--muted);
@@ -378,18 +378,20 @@
 }
 
 .tooltip {
-  align-items: center;
-  border-top: 1px solid var(--line);
-  display: flex;
-  font-size: 11px;
-  gap: 12px;
-  justify-content: flex-end;
-  margin-top: 12px;
-  padding-top: 12px;
-}
-
-.tooltip span {
-  color: var(--muted);
+  background: #fff;
+  border: 1px solid #deded9;
+  border-radius: 10px;
+  box-shadow: 0 6px 18px rgba(17, 17, 15, 0.12);
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 520;
+  line-height: 1;
+  padding: 9px 11px;
+  pointer-events: none;
+  position: absolute;
+  transform: translate(-50%, calc(-100% - 9px));
+  white-space: nowrap;
+  z-index: 10;
 }
 
 .details {
