@@ -447,21 +447,33 @@
   display: grid;
   font-size: 13px;
   gap: 10px;
-  grid-template-columns: 30px minmax(0, 1fr) auto;
+  grid-template-columns: 32px minmax(0, 1fr) auto;
   padding: 10px 0;
 }
 
 .plugins i {
   align-items: center;
-  background: #e5e5e0;
   border-radius: 8px;
-  color: #33332f;
   display: flex;
-  font-size: 12px;
   font-style: normal;
-  height: 30px;
+  height: 32px;
   justify-content: center;
-  width: 30px;
+  overflow: hidden;
+  width: 32px;
+}
+
+.pluginIcon img {
+  height: 32px;
+  object-fit: contain;
+  width: 32px;
+}
+
+.skillIcon {
+  background: #20201d;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
 
 .plugins b {
@@ -469,15 +481,6 @@
   font-size: 11px;
   font-weight: 500;
   white-space: nowrap;
-}
-
-.green,
-.orange,
-.violet,
-.blue,
-.cyan {
-  background: #e5e5e0 !important;
-  color: #33332f !important;
 }
 
 .dashboard footer {
@@ -597,7 +600,7 @@
   }
 
   .plugins li {
-    grid-template-columns: 30px minmax(0, 1fr);
+    grid-template-columns: 32px minmax(0, 1fr);
   }
 
   .plugins b {

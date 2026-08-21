@@ -37,12 +37,12 @@ const makeDayPeriods = (requestedStart: Date, lastDate: Date, byDate: Map<string
   return periods;
 };
 
-const pluginMeta: Record<string, { icon: string; tone: string }> = {
-  spreadsheets: { icon: "▦", tone: "green" },
-  presentations: { icon: "▣", tone: "orange" },
-  "company-model-harness": { icon: "◆", tone: "violet" },
-  documents: { icon: "▤", tone: "blue" },
-  sites: { icon: "✣", tone: "cyan" },
+const pluginMeta: Record<string, { icon?: string; label?: string }> = {
+  spreadsheets: { icon: "/plugin-icons/spreadsheets.png" },
+  presentations: { icon: "/plugin-icons/presentations.png" },
+  "company-model-harness": { label: "CM" },
+  documents: { icon: "/plugin-icons/documents.png" },
+  sites: { icon: "/plugin-icons/sites.svg" },
 };
 
 function TokenTooltip({ period }: { period: Period }) {
@@ -244,8 +244,14 @@ export default function UsageDashboard({ data }: { data: UsageData }) {
         <div className={styles.plugins}>
           <h2>最常用的插件</h2>
           <ol>{data.activity.topPlugins.map((plugin) => {
-            const meta = pluginMeta[plugin.name] ?? { icon: "◆", tone: "blue" };
-            return <li key={plugin.name}><i className={styles[meta.tone]}>{meta.icon}</i><span>@{plugin.name}</span><b>{compactCount(plugin.count)} 次运行</b></li>;
+            const meta = pluginMeta[plugin.name] ?? { label: plugin.name.slice(0, 2).toUpperCase() };
+            return <li key={plugin.name}>
+              <i className={meta.icon ? styles.pluginIcon : styles.skillIcon} aria-hidden="true">
+                {meta.icon ? <Image alt="" height={32} src={meta.icon} width={32} /> : meta.label}
+              </i>
+              <span>@{plugin.name}</span>
+              <b>{compactCount(plugin.count)} 次运行</b>
+            </li>;
           })}</ol>
         </div>
       </section>
