@@ -396,10 +396,6 @@ img {
   padding: 4px;
 }
 
-.timeline-logo--dark {
-  background: #102d4e;
-}
-
 .timeline-detail {
   color: var(--muted);
   font-size: 14px;

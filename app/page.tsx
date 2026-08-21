@@ -258,7 +258,7 @@ const workExperience = [
       en: "Research the AI value chain and related companies across private and public markets, combining technical, business-model and market analysis.",
       zh: "研究 AI 价值链及相关公司，结合技术、商业模式与市场变化，分析一级和公开市场机会。",
     },
-    logo: "/companies/yuanbao.jpg",
+    logo: "/companies/yuanbao.png",
     logoAlt: "Yuanbao logo",
     website: "https://ir.yb-inc.com/",
   },
@@ -282,9 +282,8 @@ const workExperience = [
       en: "Worked on multi-factor research, ETF analysis and backtesting pipelines.",
       zh: "参与多因子研究、ETF 分析和回测数据管线搭建。",
     },
-    logo: "/companies/gaoteng.svg",
+    logo: "/companies/gaoteng.png",
     logoAlt: "GaoTeng Global Asset Management logo",
-    logoTone: "dark" as const,
     website: "https://www.gaotengasset.com/",
   },
   {
@@ -297,7 +296,6 @@ const workExperience = [
     },
     logo: "/companies/hengli.png",
     logoAlt: "Hengli Group logo",
-    logoTone: "dark" as const,
     website: "https://www.hengli.com/global/",
   },
 ];
@@ -362,7 +360,6 @@ function TimelineColumn({
     detail?: Localized;
     logo?: string;
     logoAlt?: string;
-    logoTone?: "dark";
     website?: string;
   }>;
   language: Language;
@@ -385,13 +382,7 @@ function TimelineColumn({
                   <h4>{name ? t(name, language) : ""}</h4>
                 </div>
                 {item.logo && item.website ? (
-                  <a
-                    className={`timeline-logo${item.logoTone === "dark" ? " timeline-logo--dark" : ""}`}
-                    href={item.website}
-                    target="_blank"
-                    rel="noreferrer"
-                    aria-label={item.logoAlt}
-                  >
+                  <a className="timeline-logo" href={item.website} target="_blank" rel="noreferrer" aria-label={item.logoAlt}>
                     <Image src={item.logo} alt={item.logoAlt ?? ""} fill sizes="88px" />
                   </a>
                 ) : null}
