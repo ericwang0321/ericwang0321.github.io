@@ -490,16 +490,8 @@ img {
   display: block;
 }
 
-.about-shell {
-  background: #111;
-  border-radius: 34px;
-  color: #fff;
-  overflow: hidden;
-  padding: clamp(34px, 5.5vw, 66px);
-}
-
-.about-header {
-  align-items: end;
+.about-intro {
+  align-items: start;
   display: grid;
   gap: clamp(40px, 8vw, 110px);
   grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
@@ -509,99 +501,62 @@ img {
   margin: 0;
 }
 
-.about-heading .section-kicker,
-.about-belief > span,
-.about-note > span,
-.about-curiosity > span {
-  color: #8f8f89;
+.about-copy {
+  max-width: 650px;
 }
 
-.about-heading h2 {
-  color: #fff;
+.about-copy p {
+  color: #30302e;
+  font-size: clamp(19px, 2.05vw, 24px);
+  letter-spacing: -0.02em;
+  line-height: 1.48;
+  margin: 0 0 24px;
 }
 
-.about-standfirst {
-  color: #c7c7c1;
-  font-size: clamp(19px, 2.1vw, 25px);
-  letter-spacing: -0.025em;
-  line-height: 1.45;
-  margin: 0;
-  max-width: 620px;
+.about-copy p:last-child {
+  margin-bottom: 0;
 }
 
-.about-belief {
-  border-top: 1px solid #383834;
+.about-languages {
+  align-items: center;
+  border-top: 1px solid var(--line);
   display: grid;
-  gap: 32px;
-  grid-template-columns: minmax(150px, 0.42fr) minmax(0, 1.58fr);
-  margin-top: clamp(48px, 7vw, 82px);
-  padding-top: 32px;
+  gap: clamp(40px, 8vw, 110px);
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  margin-top: 58px;
+  padding-top: 24px;
 }
 
-.about-belief > span,
-.about-note > span,
-.about-curiosity > span {
+.about-languages > span {
+  color: var(--muted);
   font-size: 12px;
-  letter-spacing: 0.05em;
+  font-weight: 600;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
 }
 
-.about-belief > p {
-  font-size: clamp(28px, 3.5vw, 43px);
-  font-weight: 450;
-  letter-spacing: -0.045em;
-  line-height: 1.12;
+.about-languages ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 0;
+  list-style: none;
   margin: 0;
-  text-wrap: balance;
+  padding: 0;
 }
 
-.about-notes {
-  border-top: 1px solid #383834;
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  margin-top: clamp(48px, 7vw, 78px);
-}
-
-.about-note {
-  padding: 28px 30px 4px 0;
-}
-
-.about-note + .about-note {
-  border-left: 1px solid #383834;
-  padding-left: 30px;
-}
-
-.about-note h3 {
-  font-size: 22px;
-  font-weight: 520;
-  letter-spacing: -0.035em;
-  line-height: 1.18;
-  margin: 22px 0 14px;
-}
-
-.about-note p {
-  color: #aaa9a3;
+.about-languages li {
+  color: #30302e;
   font-size: 15px;
-  line-height: 1.58;
-  margin: 0;
+  line-height: 1;
+  padding: 0 18px;
 }
 
-.about-curiosity {
-  align-items: baseline;
-  border-top: 1px solid #383834;
-  display: grid;
-  gap: 32px;
-  grid-template-columns: minmax(150px, 0.42fr) minmax(0, 1.58fr);
-  margin-top: 42px;
-  padding-top: 28px;
+.about-languages li:first-child {
+  padding-left: 0;
 }
 
-.about-curiosity p {
-  color: #d4d4ce;
-  font-size: clamp(17px, 1.8vw, 21px);
-  letter-spacing: -0.02em;
-  line-height: 1.45;
-  margin: 0;
+.about-languages li + li {
+  border-left: 1px solid #cfcfca;
 }
 
 
@@ -1028,9 +983,8 @@ img {
     display: block;
   }
 
-  .about-header {
-    align-items: start;
-    gap: 32px;
+  .about-intro {
+    gap: 34px;
     grid-template-columns: 1fr;
   }
 
@@ -1038,24 +992,9 @@ img {
     margin-bottom: 0;
   }
 
-  .about-belief {
+  .about-languages {
     gap: 18px;
     grid-template-columns: 1fr;
-  }
-
-  .about-notes {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .about-note:nth-child(3) {
-    border-left: 0;
-    border-top: 1px solid #383834;
-    grid-column: 1 / -1;
-    padding-left: 0;
-  }
-
-  .about-curiosity {
-    grid-template-columns: minmax(120px, 0.4fr) minmax(0, 1.6fr);
   }
 
   .places-grid {
@@ -1257,56 +1196,18 @@ img {
     font-size: 14px;
   }
 
-  .about-shell {
-    border-radius: 26px;
-    padding: 30px 26px;
-  }
-
-  .about-header {
-    gap: 24px;
-  }
-
-  .about-standfirst {
+  .about-copy p {
     font-size: 18px;
   }
 
-  .about-belief {
+  .about-languages {
     margin-top: 42px;
-    padding-top: 24px;
+    padding-top: 20px;
   }
 
-  .about-belief > p {
-    font-size: 28px;
-    line-height: 1.16;
-  }
-
-  .about-notes {
-    display: block;
-    margin-top: 42px;
-  }
-
-  .about-note,
-  .about-note + .about-note,
-  .about-note:nth-child(3) {
-    border-left: 0;
-    grid-column: auto;
-    padding: 24px 0;
-  }
-
-  .about-note + .about-note,
-  .about-note:nth-child(3) {
-    border-top: 1px solid #383834;
-  }
-
-  .about-note h3 {
-    margin-top: 18px;
-  }
-
-  .about-curiosity {
-    gap: 14px;
-    grid-template-columns: 1fr;
-    margin-top: 16px;
-    padding-top: 24px;
+  .about-languages li {
+    font-size: 14px;
+    padding: 0 12px;
   }
 
   .places-map-shell {

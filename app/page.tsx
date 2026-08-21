@@ -542,66 +542,32 @@ export default function Home() {
 
       <div className="site-container">
         <section id="about" className="page-section about-section">
-          <div className="about-shell">
-            <div className="about-header">
-              <div className="section-heading about-heading">
-                <p className="section-kicker">{language === "en" ? "About" : "关于我"}</p>
-                <h2>{language === "en" ? "Curiosity, across worlds." : "在不同世界之间，保持好奇。"}</h2>
-              </div>
-              <p className="about-standfirst">
-                {language === "en"
-                  ? "I’m Eric. I enjoy moving between technical systems, markets and everyday life—the questions get better when those worlds meet."
-                  : "我是 Eric。我喜欢在技术系统、市场和日常生活之间来回切换；不同世界相遇时，问题往往会变得更有意思。"}
-              </p>
+          <div className="about-intro">
+            <div className="section-heading about-heading">
+              <p className="section-kicker">{language === "en" ? "Introduction" : "个人简介"}</p>
+              <h2>{language === "en" ? "A little about me." : "简单介绍一下我。"}</h2>
             </div>
-
-            <div className="about-belief">
-              <span>{language === "en" ? "01 / A conviction" : "01 / 一个判断"}</span>
+            <div className="about-copy">
               <p>
                 {language === "en"
-                  ? "AI, to me, is more than another technology cycle. I think it will reshape the world at a fundamental level. That is why I want to understand both how the systems actually work and how they will change industries, companies and people’s choices."
-                  : "对我来说，AI 不只是又一轮技术周期。我相信它会从根本上重塑世界，所以我既想弄清系统究竟如何运作，也想理解它将怎样改变产业、公司与人的选择。"}
+                  ? "I’m Eric Wang. I have studied and worked in Hong Kong and Singapore, with training in physics and financial engineering. I’m interested in AI infrastructure, technology and markets—especially how advances in compute and software translate into changes in companies and industries."
+                  : "我是 Eric Wang，曾在香港和新加坡学习与工作，拥有物理和金融工程背景。我关注 AI 基础设施、技术和市场，尤其想理解算力与软件的进步如何进一步影响公司和产业。"}
               </p>
-            </div>
-
-            <div className="about-notes">
-              <article className="about-note">
-                <span>02</span>
-                <h3>{language === "en" ? "Four languages, more ways to listen." : "四种语言，也是四种倾听方式。"}</h3>
-                <p>
-                  {language === "en"
-                    ? "I speak Mandarin, Cantonese, English and French. I value languages less as badges than as different ways into a culture, a conversation and a way of seeing the world."
-                    : "我会普通话、粤语、英语和法语。语言对我不是标签，而是进入一种文化、一场对话和一种世界观的不同入口。"}
-                </p>
-              </article>
-              <article className="about-note">
-                <span>03</span>
-                <h3>{language === "en" ? "New places reset my assumptions." : "新的地方，会刷新我的预设。"}</h3>
-                <p>
-                  {language === "en"
-                    ? "I like traveling and spending time with cultures different from my own. The point is not collecting destinations; it is noticing how differently people can organize a life."
-                    : "我喜欢旅行，也喜欢接触与自己不同的文化。重要的不是去过多少地方，而是看到人们可以用多么不同的方式安排生活。"}
-                </p>
-              </article>
-              <article className="about-note">
-                <span>04</span>
-                <h3>{language === "en" ? "Away from the screen." : "屏幕之外。"}</h3>
-                <p>
-                  {language === "en"
-                    ? "Most days are simple: tennis, the gym, and occasionally a game of Texas Hold’em. I enjoy the mix of focus, uncertainty and reading the room."
-                    : "日常其实很简单：打网球、健身，偶尔玩一局德州扑克。我喜欢其中专注、不确定性和观察现场的混合感。"}
-                </p>
-              </article>
-            </div>
-
-            <div className="about-curiosity">
-              <span>{language === "en" ? "A constant" : "不变的一点"}</span>
               <p>
                 {language === "en"
-                  ? "I keep trying new technologies—not for novelty alone, but to understand what has genuinely changed."
-                  : "我会持续尝试新的技术，不只是追逐新鲜感，而是想弄清楚：究竟什么真的发生了变化。"}
+                  ? "Outside work, I play tennis, go to the gym, travel when I can, and occasionally play Texas Hold’em. I also enjoy trying new technologies and learning how people build and use them."
+                  : "工作之外，我会打网球、健身，有机会就去旅行，偶尔也玩德州扑克。我也喜欢尝试新技术，了解它们是如何被开发和使用的。"}
               </p>
             </div>
+          </div>
+          <div className="about-languages">
+            <span>{language === "en" ? "Languages" : "语言"}</span>
+            <ul>
+              <li>{language === "en" ? "Mandarin" : "普通话"}</li>
+              <li>{language === "en" ? "Cantonese" : "粤语"}</li>
+              <li>{language === "en" ? "English" : "英语"}</li>
+              <li>{language === "en" ? "French" : "法语"}</li>
+            </ul>
           </div>
         </section>
 
