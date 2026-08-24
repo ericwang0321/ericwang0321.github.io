@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
 
-import { isInheritedSubagentBootstrapEvent, scanFiles } from "../scripts/update-codex-usage.mjs";
+import { advanceCumulativeUsage, isInheritedSubagentBootstrapEvent, scanFiles } from "../scripts/update-codex-usage.mjs";
 
 const tokenEvent = (timestamp, input, output, cached = 0) => JSON.stringify({
   timestamp,
@@ -53,6 +53,61 @@ test("only classifies the subagent initialization window as inherited", () => {
     sessionStartedAt,
     threadSource: "subagent",
   }), false);
+});
+
+test("keeps cumulative counters at their high-water marks", () => {
+  const first = advanceCumulativeUsage(
+    { inputTokens: 0, cachedInputTokens: 0, cacheWriteInputTokens: 0, outputTokens: 0, reasoningOutputTokens: 0 },
+    { inputTokens: 1_000, cachedInputTokens: 800, cacheWriteInputTokens: 0, outputTokens: 100, reasoningOutputTokens: 40 },
+  );
+  const rollback = advanceCumulativeUsage(first.next, {
+    inputTokens: 990,
+    cachedInputTokens: 790,
+    cacheWriteInputTokens: 0,
+    outputTokens: 99,
+    reasoningOutputTokens: 39,
+  });
+  const resumed = advanceCumulativeUsage(rollback.next, {
+    inputTokens: 1_100,
+    cachedInputTokens: 850,
+    cacheWriteInputTokens: 0,
+    outputTokens: 110,
+    reasoningOutputTokens: 45,
+  });
+
+  assert.equal(first.delta.totalTokens, 1_100);
+  assert.equal(rollback.delta.totalTokens, 0);
+  assert.equal(resumed.delta.totalTokens, 110);
+  assert.equal(resumed.delta.cachedInputTokens, 50);
+  assert.equal(resumed.delta.reasoningOutputTokens, 5);
+  assert.equal(resumed.next.totalTokens, 1_210);
+});
+
+test("does not re-add a session after a backward token snapshot", async () => {
+  const directory = await mkdtemp(path.join(tmpdir(), "codex-usage-rollback-test-"));
+  const sessionFile = path.join(directory, "regular.jsonl");
+
+  try {
+    await writeFile(sessionFile, [
+      JSON.stringify({
+        timestamp: "2026-08-10T13:40:02.989Z",
+        type: "session_meta",
+        payload: { timestamp: "2026-08-10T13:40:02.989Z", thread_source: "cli" },
+      }),
+      tokenEvent("2026-08-10T13:40:03.108Z", 1_000, 100, 800),
+      tokenEvent("2026-08-10T13:40:04.108Z", 990, 99, 790),
+      tokenEvent("2026-08-10T13:40:05.108Z", 1_100, 110, 850),
+    ].join("\n"), "utf8");
+
+    const scanned = await scanFiles([sessionFile]);
+    const day = scanned.get(sessionFile).daily["2026-08-10"];
+    assert.equal(day.inputTokens, 1_100);
+    assert.equal(day.outputTokens, 110);
+    assert.equal(day.totalTokens, 1_210);
+    assert.equal(day.requests, 2);
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
 });
 
 test("uses imported subagent counters as a baseline without counting them twice", async () => {

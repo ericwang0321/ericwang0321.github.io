@@ -8,7 +8,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const TIME_ZONE = "Asia/Hong_Kong";
-const CACHE_VERSION = 10;
+const CACHE_VERSION = 11;
 const SUBAGENT_BOOTSTRAP_WINDOW_MS = 5_000;
 const IMPORT_BURST_INTERVAL_MS = 250;
 const SINGLE_EVENT_IMPORT_TOKEN_FLOOR = 1_000_000;
@@ -47,6 +47,30 @@ const incrementCount = (counts, name) => {
 };
 
 const numeric = (value) => Number.isFinite(Number(value)) ? Math.max(0, Number(value)) : 0;
+
+const cumulativeCounterKeys = [
+  "inputTokens",
+  "cachedInputTokens",
+  "cacheWriteInputTokens",
+  "outputTokens",
+  "reasoningOutputTokens",
+];
+
+export const advanceCumulativeUsage = (previous, current) => {
+  const next = { ...previous };
+  const delta = {};
+
+  for (const key of cumulativeCounterKeys) {
+    const previousValue = numeric(previous[key]);
+    const currentValue = numeric(current[key]);
+    delta[key] = Math.max(0, currentValue - previousValue);
+    next[key] = Math.max(previousValue, currentValue);
+  }
+
+  delta.totalTokens = delta.inputTokens + delta.outputTokens;
+  next.totalTokens = next.inputTokens + next.outputTokens;
+  return { delta, next };
+};
 
 const dateInTimeZone = (value) => {
   const parts = new Intl.DateTimeFormat("en-US", {
@@ -292,23 +316,19 @@ export const scanFiles = async (files) => {
         // session. Keep its last counter as the baseline, but never attribute the
         // imported history to the child a second time.
         if (inheritedBootstrapEvent) {
-          fileState.previous = { ...fileState.previous, ...current };
+          fileState.previous = advanceCumulativeUsage(fileState.previous, current).next;
           fileState.inheritedEventsSkipped += 1;
           fileState.inheritedTokenEventsSkipped += 1;
           continue;
         }
 
-        const reset = Object.keys(current).some((key) => current[key] < fileState.previous[key]);
-        const baseline = reset ? emptyUsage() : fileState.previous;
-        const delta = {
-          inputTokens: current.inputTokens - baseline.inputTokens,
-          cachedInputTokens: current.cachedInputTokens - baseline.cachedInputTokens,
-          cacheWriteInputTokens: current.cacheWriteInputTokens - baseline.cacheWriteInputTokens,
-          outputTokens: current.outputTokens - baseline.outputTokens,
-          reasoningOutputTokens: current.reasoningOutputTokens - baseline.reasoningOutputTokens,
-          totalTokens: current.totalTokens - baseline.totalTokens,
-        };
-        fileState.previous = { ...fileState.previous, ...current };
+        // token_count values are cumulative for a rollout file. Some Codex
+        // versions occasionally emit a stale or corrected snapshot whose
+        // counters move slightly backwards. Treat every counter as a high-water
+        // mark so those snapshots cannot make the entire cumulative history look
+        // like a fresh reset and get counted again.
+        const { delta, next } = advanceCumulativeUsage(fileState.previous, current);
+        fileState.previous = next;
         if (delta.inputTokens === 0 && delta.outputTokens === 0 && delta.totalTokens === 0) continue;
 
         const date = dateInTimeZone(event.timestamp);
