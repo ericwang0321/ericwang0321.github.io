@@ -1,0 +1,240 @@
+.page {
+  --about-accent: #9f4b35;
+  background: #fff;
+  color: #191915;
+  min-height: 100vh;
+}
+
+.nav {
+  align-items: center;
+  background: rgba(255, 255, 255, 0.92);
+  border-bottom: 1px solid #d9dcdf;
+  display: flex;
+  height: 70px;
+  justify-content: space-between;
+  padding: 0 clamp(24px, 4vw, 64px);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+}
+
+.brand {
+  align-items: center;
+  display: flex;
+  font-family: "Iowan Old Style", Palatino, Georgia, serif;
+  font-size: 20px;
+  font-weight: 600;
+  gap: 10px;
+}
+
+.brand::before {
+  background: var(--about-accent);
+  border-radius: 50%;
+  content: "";
+  height: 7px;
+  width: 7px;
+}
+
+.nav > div {
+  align-items: center;
+  display: flex;
+  gap: 18px;
+}
+
+.nav > div a,
+.nav button {
+  background: transparent;
+  border: 0;
+  color: #55524b;
+  cursor: pointer;
+  font-family: "SFMono-Regular", Consolas, monospace;
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  padding: 0;
+  text-transform: uppercase;
+}
+
+.nav button {
+  border: 1px solid #d9dcdf;
+  border-radius: 999px;
+  padding: 8px 13px;
+}
+
+.hero {
+  margin: 0 auto;
+  max-width: 1380px;
+  padding: clamp(90px, 12vw, 170px) clamp(24px, 5vw, 72px) clamp(84px, 11vw, 150px);
+}
+
+.hero > p,
+.marker p,
+.heroSummary span {
+  color: #77736b;
+  font-family: "SFMono-Regular", Consolas, monospace;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.hero > p {
+  margin: 0 0 38px;
+}
+
+.hero h1 {
+  font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  font-size: clamp(64px, 10vw, 148px);
+  font-weight: 400;
+  letter-spacing: -0.065em;
+  line-height: 0.84;
+  margin: 0;
+}
+
+.heroSummary {
+  align-items: start;
+  border-top: 1px solid #d9dcdf;
+  display: grid;
+  gap: 36px;
+  grid-template-columns: minmax(100px, 0.4fr) minmax(0, 1.6fr);
+  margin: clamp(60px, 9vw, 120px) 0 0 auto;
+  max-width: 760px;
+  padding-top: 24px;
+}
+
+.heroSummary span {
+  padding-top: 8px;
+}
+
+.heroSummary p {
+  color: #36342f;
+  font-family: "Iowan Old Style", Palatino, Georgia, serif;
+  font-size: clamp(22px, 2.4vw, 32px);
+  letter-spacing: -0.025em;
+  line-height: 1.42;
+  margin: 0;
+}
+
+.story {
+  border-top: 1px solid #d9dcdf;
+  margin: 0 auto;
+  max-width: 1380px;
+}
+
+.chapter {
+  display: grid;
+  gap: clamp(48px, 8vw, 130px);
+  grid-template-columns: minmax(170px, 0.48fr) minmax(0, 1.52fr);
+  padding: clamp(64px, 9vw, 120px) clamp(24px, 5vw, 72px);
+}
+
+.chapter + .chapter {
+  border-top: 1px solid #d9dcdf;
+}
+
+.marker {
+  align-items: baseline;
+  display: flex;
+  gap: 18px;
+}
+
+.marker span {
+  color: var(--about-accent);
+  font-family: "SFMono-Regular", Consolas, monospace;
+  font-size: 12px;
+}
+
+.marker p {
+  margin: 0;
+}
+
+.chapterCopy {
+  max-width: 780px;
+}
+
+.chapterCopy h2 {
+  font-family: "Iowan Old Style", Palatino, Georgia, serif;
+  font-size: clamp(38px, 5vw, 70px);
+  font-weight: 400;
+  letter-spacing: -0.05em;
+  line-height: 0.98;
+  margin: 0 0 36px;
+}
+
+.chapterCopy p {
+  color: #4c4943;
+  font-size: clamp(16px, 1.45vw, 19px);
+  line-height: 1.78;
+  margin: 0 0 22px;
+  max-width: 710px;
+}
+
+.chapterCopy a {
+  border-bottom: 1px solid #191915;
+  display: inline-block;
+  font-family: "SFMono-Regular", Consolas, monospace;
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  margin-top: 10px;
+  padding-bottom: 6px;
+  text-transform: uppercase;
+}
+
+.footer {
+  align-items: end;
+  background: #191915;
+  color: #fff;
+  display: flex;
+  justify-content: space-between;
+  margin-top: 40px;
+  min-height: 320px;
+  padding: clamp(48px, 7vw, 96px);
+}
+
+.footer p {
+  font-family: "Iowan Old Style", Palatino, Georgia, serif;
+  font-size: clamp(48px, 7vw, 100px);
+  letter-spacing: -0.055em;
+  line-height: 0.9;
+  margin: 0;
+}
+
+.footer a {
+  border-bottom: 1px solid #fff;
+  font-family: "SFMono-Regular", Consolas, monospace;
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  padding-bottom: 7px;
+  text-transform: uppercase;
+}
+
+@media (max-width: 760px) {
+  .nav > div a {
+    display: none;
+  }
+
+  .hero h1 {
+    font-size: clamp(58px, 18vw, 92px);
+  }
+
+  .heroSummary,
+  .chapter {
+    gap: 28px;
+    grid-template-columns: 1fr;
+  }
+
+  .chapter {
+    padding-bottom: 72px;
+    padding-top: 72px;
+  }
+
+  .chapterCopy h2 {
+    margin-bottom: 28px;
+  }
+
+  .footer {
+    align-items: start;
+    flex-direction: column;
+    gap: 60px;
+  }
+}

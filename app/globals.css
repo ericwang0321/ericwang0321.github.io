@@ -633,7 +633,25 @@ img {
 }
 
 .about-copy p:last-child {
-  margin-bottom: 0;
+  margin-bottom: 26px;
+}
+
+.about-expand {
+  align-items: center;
+  border-bottom: 1px solid var(--text);
+  display: inline-flex;
+  font-family: var(--mono);
+  font-size: 11px;
+  gap: 18px;
+  letter-spacing: 0.04em;
+  padding-bottom: 7px;
+  text-transform: uppercase;
+  transition: color 150ms ease, gap 150ms ease;
+}
+
+.about-expand:hover {
+  color: var(--accent);
+  gap: 24px;
 }
 
 .about-languages {

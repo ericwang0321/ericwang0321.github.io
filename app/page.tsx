@@ -545,19 +545,22 @@ export default function Home() {
           <div className="about-intro">
             <div className="section-heading about-heading">
               <p className="section-kicker">{language === "en" ? "Introduction" : "个人简介"}</p>
-              <h2>{language === "en" ? "A little about me." : "简单介绍一下我。"}</h2>
+              <h2>{language === "en" ? "About myself." : "关于我自己。"}</h2>
             </div>
             <div className="about-copy">
               <p>
                 {language === "en"
-                  ? "I’m Eric Wang. I have studied and worked in Hong Kong and Singapore, with training in physics and financial engineering. I’m interested in AI infrastructure, technology and markets—especially how advances in compute and software translate into changes in companies and industries."
-                  : "我是 Eric Wang，曾在香港和新加坡学习与工作，拥有物理和金融工程背景。我关注 AI 基础设施、技术和市场，尤其想理解算力与软件的进步如何进一步影响公司和产业。"}
+                  ? "My path into AI started during my physics degree, when I took Andrew Ng’s Machine Learning course and later built a fairness research project with TensorFlow and Google Colab. Learning to code, debug and design experiments from scratch was difficult, but the work eventually became a peer-reviewed paper."
+                  : "我对 AI 的兴趣始于物理本科阶段。我先在 Coursera 学习了吴恩达的 Machine Learning 课程，之后用 TensorFlow 和 Google Colab 完成了一项机器学习公平性研究。从零学习编程、调试和实验设计并不容易，但这项工作最终成为了一篇同行评审论文。"}
               </p>
               <p>
                 {language === "en"
-                  ? "Outside work, I play tennis, go to the gym, travel when I can, and occasionally play Texas Hold’em. I also enjoy trying new technologies and learning how people build and use them."
-                  : "工作之外，我会打网球、健身，有机会就去旅行，偶尔也玩德州扑克。我也喜欢尝试新技术，了解它们是如何被开发和使用的。"}
+                  ? "Since ChatGPT, I have kept moving from chat-based use toward working systems—Claude Code and GLM at ChinaAMC (HK), APIs, MCP and skills, and now Codex as my main AI workspace. Today I study both how AI systems work and how infrastructure, models, products and capital fit together."
+                  : "从 ChatGPT 开始，我逐步从网页聊天转向真正的 AI 工作流：在华夏基金（香港）尝试 Claude Code 与 GLM，继续学习 API、MCP 和 skills，现在则主要使用 Codex。如今我既研究 AI 系统如何工作，也关注基础设施、模型、产品与资本之间如何相互连接。"}
               </p>
+              <a className="about-expand" href="/about/">
+                {language === "en" ? "Read my AI journey" : "展开阅读我的 AI 路径"} <span aria-hidden="true">→</span>
+              </a>
             </div>
           </div>
           <div className="about-languages">
