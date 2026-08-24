@@ -56,6 +56,7 @@ export type CodexProfileData = {
     invocations: OfficialInvocation[];
   };
   dailyUsage?: OfficialDailyUsage[];
+  dailyUsageOverrides?: OfficialDailyUsage[];
 };
 
 export type UsageData = {

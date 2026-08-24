@@ -6,6 +6,7 @@ import styles from "./usage.module.css";
 import type { CodexProfileData, OfficialDailyUsage, OfficialInvocation, UsageData } from "./types";
 
 type View = "daily" | "weekly" | "cumulative";
+type Tooltip = { left: number; text: string; top: number };
 
 const MAX_COLUMNS = 52;
 const ACTIVITY_EPOCH = "2025-07-13";
@@ -32,11 +33,18 @@ const columnCount = (todayIso: string) => {
 const chartStart = (todayIso: string, columns: number) =>
   shiftDate(startOfSundayWeek(todayIso), -(columns - 1) * 7);
 
-const dailyValues = (usage: UsageData, officialDailyUsage: OfficialDailyUsage[] | undefined, todayIso: string, columns: number) => {
+const dailyValues = (
+  usage: UsageData,
+  officialDailyUsage: OfficialDailyUsage[] | undefined,
+  officialOverrides: OfficialDailyUsage[] | undefined,
+  todayIso: string,
+  columns: number,
+) => {
   const start = chartStart(todayIso, columns);
   const byDate = officialDailyUsage
     ? new Map(officialDailyUsage.map((day) => [day.date, Math.max(0, day.credits)]))
     : new Map(usage.daily.map((day) => [day.date, Math.max(0, day.totalTokens)]));
+  for (const day of officialOverrides ?? []) byDate.set(day.date, Math.max(0, day.credits));
   return Array.from({ length: columns * 7 }, (_, index) => byDate.get(shiftDate(start, index)) ?? 0);
 };
 
@@ -137,16 +145,49 @@ function InvocationIcon({ invocation, name }: { invocation: OfficialInvocation; 
   </span>;
 }
 
-function TokenActivity({ dailyUsage, todayIso, usage }: { dailyUsage?: OfficialDailyUsage[]; todayIso: string; usage: UsageData }) {
+function TokenActivity({ dailyUsage, dailyUsageOverrides, todayIso, usage }: {
+  dailyUsage?: OfficialDailyUsage[];
+  dailyUsageOverrides?: OfficialDailyUsage[];
+  todayIso: string;
+  usage: UsageData;
+}) {
   const [view, setView] = useState<View>("daily");
+  const [tooltip, setTooltip] = useState<Tooltip | null>(null);
   const columns = columnCount(todayIso);
   const values = useMemo(
-    () => dailyValues(usage, dailyUsage, todayIso, columns),
-    [columns, dailyUsage, todayIso, usage],
+    () => dailyValues(usage, dailyUsage, dailyUsageOverrides, todayIso, columns),
+    [columns, dailyUsage, dailyUsageOverrides, todayIso, usage],
   );
   const cells = useMemo(() => cellsForView(values, view), [values, view]);
+  const weeks = useMemo(() => weeklyTotals(values), [values]);
+  const cumulative = useMemo(() => cumulativeTotals(weeks), [weeks]);
   const months = monthLabels(todayIso, columns);
   const start = chartStart(todayIso, columns);
+
+  const showTooltip = (element: HTMLElement, index: number) => {
+    const chart = element.closest(`.${styles.chartScroll}`) as HTMLElement | null;
+    if (!chart) return;
+
+    const cellRect = element.getBoundingClientRect();
+    const chartRect = chart.getBoundingClientRect();
+    const viewportCenter = Math.max(110, Math.min(window.innerWidth - 110, cellRect.left + cellRect.width / 2));
+    const weekIndex = Math.floor(index / 7);
+    const date = view === "daily" ? shiftDate(start, index) : shiftDate(start, weekIndex * 7);
+    const tokenCount = view === "daily"
+      ? values[index] ?? 0
+      : view === "weekly" ? weeks[weekIndex] ?? 0 : cumulative[weekIndex] ?? 0;
+    const text = view === "daily"
+      ? `${formatTooltipDate(date)} 使用了 ${formatTokenCount(tokenCount)} 个 Token`
+      : view === "weekly"
+        ? `${formatTooltipDate(date)} 当周使用了 ${formatTokenCount(tokenCount)} 个 Token`
+        : `截至 ${formatTooltipDate(date)} 累计使用了 ${formatTokenCount(tokenCount)} 个 Token`;
+
+    setTooltip({
+      left: viewportCenter - chartRect.left,
+      text,
+      top: cellRect.top - chartRect.top,
+    });
+  };
 
   return <section className={styles.activitySection}>
     <div className={styles.activityHeader}>
@@ -156,7 +197,7 @@ function TokenActivity({ dailyUsage, todayIso, usage }: { dailyUsage?: OfficialD
           aria-pressed={view === option}
           className={view === option ? styles.activeTab : ""}
           key={option}
-          onClick={() => setView(option)}
+          onClick={() => { setView(option); setTooltip(null); }}
           type="button"
         >{option === "daily" ? "每日" : option === "weekly" ? "每周" : "累计"}</button>)}
       </div>
@@ -171,12 +212,17 @@ function TokenActivity({ dailyUsage, todayIso, usage }: { dailyUsage?: OfficialD
       >{cells.map((level, index) => {
         const date = shiftDate(start, index);
         if (view === "daily" && date > todayIso) return null;
-        const title = view === "daily"
-          ? `${formatTooltipDate(date)}：${formatTokenCount(values[index] ?? 0)} Token`
-          : undefined;
-        return <span className={`${styles.cell} ${styles[`level${level}`]}`} key={`${view}-${index}`} title={title} />;
+        return <span
+          aria-label={view === "daily" ? `${formatTooltipDate(date)}，${formatTokenCount(values[index] ?? 0)} Token` : undefined}
+          className={`${styles.cell} ${styles[`level${level}`]}`}
+          key={`${view}-${index}`}
+          onClick={(event) => showTooltip(event.currentTarget, index)}
+          onMouseEnter={(event) => showTooltip(event.currentTarget, index)}
+          onMouseLeave={() => setTooltip(null)}
+        />;
       })}</div>
       <div className={styles.months}>{months.map((month, index) => <span key={`${month}-${index}`}>{month}</span>)}</div>
+      {tooltip ? <div className={styles.tooltip} role="tooltip" style={{ left: tooltip.left, top: tooltip.top }}>{tooltip.text}</div> : null}
     </div>
   </section>;
 }
@@ -221,7 +267,12 @@ export default function UsageDashboard({ profile, usage }: { profile: CodexProfi
         </div>
       </div>)}</dl>
 
-      <TokenActivity dailyUsage={profile.dailyUsage} todayIso={profile.todayIso} usage={usage} />
+      <TokenActivity
+        dailyUsage={profile.dailyUsage}
+        dailyUsageOverrides={profile.dailyUsageOverrides}
+        todayIso={profile.todayIso}
+        usage={usage}
+      />
 
       <section aria-label="Codex 活动" className={styles.details}>
         <div className={styles.insights}>

@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
-  "syncedAt": "2026-08-24T00:00:00.000Z",
+  "syncedAt": "2026-08-24T04:00:00.000Z",
   "todayIso": "2026-08-24",
   "source": {
     "kind": "official-profile-snapshot",
     "endpoint": "/wham/profiles/me",
-    "note": "Confirmed from the Codex profile screenshot supplied on 2026-08-24; compact token values retain the precision displayed by Codex."
+    "note": "Confirmed from the latest Codex profile screenshot supplied on 2026-08-24; compact token values retain the precision displayed by Codex."
   },
   "profile": {
     "displayName": "Eric",
@@ -14,19 +14,19 @@
     "imageUrl": "/eric.png"
   },
   "summary": {
-    "totalTextTokens": 18040000000,
+    "totalTextTokens": 18130000000,
     "peakTokens": 1680000000,
     "longestTaskDurationMs": 57300000,
-    "currentStreakDays": 4,
+    "currentStreakDays": 0,
     "longestStreakDays": 20
   },
   "activityInsights": {
-    "fastModePercent": 38,
+    "fastModePercent": 37,
     "reasoningEffort": "极高",
     "reasoningEffortPercent": 36,
     "skillsExplored": 71,
-    "totalSkillsUsed": 2198,
-    "totalThreads": 4772,
+    "totalSkillsUsed": 2217,
+    "totalThreads": 4789,
     "invocations": [
       {
         "type": "plugin",
@@ -36,7 +36,7 @@
       {
         "type": "skill",
         "skillName": "company-model-harness",
-        "usageCount": 174
+        "usageCount": 176
       },
       {
         "type": "plugin",
@@ -45,14 +45,20 @@
       },
       {
         "type": "plugin",
-        "pluginName": "documents",
-        "usageCount": 124
+        "pluginName": "sites",
+        "usageCount": 131
       },
       {
         "type": "plugin",
-        "pluginName": "sites",
-        "usageCount": 119
+        "pluginName": "documents",
+        "usageCount": 124
       }
     ]
-  }
+  },
+  "dailyUsageOverrides": [
+    {
+      "date": "2026-07-31",
+      "credits": 1380000000
+    }
+  ]
 }

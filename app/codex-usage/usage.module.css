@@ -215,6 +215,7 @@
   gap: 8px;
   min-width: 0;
   overflow: visible;
+  position: relative;
 }
 
 .heatmap {
@@ -252,6 +253,23 @@
   font-size: 12px;
   justify-content: space-between;
   line-height: 16px;
+}
+
+.tooltip {
+  background: #fff;
+  border: 1px solid #e8e8e8;
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  color: var(--primary);
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 20px;
+  padding: 4px 10px;
+  pointer-events: none;
+  position: absolute;
+  transform: translate(-50%, -100%);
+  white-space: nowrap;
+  z-index: 10;
 }
 
 .details {
