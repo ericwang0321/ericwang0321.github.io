@@ -7,7 +7,7 @@
 
 .nav {
   align-items: center;
-  background: rgba(255, 255, 255, 0.92);
+  background: #fff;
   border-bottom: 1px solid #d9dcdf;
   display: flex;
   height: 70px;
@@ -16,8 +16,6 @@
   position: sticky;
   top: 0;
   z-index: 10;
-  -webkit-backdrop-filter: blur(16px);
-  backdrop-filter: blur(16px);
 }
 
 .brand {
@@ -64,13 +62,12 @@
 
 .hero {
   margin: 0 auto;
-  max-width: 1380px;
-  padding: clamp(90px, 12vw, 170px) clamp(24px, 5vw, 72px) clamp(84px, 11vw, 150px);
+  max-width: 900px;
+  padding: 72px 24px 56px;
 }
 
 .hero > p,
-.marker p,
-.heroSummary span {
+.marker p {
   color: #77736b;
   font-family: "SFMono-Regular", Consolas, monospace;
   font-size: 10px;
@@ -79,53 +76,39 @@
 }
 
 .hero > p {
-  margin: 0 0 38px;
+  margin: 0 0 16px;
 }
 
 .hero h1 {
   font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
-  font-size: clamp(64px, 10vw, 148px);
-  font-weight: 400;
-  letter-spacing: -0.065em;
-  line-height: 0.84;
+  font-size: clamp(38px, 5vw, 56px);
+  font-weight: 500;
+  letter-spacing: -0.035em;
+  line-height: 1.08;
   margin: 0;
 }
 
 .heroSummary {
-  align-items: start;
-  border-top: 1px solid #d9dcdf;
-  display: grid;
-  gap: 36px;
-  grid-template-columns: minmax(100px, 0.4fr) minmax(0, 1.6fr);
-  margin: clamp(60px, 9vw, 120px) 0 0 auto;
-  max-width: 760px;
-  padding-top: 24px;
-}
-
-.heroSummary span {
-  padding-top: 8px;
+  margin-top: 24px;
+  max-width: 720px;
 }
 
 .heroSummary p {
-  color: #36342f;
-  font-family: "Iowan Old Style", Palatino, Georgia, serif;
-  font-size: clamp(22px, 2.4vw, 32px);
-  letter-spacing: -0.025em;
-  line-height: 1.42;
+  color: #4c4943;
+  font-size: 18px;
+  line-height: 1.7;
   margin: 0;
 }
 
 .story {
   border-top: 1px solid #d9dcdf;
   margin: 0 auto;
-  max-width: 1380px;
+  max-width: 900px;
+  padding: 0 24px;
 }
 
 .chapter {
-  display: grid;
-  gap: clamp(48px, 8vw, 130px);
-  grid-template-columns: minmax(170px, 0.48fr) minmax(0, 1.52fr);
-  padding: clamp(64px, 9vw, 120px) clamp(24px, 5vw, 72px);
+  padding: 48px 0;
 }
 
 .chapter + .chapter {
@@ -133,15 +116,7 @@
 }
 
 .marker {
-  align-items: baseline;
-  display: flex;
-  gap: 18px;
-}
-
-.marker span {
-  color: var(--about-accent);
-  font-family: "SFMono-Regular", Consolas, monospace;
-  font-size: 12px;
+  margin-bottom: 10px;
 }
 
 .marker p {
@@ -149,24 +124,23 @@
 }
 
 .chapterCopy {
-  max-width: 780px;
+  max-width: 720px;
 }
 
 .chapterCopy h2 {
   font-family: "Iowan Old Style", Palatino, Georgia, serif;
-  font-size: clamp(38px, 5vw, 70px);
-  font-weight: 400;
-  letter-spacing: -0.05em;
-  line-height: 0.98;
-  margin: 0 0 36px;
+  font-size: clamp(27px, 3vw, 34px);
+  font-weight: 500;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+  margin: 0 0 22px;
 }
 
 .chapterCopy p {
   color: #4c4943;
-  font-size: clamp(16px, 1.45vw, 19px);
-  line-height: 1.78;
-  margin: 0 0 22px;
-  max-width: 710px;
+  font-size: 17px;
+  line-height: 1.75;
+  margin: 0 0 18px;
 }
 
 .chapterCopy a {
@@ -181,26 +155,23 @@
 }
 
 .footer {
-  align-items: end;
-  background: #191915;
-  color: #fff;
+  align-items: center;
+  border-top: 1px solid #d9dcdf;
   display: flex;
   justify-content: space-between;
-  margin-top: 40px;
-  min-height: 320px;
-  padding: clamp(48px, 7vw, 96px);
+  margin: 24px auto 0;
+  max-width: 900px;
+  padding: 32px 24px 56px;
 }
 
 .footer p {
-  font-family: "Iowan Old Style", Palatino, Georgia, serif;
-  font-size: clamp(48px, 7vw, 100px);
-  letter-spacing: -0.055em;
-  line-height: 0.9;
+  color: #55524b;
+  font-size: 14px;
   margin: 0;
 }
 
 .footer a {
-  border-bottom: 1px solid #fff;
+  border-bottom: 1px solid #191915;
   font-family: "SFMono-Regular", Consolas, monospace;
   font-size: 10px;
   letter-spacing: 0.05em;
@@ -213,19 +184,8 @@
     display: none;
   }
 
-  .hero h1 {
-    font-size: clamp(58px, 18vw, 92px);
-  }
-
-  .heroSummary,
   .chapter {
-    gap: 28px;
-    grid-template-columns: 1fr;
-  }
-
-  .chapter {
-    padding-bottom: 72px;
-    padding-top: 72px;
+    padding: 40px 0;
   }
 
   .chapterCopy h2 {
@@ -233,8 +193,6 @@
   }
 
   .footer {
-    align-items: start;
-    flex-direction: column;
-    gap: 60px;
+    gap: 24px;
   }
 }

@@ -138,9 +138,8 @@ export default function AboutPage() {
 
       <section className={styles.hero}>
         <p>{language === "en" ? "About myself" : "关于我自己"}</p>
-        <h1>{language === "en" ? <>How I learned to<br />work with AI.</> : <>我如何一步步<br />走进 AI。</>}</h1>
+        <h1>{language === "en" ? "How I learned to work with AI" : "我如何一步步走进 AI"}</h1>
         <div className={styles.heroSummary}>
-          <span>{language === "en" ? "University—Now" : "大学至今"}</span>
           <p>{language === "en"
             ? "I came to AI through physics, not computer science. What kept me in it was a simple habit: when a new model or interface changes what is possible, I want to understand both how it works and what it changes."
             : "我从物理而不是计算机专业进入 AI。让我一直走下去的是一个简单的习惯：当新的模型或交互方式改变了可能性，我既想理解它如何工作，也想知道它会改变什么。"}</p>
@@ -148,16 +147,15 @@ export default function AboutPage() {
       </section>
 
       <section className={styles.story} aria-label={language === "en" ? "AI journey" : "AI 学习与实践路径"}>
-        {stories.map((item, index) => (
+        {stories.map((item) => (
           <article className={styles.chapter} key={item.title.en}>
             <div className={styles.marker}>
-              <span>{String(index + 1).padStart(2, "0")}</span>
               <p>{item.marker[language]}</p>
             </div>
             <div className={styles.chapterCopy}>
               <h2>{item.title[language]}</h2>
               {item.body[language].map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
-              {index === 1 ? <a href="https://doi.org/10.1145/3690646" target="_blank" rel="noreferrer">
+              {item.title.en === "My first research project" ? <a href="https://doi.org/10.1145/3690646" target="_blank" rel="noreferrer">
                 Fair Single Index Model · ACM TKDD ↗
               </a> : null}
             </div>
@@ -166,7 +164,7 @@ export default function AboutPage() {
       </section>
 
       <footer className={styles.footer}>
-        <p>{language === "en" ? "The work continues." : "探索还在继续。"}</p>
+        <p>{language === "en" ? "More of my work" : "更多内容"}</p>
         <Link href="/#research">{language === "en" ? "Read my research" : "查看我的研究"} →</Link>
       </footer>
     </main>
