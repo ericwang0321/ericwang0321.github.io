@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "syncedAt": "2026-08-24T00:00:00.000Z",
+  "todayIso": "2026-08-24",
+  "source": {
+    "kind": "official-profile-snapshot",
+    "endpoint": "/wham/profiles/me",
+    "note": "Confirmed from the Codex profile screenshot supplied on 2026-08-24; compact token values retain the precision displayed by Codex."
+  },
+  "profile": {
+    "displayName": "Eric",
+    "username": "ericwang0321",
+    "plan": "Pro",
+    "imageUrl": "/eric.png"
+  },
+  "summary": {
+    "totalTextTokens": 18040000000,
+    "peakTokens": 1680000000,
+    "longestTaskDurationMs": 57300000,
+    "currentStreakDays": 4,
+    "longestStreakDays": 20
+  },
+  "activityInsights": {
+    "fastModePercent": 38,
+    "reasoningEffort": "极高",
+    "reasoningEffortPercent": 36,
+    "skillsExplored": 71,
+    "totalSkillsUsed": 2198,
+    "totalThreads": 4772,
+    "invocations": [
+      {
+        "type": "plugin",
+        "pluginName": "spreadsheets",
+        "usageCount": 502
+      },
+      {
+        "type": "skill",
+        "skillName": "company-model-harness",
+        "usageCount": 174
+      },
+      {
+        "type": "plugin",
+        "pluginName": "presentations",
+        "usageCount": 133
+      },
+      {
+        "type": "plugin",
+        "pluginName": "documents",
+        "usageCount": 124
+      },
+      {
+        "type": "plugin",
+        "pluginName": "sites",
+        "usageCount": 119
+      }
+    ]
+  }
+}

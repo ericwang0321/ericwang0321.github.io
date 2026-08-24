@@ -1,291 +1,249 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import styles from "./usage.module.css";
-import type { DailyUsage, UsageData } from "./types";
+import type { CodexProfileData, OfficialDailyUsage, OfficialInvocation, UsageData } from "./types";
 
-type View = "daily" | "weekly" | "lifetime";
-type Period = { date: string; totalTokens: number };
-type HoveredPeriod = Period & { left: number; top: number };
+type View = "daily" | "weekly" | "cumulative";
 
-const formatTokens = (value: number) => {
-  if (value === 0) return "0M";
-  if (value < 10_000) return "<0.01M";
-  const divisor = value >= 1_000_000_000 ? 1_000_000_000 : 1_000_000;
-  const unit = value >= 1_000_000_000 ? "B" : "M";
-  return `${new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 }).format(value / divisor)}${unit}`;
-};
-const dateKey = (date: Date) => date.toISOString().slice(0, 10);
-const shiftDate = (date: Date, days: number) => { const result = new Date(date); result.setUTCDate(result.getUTCDate() + days); return result; };
-const startOfWeek = (date: Date) => { const result = new Date(date); result.setUTCDate(result.getUTCDate() - ((result.getUTCDay() + 6) % 7)); return result; };
-const monthLabel = (date: Date) => `${date.getUTCMonth() + 1}月`;
-const compactCount = (value: number) => value.toLocaleString("zh-CN");
-const tooltipDate = (date: string) => {
-  const value = new Date(`${date}T00:00:00Z`);
-  return `${value.getUTCMonth() + 1}月${value.getUTCDate()}日`;
-};
-const tooltipTokens = (value: number) => {
-  const formatter = new Intl.NumberFormat("zh-CN", { maximumFractionDigits: 1, useGrouping: false });
-  if (value >= 100_000_000) return `${formatter.format(value / 100_000_000)}亿`;
-  if (value >= 10_000) return `${formatter.format(value / 10_000)}万`;
-  return new Intl.NumberFormat("zh-CN").format(value);
-};
-const formatDuration = (seconds: number) => {
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.round((seconds % 3600) / 60);
-  return `${hours} 小时 ${minutes} 分`;
+const MAX_COLUMNS = 52;
+const ACTIVITY_EPOCH = "2025-07-13";
+
+const shiftDate = (dateIso: string, days: number) => {
+  const date = new Date(`${dateIso}T00:00:00.000Z`);
+  date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString().slice(0, 10);
 };
 
-const makeDayPeriods = (requestedStart: Date, lastDate: Date, byDate: Map<string, number>) => {
-  const start = startOfWeek(requestedStart);
-  const periods: Period[] = [];
-  for (let cursor = new Date(start); cursor <= lastDate; cursor = shiftDate(cursor, 1)) {
-    const date = dateKey(cursor);
-    periods.push({ date, totalTokens: byDate.get(date) ?? 0 });
-  }
-  return periods;
+const startOfSundayWeek = (dateIso: string) => {
+  const date = new Date(`${dateIso}T00:00:00.000Z`);
+  date.setUTCDate(date.getUTCDate() - date.getUTCDay());
+  return date.toISOString().slice(0, 10);
 };
 
-const pluginMeta: Record<string, { icon?: string; label?: string }> = {
-  spreadsheets: { icon: "/plugin-icons/spreadsheets.png" },
-  presentations: { icon: "/plugin-icons/presentations.png" },
-  "company-model-harness": { label: "CM" },
-  documents: { icon: "/plugin-icons/documents.png" },
-  sites: { icon: "/plugin-icons/sites.svg" },
+const columnCount = (todayIso: string) => {
+  const todayWeek = new Date(`${startOfSundayWeek(todayIso)}T00:00:00.000Z`).getTime();
+  const epoch = new Date(`${ACTIVITY_EPOCH}T00:00:00.000Z`).getTime();
+  const elapsedWeeks = Math.floor((todayWeek - epoch) / (7 * 24 * 60 * 60 * 1000));
+  return Math.min(MAX_COLUMNS, Math.max(1, elapsedWeeks + 1));
 };
 
-const anchoredPeriod = (element: HTMLElement, period: Period): HoveredPeriod => {
-  const wrap = element.closest(`.${styles.mapWrap}`) as HTMLElement | null;
-  const cellRect = element.getBoundingClientRect();
-  const wrapRect = wrap?.getBoundingClientRect();
-  const rawLeft = cellRect.left - (wrapRect?.left ?? 0) + cellRect.width / 2;
-  const width = wrapRect?.width ?? 260;
-  return {
-    ...period,
-    left: Math.max(116, Math.min(width - 116, rawLeft)),
-    top: cellRect.top - (wrapRect?.top ?? 0),
-  };
+const chartStart = (todayIso: string, columns: number) =>
+  shiftDate(startOfSundayWeek(todayIso), -(columns - 1) * 7);
+
+const dailyValues = (usage: UsageData, officialDailyUsage: OfficialDailyUsage[] | undefined, todayIso: string, columns: number) => {
+  const start = chartStart(todayIso, columns);
+  const byDate = officialDailyUsage
+    ? new Map(officialDailyUsage.map((day) => [day.date, Math.max(0, day.credits)]))
+    : new Map(usage.daily.map((day) => [day.date, Math.max(0, day.totalTokens)]));
+  return Array.from({ length: columns * 7 }, (_, index) => byDate.get(shiftDate(start, index)) ?? 0);
 };
 
-function TokenTooltip({ period }: { period: HoveredPeriod }) {
-  return <div
-    aria-live="polite"
-    className={styles.tooltip}
-    role="tooltip"
-    style={{ left: period.left, top: period.top }}
-  >{tooltipDate(period.date)} 使用了 {tooltipTokens(period.totalTokens)} 个 Token</div>;
-}
-
-function DayMap({ periods, setHovered }: { periods: Period[]; setHovered: (period: HoveredPeriod | null) => void }) {
-  const max = Math.max(1, ...periods.map((period) => period.totalTokens));
-  const columns = Math.ceil(periods.length / 7);
-  const [focusIndex, setFocusIndex] = useState(Math.max(0, periods.length - 1));
-  const cellRefs = useRef<Array<HTMLButtonElement | null>>([]);
-  const months = periods.flatMap((period, index) => {
-    const date = new Date(`${period.date}T00:00:00Z`);
-    const previousDate = index > 0 ? new Date(`${periods[index - 1].date}T00:00:00Z`) : null;
-    const isNewMonth = !previousDate
-      || date.getUTCFullYear() !== previousDate.getUTCFullYear()
-      || date.getUTCMonth() !== previousDate.getUTCMonth();
-    if (!isNewMonth || (index === 0 && date.getUTCDate() > 7)) return [];
-    return [{ label: monthLabel(date), column: Math.floor(index / 7) + 1 }];
+const dailyLevels = (values: number[]) => {
+  const max = values.reduce((peak, value) => Math.max(peak, value), 0);
+  return values.map((value) => {
+    if (value <= 0 || max <= 0) return 0;
+    const ratio = value / max;
+    if (ratio > 0.75) return 4;
+    if (ratio > 0.5) return 3;
+    if (ratio > 0.25) return 2;
+    return 1;
   });
+};
 
-  const moveFocus = (index: number, key: string) => {
-    const offsets: Record<string, number> = { ArrowUp: -1, ArrowDown: 1, ArrowLeft: -7, ArrowRight: 7 };
-    const requestedIndex = key === "Home" ? 0 : key === "End" ? periods.length - 1 : index + (offsets[key] ?? 0);
-    const nextIndex = Math.max(0, Math.min(periods.length - 1, requestedIndex));
-    setFocusIndex(nextIndex);
-    cellRefs.current[nextIndex]?.focus();
-  };
+const weeklyTotals = (values: number[]) =>
+  Array.from({ length: Math.ceil(values.length / 7) }, (_, column) =>
+    values.slice(column * 7, column * 7 + 7).reduce((sum, value) => sum + value, 0),
+  );
 
-  return <>
-    <div aria-label="Daily token activity" className={styles.heatmap} role="group" style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}>{periods.map((period, index) => {
-      const level = period.totalTokens ? Math.max(1, Math.ceil((period.totalTokens / max) * 5)) : 0;
-      return <button
-        aria-current={index === focusIndex ? "date" : undefined}
-        aria-label={`${period.date}, ${formatTokens(period.totalTokens)} tokens`}
-        className={`${styles.cell} ${styles[`level${level}`]}`}
-        key={period.date}
-        onBlur={() => setHovered(null)}
-        onClick={(event) => setHovered(anchoredPeriod(event.currentTarget, period))}
-        onFocus={(event) => { setFocusIndex(index); setHovered(anchoredPeriod(event.currentTarget, period)); }}
-        onKeyDown={(event) => {
-          if (!["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
-          event.preventDefault();
-          moveFocus(index, event.key);
-        }}
-        onMouseEnter={(event) => setHovered(anchoredPeriod(event.currentTarget, period))}
-        onMouseLeave={(event) => {
-          if (event.currentTarget !== document.activeElement) setHovered(null);
-        }}
-        ref={(element) => { cellRefs.current[index] = element; }}
-        tabIndex={index === focusIndex ? 0 : -1}
-        type="button"
-      />;
-    })}</div>
-    <div className={styles.months} style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}>{months.map((month) => <span key={`${month.label}-${month.column}`} style={{ gridColumnStart: month.column }}>{month.label}</span>)}</div>
-  </>;
+const cumulativeTotals = (values: number[]) =>
+  values.reduce<number[]>((result, value) => {
+    result.push((result.at(-1) ?? 0) + value);
+    return result;
+  }, []);
+
+const aggregateLevels = (totals: number[]) => {
+  const max = totals.reduce((peak, value) => Math.max(peak, value), 0);
+  return Array.from({ length: totals.length * 7 }, (_, index) => {
+    const row = index % 7;
+    const total = totals[Math.floor(index / 7)] ?? 0;
+    const filledRows = total <= 0 || max <= 0 ? 0 : Math.max(1, Math.ceil((total / max) * 7));
+    return filledRows === 0 || 7 - row > filledRows ? 0 : 4;
+  });
+};
+
+const cellsForView = (values: number[], view: View) => {
+  if (view === "daily") return dailyLevels(values);
+  const weeks = weeklyTotals(values);
+  return aggregateLevels(view === "weekly" ? weeks : cumulativeTotals(weeks));
+};
+
+const monthLabels = (todayIso: string, columns: number) => {
+  const start = new Date(`${chartStart(todayIso, columns)}T00:00:00.000Z`);
+  const today = new Date(`${todayIso}T00:00:00.000Z`);
+  const difference = (today.getUTCFullYear() - start.getUTCFullYear()) * 12
+    + today.getUTCMonth() - start.getUTCMonth();
+  const count = Math.min(12, difference + 1);
+  return Array.from({ length: count }, (_, index) => {
+    const monthOffset = index - (count - 1);
+    return `${new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth() + monthOffset, 1)).getUTCMonth() + 1}月`;
+  });
+};
+
+const formatTokenCount = (value: number) => new Intl.NumberFormat("zh-CN", {
+  maximumFractionDigits: 1,
+  notation: "compact",
+}).format(Math.max(0, Math.round(value)));
+
+const formatNumber = (value: number) => new Intl.NumberFormat("zh-CN").format(value);
+
+const formatDuration = (milliseconds: number) => {
+  const seconds = Math.max(0, Math.round(milliseconds / 1000));
+  if (seconds >= 3600) {
+    const totalMinutes = Math.round(seconds / 60);
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+    return minutes === 0 ? `${hours} 小时` : `${hours} 小时 ${minutes} 分`;
+  }
+  if (seconds >= 60) {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return remainingSeconds === 0 ? `${minutes} 分` : `${minutes} 分 ${remainingSeconds} 秒`;
+  }
+  return `${seconds} 秒`;
+};
+
+const formatTooltipDate = (dateIso: string) => {
+  const date = new Date(`${dateIso}T00:00:00.000Z`);
+  return `${date.getUTCMonth() + 1}月${date.getUTCDate()}日`;
+};
+
+const iconByName: Record<string, string> = {
+  spreadsheets: "/plugin-icons/spreadsheets.png",
+  presentations: "/plugin-icons/presentations.png",
+  documents: "/plugin-icons/documents.png",
+  sites: "/plugin-icons/sites.svg",
+};
+
+function InvocationIcon({ invocation, name }: { invocation: OfficialInvocation; name: string }) {
+  if (invocation.type === "skill") {
+    return <span aria-hidden="true" className={styles.skillCube}><i /><b /><em /></span>;
+  }
+
+  const icon = iconByName[name];
+  return <span aria-hidden="true" className={styles.invocationIcon}>
+    {icon ? <Image alt="" height={18} src={icon} width={18} /> : <span>{name.slice(0, 1).toUpperCase()}</span>}
+  </span>;
 }
 
-function WeekMap({ periods, setHovered }: { periods: Period[]; setHovered: (period: HoveredPeriod | null) => void }) {
-  const max = Math.max(1, ...periods.map((period) => period.totalTokens));
-  const [focusIndex, setFocusIndex] = useState(Math.max(0, periods.length - 1));
-  const cellRefs = useRef<Array<HTMLButtonElement | null>>([]);
-
-  const moveFocus = (index: number, key: string) => {
-    const offsets: Record<string, number> = { ArrowUp: -13, ArrowDown: 13, ArrowLeft: -1, ArrowRight: 1 };
-    const requestedIndex = key === "Home" ? 0 : key === "End" ? periods.length - 1 : index + (offsets[key] ?? 0);
-    const nextIndex = Math.max(0, Math.min(periods.length - 1, requestedIndex));
-    setFocusIndex(nextIndex);
-    cellRefs.current[nextIndex]?.focus();
-  };
-
-  return <div aria-label="Weekly token activity" className={styles.weekMap} role="group">{periods.map((period, index) => {
-    const level = period.totalTokens ? Math.max(1, Math.ceil((period.totalTokens / max) * 5)) : 0;
-    return <button
-      aria-current={index === focusIndex ? "date" : undefined}
-      aria-label={`${period.date} 当周, ${formatTokens(period.totalTokens)} tokens`}
-      className={`${styles.weekCell} ${styles[`level${level}`]}`}
-      key={period.date}
-      onBlur={() => setHovered(null)}
-      onClick={(event) => setHovered(anchoredPeriod(event.currentTarget, period))}
-      onFocus={(event) => { setFocusIndex(index); setHovered(anchoredPeriod(event.currentTarget, period)); }}
-      onKeyDown={(event) => {
-        if (!["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
-        event.preventDefault();
-        moveFocus(index, event.key);
-      }}
-      onMouseEnter={(event) => setHovered(anchoredPeriod(event.currentTarget, period))}
-      onMouseLeave={(event) => {
-        if (event.currentTarget !== document.activeElement) setHovered(null);
-      }}
-      ref={(element) => { cellRefs.current[index] = element; }}
-      tabIndex={index === focusIndex ? 0 : -1}
-      type="button"
-    />;
-  })}</div>;
-}
-
-function ActivityHeatmap({ data }: { data: DailyUsage[] }) {
-  const [hovered, setHovered] = useState<HoveredPeriod | null>(null);
-  const lastDateKey = data.at(-1)!.date;
-  const byDate = useMemo(() => new Map(data.map((day) => [day.date, day.totalTokens])), [data]);
-
-  const dailyPeriods = useMemo(() => {
-    const lastDate = new Date(`${lastDateKey}T00:00:00Z`);
-    return makeDayPeriods(shiftDate(lastDate, -364), lastDate, byDate);
-  }, [byDate, lastDateKey]);
-  const lifetimePeriods = useMemo(() => {
-    const lastDate = new Date(`${lastDateKey}T00:00:00Z`);
-    return makeDayPeriods(new Date(`${data[0].date}T00:00:00Z`), lastDate, byDate);
-  }, [byDate, data, lastDateKey]);
-
-  const weeks = useMemo(() => {
-    const grouped = new Map<string, number>();
-    for (const day of data) {
-      const week = dateKey(startOfWeek(new Date(`${day.date}T00:00:00Z`)));
-      grouped.set(week, (grouped.get(week) ?? 0) + day.totalTokens);
-    }
-    return [...grouped].slice(-52).map(([date, totalTokens]) => ({ date, totalTokens }));
-  }, [data]);
+function TokenActivity({ dailyUsage, todayIso, usage }: { dailyUsage?: OfficialDailyUsage[]; todayIso: string; usage: UsageData }) {
+  const [view, setView] = useState<View>("daily");
+  const columns = columnCount(todayIso);
+  const values = useMemo(
+    () => dailyValues(usage, dailyUsage, todayIso, columns),
+    [columns, dailyUsage, todayIso, usage],
+  );
+  const cells = useMemo(() => cellsForView(values, view), [values, view]);
+  const months = monthLabels(todayIso, columns);
+  const start = chartStart(todayIso, columns);
 
   return <section className={styles.activitySection}>
     <div className={styles.activityHeader}>
       <h2>Token 活动</h2>
-      <div aria-label="Token 活动视图" className={styles.tabs} role="radiogroup">
-        {(["daily", "weekly", "lifetime"] as View[]).map((option) => <span key={option}>
-          <input className={styles[`${option}Toggle`]} defaultChecked={option === "daily"} id={`token-view-${option}`} name="token-view" onChange={() => setHovered(null)} type="radio" />
-          <label htmlFor={`token-view-${option}`}>{option === "daily" ? "每日" : option === "weekly" ? "每周" : "累计"}</label>
-        </span>)}
+      <div aria-label="Token 活动视图" className={styles.tabs} role="group">
+        {(["daily", "weekly", "cumulative"] as View[]).map((option) => <button
+          aria-pressed={view === option}
+          className={view === option ? styles.activeTab : ""}
+          key={option}
+          onClick={() => setView(option)}
+          type="button"
+        >{option === "daily" ? "每日" : option === "weekly" ? "每周" : "累计"}</button>)}
       </div>
     </div>
-    <div className={styles.mapWrap}>
-      <div className={`${styles.viewPanel} ${styles.dailyPanel}`}><DayMap periods={dailyPeriods} setHovered={setHovered} /></div>
-      <div className={`${styles.viewPanel} ${styles.weeklyPanel}`}>
-        <WeekMap periods={weeks} setHovered={setHovered} />
-        <div className={styles.weekCaption}>最近 {weeks.length} 周</div>
-      </div>
-      <div className={`${styles.viewPanel} ${styles.lifetimePanel}`}><DayMap periods={lifetimePeriods} setHovered={setHovered} /></div>
-      {hovered ? <TokenTooltip period={hovered} /> : null}
+
+    <div className={styles.chartScroll}>
+      <div
+        aria-label="Codex Token 活动热力图"
+        className={styles.heatmap}
+        role="img"
+        style={{ gridTemplateColumns: `repeat(${columns}, minmax(1px, 1fr))` }}
+      >{cells.map((level, index) => {
+        const date = shiftDate(start, index);
+        if (view === "daily" && date > todayIso) return null;
+        const title = view === "daily"
+          ? `${formatTooltipDate(date)}：${formatTokenCount(values[index] ?? 0)} Token`
+          : undefined;
+        return <span className={`${styles.cell} ${styles[`level${level}`]}`} key={`${view}-${index}`} title={title} />;
+      })}</div>
+      <div className={styles.months}>{months.map((month, index) => <span key={`${month}-${index}`}>{month}</span>)}</div>
     </div>
   </section>;
 }
 
-export default function UsageDashboard({ data }: { data: UsageData }) {
+export default function UsageDashboard({ profile, usage }: { profile: CodexProfileData; usage: UsageData }) {
   const stats = [
-    { value: formatTokens(data.totals.totalTokens), label: "累计 Token" },
-    { value: formatTokens(data.summary.peakChatTokens), label: "单聊天峰值 Token" },
-    { value: formatDuration(data.summary.longestChatSeconds), label: "最长连续聊天时长" },
-    { value: `${data.summary.currentStreak} 天`, label: "当前连续天数" },
-    { value: `${data.summary.longestStreak} 天`, label: "最长连续天数" },
+    { value: formatTokenCount(profile.summary.totalTextTokens), label: "累计 Token 数" },
+    { value: formatTokenCount(profile.summary.peakTokens), label: "峰值 Token 数" },
+    { value: formatDuration(profile.summary.longestTaskDurationMs), label: "最长聊天时长" },
+    { value: `${profile.summary.currentStreakDays} 天`, label: "当前连续天数" },
+    { value: `${profile.summary.longestStreakDays} 天`, label: "最长连续天数" },
+  ];
+
+  const insightRows = [
+    { label: "快速模式", value: `${Math.round(profile.activityInsights.fastModePercent)}%` },
+    { label: "最常用的推理强度", value: <><strong>{profile.activityInsights.reasoningEffort}</strong> · {Math.round(profile.activityInsights.reasoningEffortPercent)}%</> },
+    { label: "已探索的技能", value: formatNumber(profile.activityInsights.skillsExplored) },
+    { label: "使用的技能总数", value: formatNumber(profile.activityInsights.totalSkillsUsed) },
+    { label: "聊天总数", value: formatNumber(profile.activityInsights.totalThreads) },
   ];
 
   return <main className={styles.page}>
-    <header className={styles.siteHeader}>
-      <div className={styles.headerInner}>
-        <Link className={styles.brand} href="/">Eric Wang</Link>
-        <nav aria-label="Codex Usage navigation">
-          <Link href="/#research">Research</Link>
-          <span aria-current="page">Codex Usage</span>
-        </nav>
-        <Link className={styles.homeLink} href="/">返回首页 <span aria-hidden="true">↗</span></Link>
-      </div>
-    </header>
     <div className={styles.dashboard}>
-      <section className={styles.intro}>
-        <div className={styles.introCopy}>
-          <p>ACTIVITY</p>
-          <h1>Codex Usage</h1>
-          <span>按日记录的 token 使用、活动节奏与工具偏好。</span>
-        </div>
-        <div className={styles.profile}>
+      <section className={styles.profileSection}>
         <div className={styles.avatarWrap}>
-          <Image alt="Eric Wang" className={styles.avatar} fill priority sizes="82px" src="/eric.png" />
+          <Image alt={profile.profile.displayName} className={styles.avatar} fill priority sizes="80px" src={profile.profile.imageUrl} />
           <span aria-label="布丁，我的 Codex 宠物" className={styles.pet} role="img" />
         </div>
-          <div>
-            <strong>Eric</strong>
-            <span className={styles.handle}>@ericwang0321</span>
-            <span className={styles.plan}>Pro</span>
-          </div>
+        <h1>{profile.profile.displayName}</h1>
+        <div className={styles.identityMeta}>
+          <span>@{profile.profile.username}</span>
+          <span aria-hidden="true" className={styles.dot}>·</span>
+          <span className={styles.plan}>{profile.profile.plan}</span>
         </div>
       </section>
 
-      <dl className={styles.summary}>{stats.map((stat) => <div key={stat.label}><dd>{stat.value}</dd><dt>{stat.label}</dt></div>)}</dl>
+      <dl className={styles.summary}>{stats.map((stat, index) => <div className={styles.statGroup} key={stat.label}>
+        {index > 0 ? <span aria-hidden="true" className={styles.statDivider} /> : null}
+        <div className={styles.stat}>
+          <dd>{stat.value}</dd>
+          <dt>{stat.label}</dt>
+        </div>
+      </div>)}</dl>
 
-      <ActivityHeatmap data={data.daily} />
+      <TokenActivity dailyUsage={profile.dailyUsage} todayIso={profile.todayIso} usage={usage} />
 
-      <section className={styles.details}>
+      <section aria-label="Codex 活动" className={styles.details}>
         <div className={styles.insights}>
           <h2>活动洞察</h2>
-          <dl>
-            <div><dt>快速模式</dt><dd>{Math.round(data.behavior.fastModePercent)}%</dd></div>
-            <div><dt>最常用推理强度</dt><dd><strong>{data.behavior.reasoningLabel}</strong> · {Math.round(data.behavior.reasoningPercent)}%</dd></div>
-            <div><dt>已探索 Skill</dt><dd>{data.activity.uniqueSkills}</dd></div>
-            <div><dt>Skill 使用总数</dt><dd>{compactCount(data.activity.skillReads)}</dd></div>
-            <div><dt>聊天总数</dt><dd>{compactCount(data.source.sessionsWithUsage)}</dd></div>
-          </dl>
+          <dl>{insightRows.map((row) => <div key={row.label}><dt>{row.label}</dt><dd>{row.value}</dd></div>)}</dl>
         </div>
 
-        <div className={styles.plugins}>
+        <div className={styles.invocations}>
           <h2>最常用的插件</h2>
-          <ol>{data.activity.topPlugins.map((plugin) => {
-            const meta = pluginMeta[plugin.name] ?? { label: plugin.name.slice(0, 2).toUpperCase() };
-            return <li key={plugin.name}>
-              <i className={meta.icon ? styles.pluginIcon : styles.skillIcon} aria-hidden="true">
-                {meta.icon ? <Image alt="" height={32} src={meta.icon} width={32} /> : meta.label}
-              </i>
-              <span>@{plugin.name}</span>
-              <b>{compactCount(plugin.count)} 次运行</b>
+          <ul>{profile.activityInsights.invocations.map((invocation) => {
+            const fullName = invocation.type === "plugin" ? invocation.pluginName : invocation.skillName;
+            const name = fullName?.split(":").at(-1) ?? "";
+            return <li key={`${invocation.type}-${name}`}>
+              <div>
+                <InvocationIcon invocation={invocation} name={name} />
+                <span>{invocation.type === "plugin" ? "@" : "$"}{name}</span>
+              </div>
+              <span>{formatNumber(invocation.usageCount)} 次运行</span>
             </li>;
-          })}</ol>
+          })}</ul>
         </div>
       </section>
-
-      <footer>统计截至 {data.throughDate} · 仅公开时间、计数与调用名称，不包含对话内容</footer>
     </div>
   </main>;
 }

@@ -12,6 +12,52 @@ export type DailyUsage = {
   cacheHitRate: number;
 };
 
+export type OfficialDailyUsage = {
+  date: string;
+  credits: number;
+};
+
+export type OfficialInvocation = {
+  type: "plugin" | "skill";
+  pluginName?: string;
+  skillName?: string;
+  usageCount: number;
+};
+
+export type CodexProfileData = {
+  schemaVersion: number;
+  syncedAt: string;
+  todayIso: string;
+  source: {
+    kind: "official-profile-snapshot";
+    endpoint: "/wham/profiles/me";
+    note: string;
+  };
+  profile: {
+    displayName: string;
+    username: string;
+    plan: string;
+    imageUrl: string;
+  };
+  summary: {
+    totalTextTokens: number;
+    peakTokens: number;
+    longestTaskDurationMs: number;
+    currentStreakDays: number;
+    longestStreakDays: number;
+  };
+  activityInsights: {
+    fastModePercent: number;
+    reasoningEffort: string;
+    reasoningEffortPercent: number;
+    skillsExplored: number;
+    totalSkillsUsed: number;
+    totalThreads: number;
+    invocations: OfficialInvocation[];
+  };
+  dailyUsage?: OfficialDailyUsage[];
+};
+
 export type UsageData = {
   schemaVersion: number;
   generatedAt: string;

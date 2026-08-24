@@ -1,16 +1,17 @@
 import type { Metadata } from "next";
+import profileData from "@/public/data/codex-profile.json";
 import usageData from "@/public/data/codex-usage.json";
 import UsageDashboard from "./UsageDashboard";
-import type { UsageData } from "./types";
+import type { CodexProfileData, UsageData } from "./types";
 
 export const dynamic = "force-static";
 
 export const metadata: Metadata = {
-  title: "Codex Usage — Eric Wang",
-  description: "A compact public view of Eric Wang's daily Codex token usage and activity trends.",
+  title: "Eric — Codex Profile",
+  description: "Eric's Codex activity profile.",
   robots: { index: false, follow: false },
 };
 
 export default function CodexUsagePage() {
-  return <UsageDashboard data={usageData as UsageData} />;
+  return <UsageDashboard profile={profileData as CodexProfileData} usage={usageData as UsageData} />;
 }
