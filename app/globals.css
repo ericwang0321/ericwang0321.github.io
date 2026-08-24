@@ -1,13 +1,13 @@
 :root {
-  --page: #f6f2e9;
-  --surface: #eae4d7;
-  --surface-hover: #e2dacb;
+  --page: #ffffff;
+  --surface: #f4f5f6;
+  --surface-hover: #eceff1;
   --text: #191915;
   --muted: #6d685e;
-  --line: #cdc5b6;
+  --line: #d9dcdf;
   --accent: #9f4b35;
   --accent-deep: #713424;
-  --paper-light: #fbf9f4;
+  --paper-light: #ffffff;
   --display: "Iowan Old Style", "Palatino Linotype", Palatino, Baskerville, Georgia, "Times New Roman", serif;
   --mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
   --max-width: 1280px;
@@ -69,7 +69,7 @@ img {
 }
 
 .site-header {
-  background: rgba(246, 242, 233, 0.9);
+  background: rgba(255, 255, 255, 0.92);
   border-bottom: 1px solid rgba(25, 25, 21, 0.14);
   position: sticky;
   top: 0;
@@ -179,8 +179,8 @@ img {
 
 .hero-section::before {
   background-image:
-    linear-gradient(rgba(25, 25, 21, 0.07) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(25, 25, 21, 0.07) 1px, transparent 1px);
+    linear-gradient(rgba(25, 25, 21, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(25, 25, 21, 0.045) 1px, transparent 1px);
   background-size: 64px 64px;
   content: "";
   inset: 34px 32px 36px;
@@ -219,7 +219,7 @@ img {
 }
 
 .hero-avatar {
-  background: #ded9cf;
+  background: #f1f2f3;
   border: 1px solid rgba(25, 25, 21, 0.22);
   border-radius: 2px;
   height: 62px;
@@ -289,7 +289,7 @@ img {
 }
 
 .explore-chips a {
-  background: rgba(246, 242, 233, 0.72);
+  background: rgba(255, 255, 255, 0.88);
   border: 1px solid var(--line);
   border-radius: 999px;
   color: #4f4a42;
@@ -1048,8 +1048,8 @@ img {
 
 .contact-section {
   background:
-    linear-gradient(rgba(246, 242, 233, 0.06) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(246, 242, 233, 0.06) 1px, transparent 1px),
+    linear-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.06) 1px, transparent 1px),
     var(--text);
   background-size: 48px 48px;
   border-radius: 3px;
