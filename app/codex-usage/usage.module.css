@@ -44,7 +44,7 @@
 }
 
 .pet {
-  animation: petIdle 1.1s step-end infinite;
+  animation: petIdle 3.2s step-end infinite;
   background-image: url('/assets/codex-pet/pudding-spritesheet.webp');
   background-position: 0 0;
   background-repeat: no-repeat;
