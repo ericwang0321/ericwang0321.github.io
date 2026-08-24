@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>AI 全产业链闭环交互信息图</title>
+  <title>Interactive AI Value Chain Loop</title>
   <link rel="icon" href="/favicon.png">
   <style>
     :root {
@@ -934,30 +934,30 @@
           <div class="title-tools">
             <p class="eyebrow" id="headerEyebrow">AI value chain loop</p>
             <div class="lang-toggle" aria-label="Language switch">
-              <button class="lang-button active" data-lang="zh" type="button">中文</button>
-              <button class="lang-button" data-lang="en" type="button">English</button>
+              <button class="lang-button" data-lang="zh" type="button">中文</button>
+              <button class="lang-button active" data-lang="en" type="button">English</button>
             </div>
           </div>
-          <h1 id="headerTitle">AI 全产业链闭环交互信息图</h1>
-          <p class="lead" id="headerLead">从“谁为 AI 付费”开始，沿着应用需求、模型服务、算力基础设施、半导体制造、能源和数据中心资源逐层下钻。每一层都不是公司名单，而是解释业务流程、瓶颈、公司角色和可跟踪的投研观察指标。</p>
+          <h1 id="headerTitle">Interactive AI Value Chain Loop</h1>
+          <p class="lead" id="headerLead">Start from who pays for AI, then trace the demand signal through applications, models, compute infrastructure, semiconductor manufacturing, and finally power and data-center resources. Each layer explains workflows, bottlenecks, company roles, and trackable investment indicators rather than becoming a plain company list.</p>
         </div>
         <div class="read-card">
-          <strong id="readTitle">读图顺序</strong>
-          <span id="readStepOne">先看传导链：应用付费变成模型调用，模型调用变成算力采购，算力采购继续传导到芯片、封装、设备、材料、电力和液冷。</span>
-          <span id="readStepTwo">再点击任意层级：右侧会切换该层的子赛道、流程、瓶颈、公司角色和观察指标。</span>
+          <strong id="readTitle">How to read this map</strong>
+          <span id="readStepOne">Follow the transmission chain first: application monetization becomes model calls, model calls become compute procurement, and compute procurement flows into chips, packaging, equipment, materials, power, and cooling.</span>
+          <span id="readStepTwo">Then click any layer. The right side switches to that layer's sub-sectors, workflow, bottlenecks, company roles, and monitoring indicators.</span>
         </div>
       </header>
 
       <div class="content">
-        <nav class="flow-strip" id="flowStrip" aria-label="AI 产业链传导层级"></nav>
-
         <section class="section" id="overviewVisualPanel"></section>
+
+        <nav class="flow-strip" id="flowStrip" aria-label="AI value chain transmission layers"></nav>
 
         <section class="workspace">
           <aside class="panel panel-pad">
             <div class="panel-head">
-              <h2 id="layerStackTitle">五层产业链</h2>
-              <span class="hint" id="layerStackHint">越往下越接近物理瓶颈和资本开支；公司可跨层出现，但角色必须重新定义。</span>
+              <h2 id="layerStackTitle">Five-Layer Value Chain</h2>
+              <span class="hint" id="layerStackHint">Lower layers are closer to physical constraints and capital spending. Companies may appear across layers, but their roles must be redefined each time.</span>
             </div>
             <div class="layer-stack" id="layerStack"></div>
             <div class="audit-list" id="auditList"></div>
@@ -2185,7 +2185,7 @@
     ];
 
     let activeLayer = "compute";
-    let lang = "zh";
+    let lang = "en";
 
     function escapeHtml(value) {
       return String(value).replace(/[&<>"']/g, char => ({
