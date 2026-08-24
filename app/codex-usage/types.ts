@@ -22,6 +22,8 @@ export type UsageData = {
     filesIndexed: number;
     sessionsWithUsage: number;
     invalidTokenLines: number;
+    inheritedEventsSkipped: number;
+    inheritedTokenEventsSkipped: number;
     contentRead: boolean;
   };
   totals: Omit<DailyUsage, "date">;

@@ -8,7 +8,10 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const TIME_ZONE = "Asia/Hong_Kong";
-const CACHE_VERSION = 5;
+const CACHE_VERSION = 10;
+const SUBAGENT_BOOTSTRAP_WINDOW_MS = 5_000;
+const IMPORT_BURST_INTERVAL_MS = 250;
+const SINGLE_EVENT_IMPORT_TOKEN_FLOOR = 1_000_000;
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const codexLogRoot = process.env.CODEX_USAGE_LOG_ROOT || path.join(homedir(), ".codex");
 const sourceRoots = [
@@ -105,9 +108,105 @@ const writeJsonAtomic = async (targetPath, value, compact = false) => {
   await rename(temporaryPath, targetPath);
 };
 
-const scanFiles = async (files) => {
+export const isInheritedSubagentBootstrapEvent = ({ eventTimestamp, importedHistory, sessionStartedAt, threadSource }) => {
+  if (!importedHistory || threadSource !== "subagent") return false;
+  const timestamp = Date.parse(eventTimestamp || "");
+  if (!Number.isFinite(timestamp) || !Number.isFinite(sessionStartedAt)) return false;
+  const elapsed = timestamp - sessionStartedAt;
+  return elapsed >= 0 && elapsed <= SUBAGENT_BOOTSTRAP_WINDOW_MS;
+};
+
+const detectImportedBootstrapFiles = async (files) => {
+  const states = new Map(files.map((file) => [file, {
+    sessionStartedAt: null,
+    threadSource: "",
+    sessionMetaCount: 0,
+    firstBootstrapTokenAt: null,
+    importedHistory: false,
+  }]));
+  if (files.length === 0) return new Set();
+
+  const batchSize = 72;
+  for (let start = 0; start < files.length; start += batchSize) {
+    const batch = files.slice(start, start + batchSize);
+    const child = spawn("rg", [
+      "--json", "--no-messages",
+      "-e", '"type":"session_meta"',
+      "-e", '"type":"token_count"',
+      ...batch,
+    ], { stdio: ["ignore", "pipe", "pipe"] });
+    const exitPromise = new Promise((resolve, reject) => {
+      child.once("error", reject);
+      child.once("close", resolve);
+    });
+    const lines = createInterface({ input: child.stdout, crlfDelay: Infinity });
+
+    for await (const outputLine of lines) {
+      let match;
+      try {
+        match = JSON.parse(outputLine);
+      } catch {
+        continue;
+      }
+      if (match.type !== "match") continue;
+      const file = match.data?.path?.text;
+      const rawLine = match.data?.lines?.text?.trim();
+      const state = states.get(file);
+      if (!state || !rawLine) continue;
+
+      let event;
+      try {
+        event = JSON.parse(rawLine);
+      } catch {
+        continue;
+      }
+      if (event?.type === "session_meta") {
+        state.sessionMetaCount += 1;
+        if (state.sessionStartedAt === null) {
+          state.sessionStartedAt = Date.parse(event.timestamp || event.payload?.timestamp || "");
+          state.threadSource = event.payload?.thread_source
+            || (event.payload?.source?.subagent ? "subagent" : "");
+        } else if (state.threadSource === "subagent") {
+          state.importedHistory = true;
+        }
+        continue;
+      }
+      if (event?.payload?.type !== "token_count" || state.threadSource !== "subagent") continue;
+
+      const timestamp = Date.parse(event.timestamp || "");
+      const inBootstrapWindow = Number.isFinite(timestamp)
+        && Number.isFinite(state.sessionStartedAt)
+        && timestamp >= state.sessionStartedAt
+        && timestamp - state.sessionStartedAt <= SUBAGENT_BOOTSTRAP_WINDOW_MS;
+      if (!inBootstrapWindow) continue;
+
+      const total = event.payload?.info?.total_token_usage;
+      if (numeric(total?.total_tokens) >= SINGLE_EVENT_IMPORT_TOKEN_FLOOR) {
+        state.importedHistory = true;
+      }
+      if (state.firstBootstrapTokenAt === null) {
+        state.firstBootstrapTokenAt = timestamp;
+      } else if (timestamp - state.firstBootstrapTokenAt <= IMPORT_BURST_INTERVAL_MS) {
+        state.importedHistory = true;
+      }
+    }
+
+    const exitCode = await exitPromise;
+    if (exitCode !== 0 && exitCode !== 1) throw new Error(`rg exited with status ${exitCode}`);
+  }
+
+  return new Set(
+    [...states.entries()]
+      .filter(([, state]) => state.importedHistory)
+      .map(([file]) => file),
+  );
+};
+
+export const scanFiles = async (files) => {
+  const importedBootstrapFiles = await detectImportedBootstrapFiles(files);
   const perFile = new Map(files.map((file) => [file, {
     daily: {}, activityDaily: {}, previous: emptyUsage(), lastTokenTimestamp: null, currentChatSeconds: 0, invalidLines: 0,
+    sessionStartedAt: null, threadSource: "", inheritedEventsSkipped: 0, inheritedTokenEventsSkipped: 0,
   }]));
   if (files.length === 0) return perFile;
 
@@ -116,6 +215,7 @@ const scanFiles = async (files) => {
     const batch = files.slice(start, start + batchSize);
     const child = spawn("rg", [
       "--json", "--no-messages",
+      "-e", '"type":"session_meta"',
       "-e", '"type":"token_count"',
       "-e", '"type":"function_call"',
       "-e", '"type":"turn_context"',
@@ -150,6 +250,99 @@ const scanFiles = async (files) => {
         fileState.invalidLines += 1;
         continue;
       }
+      if (event?.type === "session_meta") {
+        // Forked logs may contain a copied parent session_meta immediately after
+        // their own metadata. Only the first record describes this file.
+        if (fileState.sessionStartedAt === null) {
+          // The outer event timestamp is the moment the new file was written.
+          // payload.timestamp can precede it by more than a second during setup.
+          fileState.sessionStartedAt = Date.parse(event.timestamp || event.payload?.timestamp || "");
+          fileState.threadSource = event.payload?.thread_source
+            || (event.payload?.source?.subagent ? "subagent" : "");
+        }
+        continue;
+      }
+
+      const inheritedBootstrapEvent = isInheritedSubagentBootstrapEvent({
+        eventTimestamp: event.timestamp,
+        importedHistory: importedBootstrapFiles.has(file),
+        sessionStartedAt: fileState.sessionStartedAt,
+        threadSource: fileState.threadSource,
+      });
+
+      if (event?.payload?.type === "token_count") {
+        const total = event.payload?.info?.total_token_usage;
+        if (!total || !event.timestamp) continue;
+
+        const currentInput = numeric(total.input_tokens);
+        const currentOutput = numeric(total.output_tokens);
+        const current = {
+          inputTokens: currentInput,
+          cachedInputTokens: numeric(total.cached_input_tokens),
+          cacheWriteInputTokens: numeric(total.cache_write_input_tokens),
+          outputTokens: currentOutput,
+          reasoningOutputTokens: numeric(total.reasoning_output_tokens),
+          // Some Codex versions added one context-window allowance to total_tokens.
+          // Input + output is stable across versions and matches the chart's stacked bars.
+          totalTokens: currentInput + currentOutput,
+        };
+
+        // A spawned subagent is initialized with the parent's cumulative token history.
+        // Codex rewrites that imported prefix into the first milliseconds of the new
+        // session. Keep its last counter as the baseline, but never attribute the
+        // imported history to the child a second time.
+        if (inheritedBootstrapEvent) {
+          fileState.previous = { ...fileState.previous, ...current };
+          fileState.inheritedEventsSkipped += 1;
+          fileState.inheritedTokenEventsSkipped += 1;
+          continue;
+        }
+
+        const reset = Object.keys(current).some((key) => current[key] < fileState.previous[key]);
+        const baseline = reset ? emptyUsage() : fileState.previous;
+        const delta = {
+          inputTokens: current.inputTokens - baseline.inputTokens,
+          cachedInputTokens: current.cachedInputTokens - baseline.cachedInputTokens,
+          cacheWriteInputTokens: current.cacheWriteInputTokens - baseline.cacheWriteInputTokens,
+          outputTokens: current.outputTokens - baseline.outputTokens,
+          reasoningOutputTokens: current.reasoningOutputTokens - baseline.reasoningOutputTokens,
+          totalTokens: current.totalTokens - baseline.totalTokens,
+        };
+        fileState.previous = { ...fileState.previous, ...current };
+        if (delta.inputTokens === 0 && delta.outputTokens === 0 && delta.totalTokens === 0) continue;
+
+        const date = dateInTimeZone(event.timestamp);
+        const day = fileState.daily[date] || emptyUsage();
+        const timestamp = Date.parse(event.timestamp);
+        if (Number.isFinite(timestamp) && fileState.lastTokenTimestamp !== null) {
+          const gapSeconds = Math.max(0, (timestamp - fileState.lastTokenTimestamp) / 1000);
+          if (gapSeconds <= 10 * 60) {
+            fileState.currentChatSeconds += gapSeconds;
+            const activity = fileState.activityDaily[date] || emptyActivity();
+            activity.maxChatSeconds = Math.max(activity.maxChatSeconds, fileState.currentChatSeconds);
+            fileState.activityDaily[date] = activity;
+          } else {
+            fileState.currentChatSeconds = 0;
+          }
+        }
+        if (Number.isFinite(timestamp)) fileState.lastTokenTimestamp = timestamp;
+        day.inputTokens += delta.inputTokens;
+        day.cachedInputTokens += Math.min(delta.inputTokens, delta.cachedInputTokens);
+        day.cacheWriteInputTokens += delta.cacheWriteInputTokens;
+        day.outputTokens += delta.outputTokens;
+        day.reasoningOutputTokens += Math.min(delta.outputTokens, delta.reasoningOutputTokens);
+        day.totalTokens += delta.inputTokens + delta.outputTokens;
+        day.requests += 1;
+        day.uncachedInputTokens = Math.max(0, day.inputTokens - day.cachedInputTokens);
+        fileState.daily[date] = day;
+        continue;
+      }
+
+      if (inheritedBootstrapEvent) {
+        fileState.inheritedEventsSkipped += 1;
+        continue;
+      }
+
       if (event?.type === "turn_context" && event.timestamp) {
         const effort = typeof event.payload?.effort === "string" ? event.payload.effort : "";
         if (/^[A-Za-z0-9_-]{1,40}$/.test(effort)) {
@@ -187,59 +380,6 @@ const scanFiles = async (files) => {
         fileState.activityDaily[date] = activity;
         continue;
       }
-      if (event?.payload?.type !== "token_count") continue;
-      const total = event.payload?.info?.total_token_usage;
-      if (!total || !event.timestamp) continue;
-
-      const currentInput = numeric(total.input_tokens);
-      const currentOutput = numeric(total.output_tokens);
-      const current = {
-        inputTokens: currentInput,
-        cachedInputTokens: numeric(total.cached_input_tokens),
-        cacheWriteInputTokens: numeric(total.cache_write_input_tokens),
-        outputTokens: currentOutput,
-        reasoningOutputTokens: numeric(total.reasoning_output_tokens),
-        // Some Codex versions added one context-window allowance to total_tokens.
-        // Input + output is stable across versions and matches the chart's stacked bars.
-        totalTokens: currentInput + currentOutput,
-      };
-      const reset = Object.keys(current).some((key) => current[key] < fileState.previous[key]);
-      const baseline = reset ? emptyUsage() : fileState.previous;
-      const delta = {
-        inputTokens: current.inputTokens - baseline.inputTokens,
-        cachedInputTokens: current.cachedInputTokens - baseline.cachedInputTokens,
-        cacheWriteInputTokens: current.cacheWriteInputTokens - baseline.cacheWriteInputTokens,
-        outputTokens: current.outputTokens - baseline.outputTokens,
-        reasoningOutputTokens: current.reasoningOutputTokens - baseline.reasoningOutputTokens,
-        totalTokens: current.totalTokens - baseline.totalTokens,
-      };
-      fileState.previous = { ...fileState.previous, ...current };
-      if (delta.inputTokens === 0 && delta.outputTokens === 0 && delta.totalTokens === 0) continue;
-
-      const date = dateInTimeZone(event.timestamp);
-      const day = fileState.daily[date] || emptyUsage();
-      const timestamp = Date.parse(event.timestamp);
-      if (Number.isFinite(timestamp) && fileState.lastTokenTimestamp !== null) {
-        const gapSeconds = Math.max(0, (timestamp - fileState.lastTokenTimestamp) / 1000);
-        if (gapSeconds <= 10 * 60) {
-          fileState.currentChatSeconds += gapSeconds;
-          const activity = fileState.activityDaily[date] || emptyActivity();
-          activity.maxChatSeconds = Math.max(activity.maxChatSeconds, fileState.currentChatSeconds);
-          fileState.activityDaily[date] = activity;
-        } else {
-          fileState.currentChatSeconds = 0;
-        }
-      }
-      if (Number.isFinite(timestamp)) fileState.lastTokenTimestamp = timestamp;
-      day.inputTokens += delta.inputTokens;
-      day.cachedInputTokens += Math.min(delta.inputTokens, delta.cachedInputTokens);
-      day.cacheWriteInputTokens += delta.cacheWriteInputTokens;
-      day.outputTokens += delta.outputTokens;
-      day.reasoningOutputTokens += Math.min(delta.outputTokens, delta.reasoningOutputTokens);
-      day.totalTokens += delta.inputTokens + delta.outputTokens;
-      day.requests += 1;
-      day.uncachedInputTokens = Math.max(0, day.inputTokens - day.cachedInputTokens);
-      fileState.daily[date] = day;
     }
 
     const exitCode = await exitPromise;
@@ -298,6 +438,8 @@ const main = async () => {
       daily: result?.daily || {},
       activityDaily: result?.activityDaily || {},
       invalidLines: result?.invalidLines || 0,
+      inheritedEventsSkipped: result?.inheritedEventsSkipped || 0,
+      inheritedTokenEventsSkipped: result?.inheritedTokenEventsSkipped || 0,
     };
   }
   cache.version = CACHE_VERSION;
@@ -311,6 +453,8 @@ const main = async () => {
   const serviceTierCounts = {};
   let sourceSessions = 0;
   let invalidLines = 0;
+  let inheritedEventsSkipped = 0;
+  let inheritedTokenEventsSkipped = 0;
   let peakChatTokens = 0;
   let longestChatSeconds = 0;
   for (const file of Object.values(cache.files)) {
@@ -318,6 +462,8 @@ const main = async () => {
     let fileTokens = 0;
     let fileActiveSeconds = 0;
     invalidLines += numeric(file.invalidLines);
+    inheritedEventsSkipped += numeric(file.inheritedEventsSkipped);
+    inheritedTokenEventsSkipped += numeric(file.inheritedTokenEventsSkipped);
     for (const [date, usage] of Object.entries(file.daily || {})) {
       if (date > throughDate) continue;
       const day = combined[date] || { ...emptyUsage(), sessions: 0 };
@@ -378,7 +524,7 @@ const main = async () => {
   }
 
   const output = {
-    schemaVersion: 3,
+    schemaVersion: 4,
     generatedAt: new Date().toISOString(),
     timezone: TIME_ZONE,
     throughDate,
@@ -387,6 +533,8 @@ const main = async () => {
       filesIndexed: allFiles.length,
       sessionsWithUsage: sourceSessions,
       invalidTokenLines: invalidLines,
+      inheritedEventsSkipped,
+      inheritedTokenEventsSkipped,
       contentRead: false,
     },
     totals,
@@ -438,4 +586,4 @@ const main = async () => {
   console.log(`Indexed ${allFiles.length} files (${changedFiles.length} changed); ${daily.length} calendar days; ${totals.totalTokens.toLocaleString("en-US")} tokens.`);
 };
 
-await main();
+if (process.argv[1] === fileURLToPath(import.meta.url)) await main();

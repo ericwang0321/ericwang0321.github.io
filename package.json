@@ -11,6 +11,7 @@
     "pages:build": "next build",
     "start": "next start",
     "lint": "eslint . --ignore-pattern out --ignore-pattern .next",
+    "test:usage": "node --test tests/update-codex-usage.test.mjs",
     "usage:update": "node scripts/update-codex-usage.mjs",
     "usage:refresh": "npm run usage:update && npm run pages:build"
   },
