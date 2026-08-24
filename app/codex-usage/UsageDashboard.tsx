@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import styles from "./usage.module.css";
 import type { CodexProfileData, OfficialDailyUsage, OfficialInvocation, UsageData } from "./types";
@@ -245,6 +246,10 @@ export default function UsageDashboard({ profile, usage }: { profile: CodexProfi
   ];
 
   return <main className={styles.page}>
+    <Link aria-label="返回网站主页" className={styles.backHome} href="/">
+      <span aria-hidden="true" className={styles.backArrow}>←</span>
+      <span>返回主页</span>
+    </Link>
     <div className={styles.dashboard}>
       <section className={styles.profileSection}>
         <div className={styles.avatarWrap}>
