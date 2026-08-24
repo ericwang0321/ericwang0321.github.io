@@ -502,7 +502,10 @@ img {
 
 .timeline-logo {
   align-items: center;
-  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(15, 39, 71, 0.08);
+  border-radius: 10px;
+  box-shadow: 0 5px 18px rgba(15, 39, 71, 0.05);
   display: flex;
   flex: 0 0 auto;
   height: 64px;
