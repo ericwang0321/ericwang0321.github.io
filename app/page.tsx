@@ -245,6 +245,23 @@ const portfolioEntries: PortfolioEntry[] = [
     kind: "deck",
     group: "technology",
   },
+  {
+    number: "12",
+    title: {
+      en: "From One Line to Short-Drama Video",
+      zh: "一句话如何变成短剧视频",
+    },
+    excerpt: {
+      en: "A real-project walkthrough of script confirmation, reusable visual assets and clip-based generation—including the public CLI boundary, reference-video control and three playable outputs.",
+      zh: "基于真实项目拆解剧本确认、可复用视觉资产和分片段生成，并说明公开 CLI 边界、参考视频控制与三段可播放成片。",
+    },
+    meta: { en: "46-page bilingual deck · 3 video samples", zh: "46 页中英双语报告 · 3 段视频样例" },
+    href: "/library/xiaoyunque-short-drama-workflow/",
+    image: "/readings/xiaoyunque-workflow-en/page-01.avif",
+    sourceType: { en: "AI VIDEO WORKFLOW", zh: "AI 视频工作流" },
+    kind: "deck",
+    group: "technology",
+  },
 ];
 
 const technologyResearch = portfolioEntries.filter((entry) => entry.group === "technology");

@@ -6,7 +6,7 @@ import type { ResearchDeck } from "../decks";
 import { deckPageSource } from "../decks";
 import styles from "./viewer.module.css";
 
-export default function DeckReader({ deck }: { deck: ResearchDeck }) {
+export default function DeckReader({ deck, language = "en" }: { deck: ResearchDeck; language?: "en" | "zh" }) {
   const [currentPage, setCurrentPage] = useState(1);
   const pages = Array.from({ length: deck.pages }, (_, index) => index + 1);
 
@@ -40,18 +40,18 @@ export default function DeckReader({ deck }: { deck: ResearchDeck }) {
   return (
     <section
       className={styles.reader}
-      aria-label={`${deck.title} web reader`}
+      aria-label={language === "en" ? `${deck.title} web reader` : `${deck.chineseTitle}网页阅读器`}
       onContextMenu={(event) => event.preventDefault()}
       onDragStart={(event) => event.preventDefault()}
     >
       <div className={styles.readerBar}>
         <div>
-          <span>View-only web edition</span>
+          <span>{language === "en" ? "View-only web edition" : "仅供网页阅读"}</span>
           <strong aria-live="polite">{String(currentPage).padStart(2, "0")} / {String(deck.pages).padStart(2, "0")}</strong>
         </div>
         <div className={styles.readerControls}>
-          <button type="button" disabled={currentPage === 1} onClick={() => goToPage(currentPage - 1)} aria-label="Previous page">↑</button>
-          <button type="button" disabled={currentPage === deck.pages} onClick={() => goToPage(currentPage + 1)} aria-label="Next page">↓</button>
+          <button type="button" disabled={currentPage === 1} onClick={() => goToPage(currentPage - 1)} aria-label={language === "en" ? "Previous page" : "上一页"}>↑</button>
+          <button type="button" disabled={currentPage === deck.pages} onClick={() => goToPage(currentPage + 1)} aria-label={language === "en" ? "Next page" : "下一页"}>↓</button>
         </div>
       </div>
 
@@ -60,7 +60,9 @@ export default function DeckReader({ deck }: { deck: ResearchDeck }) {
           <figure id={`page-${page}`} data-page={page} className={styles.page} key={page}>
             <Image
               src={deckPageSource(deck, page)}
-              alt={`${deck.title}, page ${page} of ${deck.pages}`}
+              alt={language === "en"
+                ? `${deck.title}, page ${page} of ${deck.pages}`
+                : `${deck.chineseTitle}，第 ${page} 页，共 ${deck.pages} 页`}
               width="1536"
               height="864"
               loading={page === 1 ? "eager" : "lazy"}
@@ -69,7 +71,7 @@ export default function DeckReader({ deck }: { deck: ResearchDeck }) {
               draggable="false"
               unoptimized
             />
-            <figcaption>Page {String(page).padStart(2, "0")}</figcaption>
+            <figcaption>{language === "en" ? "Page" : "第"} {String(page).padStart(2, "0")}{language === "zh" ? " 页" : ""}</figcaption>
           </figure>
         ))}
       </div>

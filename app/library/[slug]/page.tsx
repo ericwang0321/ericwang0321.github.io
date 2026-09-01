@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import DeckReader from "./DeckReader";
+import BilingualDeckPage from "./BilingualDeckPage";
 import styles from "./viewer.module.css";
 import { deckPageSource, researchDecks } from "../decks";
 
@@ -29,6 +30,10 @@ export default async function LibraryPage({ params }: { params: Promise<{ slug: 
   const { slug } = await params;
   const deck = researchDecks.find((item) => item.slug === slug);
   if (!deck) notFound();
+
+  if (deck.chineseFolder) {
+    return <BilingualDeckPage deck={deck} />;
+  }
 
   return (
     <main className={`${styles.shell} ${styles[deck.accent]}`}>
