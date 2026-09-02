@@ -107,19 +107,12 @@ export default function AboutPage() {
   const [language, setLanguage] = useState<Language>("en");
 
   useEffect(() => {
-    const saved = window.localStorage.getItem("portfolio-language");
-    if (saved !== "en" && saved !== "zh") return;
-    const frame = window.requestAnimationFrame(() => {
-      setLanguage(saved);
-      document.documentElement.lang = saved === "zh" ? "zh-CN" : "en";
-    });
-    return () => window.cancelAnimationFrame(frame);
+    document.documentElement.lang = "en";
   }, []);
 
   const toggleLanguage = () => {
     const next = language === "en" ? "zh" : "en";
     setLanguage(next);
-    window.localStorage.setItem("portfolio-language", next);
     document.documentElement.lang = next === "zh" ? "zh-CN" : "en";
   };
 

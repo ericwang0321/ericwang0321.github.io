@@ -476,14 +476,6 @@ export default function Home() {
   const [language, setLanguage] = useState<Language>("en");
 
   useEffect(() => {
-    const saved = window.localStorage.getItem("portfolio-language");
-    if (saved !== "zh" && saved !== "en") return;
-    const frame = window.requestAnimationFrame(() => setLanguage(saved));
-    return () => window.cancelAnimationFrame(frame);
-  }, []);
-
-  useEffect(() => {
-    window.localStorage.setItem("portfolio-language", language);
     document.documentElement.lang = language === "zh" ? "zh-CN" : "en";
   }, [language]);
 
